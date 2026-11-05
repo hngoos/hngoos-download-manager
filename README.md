@@ -28,24 +28,24 @@ computer.
 
 ## Features
 
-- **Resumable downloads** — use up to 32 connections, pause and continue supported
-  transfers, retry network failures, and adapt to server connection limits.
-- **Flexible sources** — use mirrors, refresh expired URLs after verification,
-  and change the destination while a download is in progress.
-- **Batch workflows** — paste link–filename columns or import CSV, TXT and XLSX;
-  preview names, keep row order, and export a completion report.
-- **Video and audio** — choose available formats, download playlists, extract
-  audio, and trim, join, convert or compress files locally.
-- **File checks** — verify checksums, inspect suspicious names and archive
-  entries, and flag risky downloads before opening them.
-- **Document tools** — redact PDF regions and capture web pages as PDF or images
-  when the required browser runtime is available.
-- **Daily conveniences** — schedule downloads, select bandwidth presets, organize
-  files by type, and keep transfer history on your computer.
+- **Resumable downloads** — use up to 32 connections, pause and resume supported
+  downloads, and automatically retry after network errors.
+- **Mirrors and recovery** — use verified mirrors, replace expired links, and
+  change the save location during a download.
+- **Batch downloads** — paste links and filenames or import CSV, TXT and XLSX
+  files. Preview names, preserve row order, and export completion reports.
+- **Video and audio tools** — choose available formats, download playlists,
+  extract audio, and trim, merge, convert or compress files locally.
+- **File safety checks** — verify checksums and check filenames and archive
+  contents for signs of risk.
+- **PDF and web capture** — redact PDF content and save web pages as PDFs or
+  images with a compatible browser runtime.
+- **Scheduling and organization** — schedule downloads, limit bandwidth,
+  organize files by type, and keep download history on your computer.
 
-Features depend on the source website, installed tools and platform.
-See [platform support](docs/PLATFORMS.md) and the [feature guide](docs/FEATURES.md)
-for details. HDM does not bypass DRM or website access controls.
+Availability depends on the source website, installed tools and operating system.
+See [platform support](docs/PLATFORMS.md) and the [feature guide](docs/FEATURES.md).
+HDM does not bypass DRM or website access controls.
 
 ## Download
 
@@ -64,9 +64,8 @@ Or install from **Command Prompt (CMD)**:
 curl.exe -fL https://raw.githubusercontent.com/hngoos/hngoos-download-manager/main/install.ps1 -o "%TEMP%\HDM-install.ps1" && powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%TEMP%\HDM-install.ps1"
 ```
 
-The script verifies the installer's size and SHA-256 before installing for your
-account. No administrator privileges are required. The execution-policy option
-applies to this PowerShell process. [More installation options](docs/PLATFORMS.md#windows).
+The script checks the installer's size and SHA-256, then installs HDM for your
+account without administrator privileges. [More installation options](docs/PLATFORMS.md#windows).
 
 </details>
 
@@ -80,8 +79,8 @@ Download the DMG for your Mac:
 - [Apple Silicon (M-series)](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-macOS-arm64.dmg)
 - [Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-macOS-x64.dmg)
 
-Open the DMG, drag **HDM** to **Applications**, then open it from there.
-These desktop previews are tested on macOS 15 and include the application runtime.
+Open the DMG, drag **HDM** to **Applications**, then launch HDM from Applications.
+These preview builds are tested on macOS 15. Python is included.
 
 </details>
 
@@ -118,8 +117,9 @@ The Linux previews require glibc 2.35 or later. Python is bundled.
    or `brave://extensions`.
 3. Enable **Developer mode**, click **Load unpacked**, and choose the extracted
    folder containing `manifest.json`.
-4. Copy the extension ID. Open HDM → **Browser (Trình duyệt)**, paste the ID, and register the
-   connection. In the extension's options, click **Test connection (Kiểm tra kết nối)**.
+4. Copy the extension ID. In HDM, open **Browser (Trình duyệt)**, paste the ID,
+   and register the connection.
+5. Open the extension options and click **Test connection (Kiểm tra kết nối)**.
 
 Install the HDM desktop app first. Keep the extracted folder after installation.
 The ZIP is loaded manually; Chrome Web Store publication is pending.
@@ -134,9 +134,3 @@ The ZIP is loaded manually; Chrome Web Store publication is pending.
 **Coming soon.** Android and iOS applications are planned for a future release.
 
 </details>
-
-## Help and resources
-
-- [User guide](docs/USAGE.md)
-- [Report a problem or suggest a feature](https://github.com/hngoos/hngoos-download-manager/issues)
-- [Privacy](docs/PRIVACY.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Development](docs/DEVELOPMENT.md)
