@@ -1,49 +1,92 @@
-# Chính sách bảo mật
+# Security policy
 
-## Phiên bản được duy trì
+## Supported versions
 
-| Phiên bản | Chính sách |
+| Version | Policy |
 | --- | --- |
-| v0.1.0 / nhánh `main` | Nhận sửa lỗi bảo mật |
+| v0.1.1 / `main` | Receives security fixes |
+| Earlier releases | Upgrade to the latest release |
 
-## Báo cáo riêng
+## Report a vulnerability privately
 
-Dùng [Report a vulnerability](https://github.com/hngoos/hngoos-download-manager/security/advisories/new) để gửi báo cáo riêng. Kèm phiên bản, các bước tái hiện với dữ liệu tự tạo, ảnh hưởng và cách giảm thiểu nếu có. Không đăng khai thác đang hoạt động lên issue công khai.
+Use [Report a vulnerability](https://github.com/hngoos/hngoos-download-manager/security/advisories/new)
+to submit a private report. Include the affected version, reproducible steps
+using synthetic data, the impact, and any known mitigation. Do not publish
+working exploits in public issues.
 
-Không gửi mật khẩu, cookie, token, khóa ký, database lịch sử hoặc tệp cá nhân. Nếu cần một mẫu tệp rủi ro, mô tả trước và dùng dữ liệu tổng hợp; không đính kèm mã độc thật vào repo.
+Do not include passwords, cookies, access tokens, signing keys, download
+history databases, or personal files. If a suspicious sample is needed,
+describe it first and use a harmless synthetic example. Do not attach live
+malware to the repository.
 
-Dự án do cá nhân duy trì, chưa có cam kết thời gian phản hồi hoặc chương trình thưởng lỗi.
+HDM is maintained by an individual. There is no guaranteed response time or
+bug bounty program.
 
-## Ranh giới tin cậy
+## Protection boundaries
 
-| Thành phần | Biện pháp | Giới hạn |
+| Component | Protection | Limitations |
 | --- | --- | --- |
-| HTTP/HTTPS | Xác thực TLS mặc định; Range/ETag/kích thước trước khi ghép; kiểm mã băm mong đợi | HTTP không mã hóa. Hash tự tính không chứng minh nguồn tệp an toàn |
-| Mirror | Cần SHA-256 độc lập; sai hash thì tải lại nguồn chính | Không tin ETag giữa hai máy chủ khác nhau |
-| Extension | Quyền cookie/host tùy chọn; kiểm cùng origin trước khi đọc cookie; nút trên trang cần sự kiện tin cậy | Website và extension không phải ranh giới sandbox cho ứng dụng native |
-| Native host | Giao thức stdio giới hạn 128 KiB, kiểm URL/domain cookie; không nhận lệnh shell | OS/browser kiểm `allowed_origins`; không phòng được tài khoản Windows đã bị kiểm soát |
-| Session | Mã hóa Windows DPAPI khi lưu vào inbox | Tiến trình cùng tài khoản Windows vẫn có thể giải mã |
-| ZIP | Kiểm traversal, symlink, tên mơ hồ trên Windows, executable/macro, archive lồng nhau và giới hạn tài nguyên | Không phải bộ phân tích mã độc đầy đủ; RAR/7z chưa có độ phủ tương đương |
-| PDF | Kiểm ngân sách pixel trước render; đầu ra che vùng là PDF raster mới | Mất khả năng tìm kiếm chữ; không thay thế việc xem lại vùng đã che |
-| Cập nhật app | Khóa Ed25519 công khai ghim trong source; kiểm chữ ký/hash/kích thước trước nhận bộ cài | Chưa có Authenticode/uy tín SmartScreen; không tự chạy bộ cài |
-| yt-dlp cập nhật riêng | Chỉ dùng release chính thức, bắt buộc có GitHub SHA-256 digest | Cần tin cậy nhà phát hành upstream và GitHub |
+| HTTP/HTTPS | TLS verification by default; range, ETag and size checks before assembling downloads; expected-checksum verification | HTTP is unencrypted. A locally computed checksum does not establish that a file's source is safe. |
+| Mirrors | An independently obtained SHA-256 is required; a mismatch triggers a retry from the primary source | ETags are not trusted across different servers. |
+| Browser extension | Optional cookie and host permissions; same-origin checks before reading cookies; trusted events required for page buttons | Websites and the extension do not provide a sandbox for the desktop application. |
+| Native host | A 128 KiB limit on stdio messages; URL and cookie-domain validation; no shell commands accepted | The browser and operating system enforce allowed origins. This does not protect a compromised local account. |
+| Browser sessions | Windows DPAPI encrypts session data stored in the inbox | Processes running under the same Windows account may be able to decrypt it. Extension session transfer is unavailable on macOS/Linux. |
+| ZIP inspection | Checks for path traversal, symbolic links, ambiguous Windows names, executables, macros, nested archives and resource limits | This is not a complete malware analysis engine. RAR/7z inspection does not have equivalent coverage. |
+| PDF processing | Pixel limits before rendering; redacted output is a new raster PDF | Searchable text is lost. Review the exported pages before sharing them. |
+| Application updates | A pinned Ed25519 public key; signature, checksum and size checks before accepting an installer | The Windows installer has no Authenticode signature or established SmartScreen reputation. Downloaded installers are not run automatically. macOS/Linux updates require installing a newer package. |
+| Separate extractor updates | Official releases only, with a required GitHub SHA-256 digest | This relies on the upstream publisher and GitHub. |
 
-Ứng dụng không tự chạy tệp tải về. Đổi đuôi `.chuakiemtra` giảm nguy cơ mở nhầm nhưng không phải sandbox: đổi tên thủ công hoặc mở bằng công cụ khác vẫn có thể thực thi tệp. Quét Defender/AuthentiCode và tra hash là công cụ hỗ trợ, không phải chứng nhận tệp sạch.
+HDM does not automatically execute downloaded files. Renaming a file to
+`.chuakiemtra` reduces accidental opening, but does not sandbox it: manually
+renaming it or opening it with another tool can still execute its contents.
+Defender scans, Authenticode checks and online hash reputation are supporting
+signals, not guarantees that a file is safe.
+
+macOS packages use ad-hoc signatures and are not Developer ID signed or
+notarized. Signed update metadata verifies package integrity and publisher-key
+continuity; it is separate from operating system publisher certificates.
+See [platform support](docs/PLATFORMS.md) for platform-specific limitations.
 
 <a id="du-lieu-cuc-bo"></a>
 
-## Dữ liệu cục bộ
+## Local data
 
-- `%LOCALAPPDATA%\HDM\downloads.sqlite3` chứa lịch sử, URL có thể có token, settings, sự kiện và inbox. Database và staging chưa được mã hóa toàn bộ.
-- Phần HTTP tải dở mới ở `%LOCALAPPDATA%\HDM\staging\<job-id>`; app chỉ dùng lại khối khi có điều kiện xác minh phù hợp. Ứng dụng tiếp tục dùng thư mục dữ liệu có sẵn khi cần giữ lịch sử của lần cài trước.
-- Cookie do extension gửi theo quyền bạn cấp được mã hóa DPAPI và xóa khỏi dữ liệu inbox đang dùng sau khi chấp nhận/hủy. Các bản SQLite/WAL/backup có thể còn dữ liệu đã mã hóa trước đó.
-- Khi yt-dlp chạy, cookie được giải mã ra tệp tạm `hngoos-session-*` trong thư mục dữ liệu rồi xóa khi tác vụ kết thúc bình thường. Dừng cưỡng bức có thể để lại tệp tạm. Cookie do bạn tự xuất và chọn vẫn do bạn quản lý.
-- FFmpeg/PDF/giải nén dùng staging tạm; tiến trình bị dừng đột ngột có thể để lại dữ liệu. Không gửi cả thư mục dữ liệu hoặc thư mục build vào báo cáo lỗi.
+- The application data directory contains `downloads.sqlite3`, settings,
+  events, the browser inbox and temporary files. History can include URLs
+  containing access tokens. The database and staging files are not fully
+  encrypted. See [data locations](docs/PLATFORMS.md#download-history-and-staging)
+  for Windows, macOS and Linux paths.
+- New partial HTTP downloads are stored in `staging/<job-id>`. Blocks are
+  reused only when the required verification conditions are met. An upgraded
+  installation may continue to use a legacy data directory to preserve history.
+- On Windows, cookies sent by the extension with the user's permission are
+  encrypted with DPAPI and removed from the active inbox record after
+  acceptance or cancellation. SQLite, WAL and backup files may retain earlier
+  encrypted data.
+- During media downloads, session cookies are decrypted into a temporary
+  `hngoos-session-*` file in the data directory and removed when the task ends
+  normally. Forced termination may leave that file behind. Cookie files
+  manually exported and selected by the user remain under the user's control.
+- Media processing, PDF operations and archive extraction use temporary staging
+  files. Abrupt termination may leave data behind. Do not attach the entire
+  data directory or build directory to a bug report.
 
-Không tự tải tệp cá nhân lên dịch vụ quét. Tra VirusTotal dùng hash; người dùng vẫn cần xem dịch vụ bên ngoài nào sẽ được mở/gọi. Video, website capture, phụ đề và cập nhật kết nối đến máy chủ tương ứng theo thao tác người dùng.
+HDM does not automatically upload personal files to scanning services. Online
+reputation checks use file hashes; review which external service will be
+opened or contacted. Video downloads, website captures, subtitles and updates
+connect to the relevant servers in response to user actions.
 
-## Kiểm tra tự động
+See the [privacy policy](docs/PRIVACY.md) for more information.
 
-Workflow [Security](https://github.com/hngoos/hngoos-download-manager/actions/workflows/security.yml) quét secret trong Git, audit dependency Python và phân tích CodeQL cho Python/JavaScript. Dependabot theo dõi dependency và Actions. Các Actions được ghim commit; checkout không giữ credential trong cấu hình Git.
+## Automated checks
 
-Xem [biên bản rà soát](docs/SECURITY_REVIEW.md) để biết phạm vi và kết quả cụ thể. Không có kết quả quét nào đảm bảo phần mềm an toàn tuyệt đối. Binary native như FFmpeg/PDFium và website bên ngoài vẫn cần cập nhật và kiểm thử riêng.
+The [Security workflow](https://github.com/hngoos/hngoos-download-manager/actions/workflows/security.yml)
+scans Git history for secrets, audits Python and JavaScript dependencies, and
+runs CodeQL analysis for Python and JavaScript. Dependabot monitors dependencies
+and workflow actions. Actions are pinned to commits, and checkout does not
+retain credentials in the Git configuration.
+
+The [security review record](docs/SECURITY_REVIEW.md) describes the scope and
+results of the recorded self-review. No scan guarantees complete safety.
+Native components such as media and PDF libraries, as well as external
+websites, require ongoing updates and separate testing.

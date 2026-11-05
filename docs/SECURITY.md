@@ -1,12 +1,13 @@
 # Security policy
 
-[Home](../README.md) · [Feature reference](FEATURES.md) · [Privacy](PRIVACY.md)
+[Home](../README.md) · [Full security policy](../SECURITY.md) · [Feature reference](FEATURES.md) · [Privacy](PRIVACY.md)
 
 ## Supported versions
 
 | Version | Policy |
 | --- | --- |
-| v0.1.0 | Receives security fixes |
+| v0.1.1 | Receives security fixes |
+| Earlier releases | Upgrade to the latest release |
 | Documentation on `main` | Receives corrections and updated guidance |
 
 ## Report a vulnerability privately
