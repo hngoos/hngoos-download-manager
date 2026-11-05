@@ -47,7 +47,7 @@ Features depend on the source website, installed tools and platform.
 See [platform support](docs/PLATFORMS.md) and the [feature guide](docs/FEATURES.md)
 for details. HDM does not bypass DRM or website access controls.
 
-## Download and quick start
+## Download
 
 <a id="windows"></a>
 
