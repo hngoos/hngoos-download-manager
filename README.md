@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/hdm-wordmark-monochrome.svg" width="740" alt="Hngoos Download Manager (HDM) — Easy &amp; fast">
+  <img src="docs/assets/hdm-wordmark-original-h.svg" width="740" alt="Hngoos Download Manager (HDM) — Easy &amp; fast">
 </p>
 
 > Download, organize, and process your files in one desktop app.
