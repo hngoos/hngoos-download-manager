@@ -2,6 +2,7 @@ import base64
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from hngoos_dm.guard import DirectoryGuard
 from hngoos_dm.store import Store
@@ -12,7 +13,6 @@ class UpdateTests(unittest.TestCase):
     @patch("hngoos_dm.updater.__version__", "0.1.0")
     def test_signed_release_body_accepts_valid_and_rejects_tampered_updates(self):
         import json
-        from unittest.mock import patch
 
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
         from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
