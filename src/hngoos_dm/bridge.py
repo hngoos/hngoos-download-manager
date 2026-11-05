@@ -103,7 +103,10 @@ def handle_message(message, store):
 
 def launch_app():
     if getattr(sys, "frozen", False):
-        executable = Path(sys.executable).with_name("HDM.exe")
+        executable = Path(sys.executable).with_name("HDM.exe" if os.name == "nt" else "HDM")
+        if sys.platform == "darwin":
+            # The macOS bridge lives beside HDM.app, outside the GUI bundle.
+            executable = Path(sys.executable).parent/"HDM.app/Contents/MacOS/HDM"
         if executable.is_file():
             subprocess.Popen([str(executable)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                              creationflags=0x08000000 if os.name == "nt" else 0)

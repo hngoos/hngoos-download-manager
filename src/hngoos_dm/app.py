@@ -1,4 +1,4 @@
-"""Vietnamese desktop UI, using Windows' bundled Tk without runtime dependencies."""
+"""Vietnamese desktop UI for Windows, macOS and Linux with Tkinter."""
 
 import argparse
 import os
@@ -13,6 +13,7 @@ from . import __version__
 from .engine import DownloadManager
 from .instance import InstanceLock
 from .paths import data_directory
+from .platforms import open_path, platform_label
 from .safety import filename_from_url, scan_defender, sha256_file
 from .store import Store
 
@@ -121,7 +122,7 @@ class App:
         header.pack(fill="x", pady=(0, 12))
         self.page_title = tk.StringVar(value="Tải xuống")
         ttk.Label(header, textvariable=self.page_title, style="Title.TLabel").pack(side="left")
-        ttk.Label(header, text=f"HDM {__version__}  ·  Windows", style="Muted.TLabel").pack(side="right")
+        ttk.Label(header, text=f"HDM {__version__}  ·  {platform_label()}", style="Muted.TLabel").pack(side="right")
         ttk.Label(shell, textvariable=self.status, style="Muted.TLabel", wraplength=1100).pack(side="bottom", fill="x", pady=(12, 0))
         tabs = ttk.Notebook(shell, style="HDM.TNotebook")
         tabs.pack(fill="both", expand=True)
@@ -289,7 +290,8 @@ class App:
         actions = ttk.Frame(parent)
         actions.pack(fill="x")
         ttk.Button(actions, text="Tính SHA-256 của tệp…", command=self.hash_file).pack(side="left", padx=(0, 10))
-        ttk.Button(actions, text="Quét bằng Windows Defender…", command=self.defender).pack(side="left")
+        if os.name == "nt":
+            ttk.Button(actions, text="Quét bằng Windows Defender…", command=self.defender).pack(side="left")
         ttk.Button(actions, text="Kiểm tra ZIP / chữ ký…", command=self.inspect_safety).pack(side="left", padx=8)
         self.hash_value = tk.StringVar()
         ttk.Entry(parent, textvariable=self.hash_value).pack(fill="x", pady=20)
@@ -299,6 +301,7 @@ class App:
         ttk.Button(parent, text="Tra mã băm trên dịch vụ đã chọn", command=self.lookup_hash).pack(anchor="w")
         self.high_security = tk.BooleanVar(value=self.store.setting("high_security", False))
         ttk.Checkbutton(parent, text="An toàn cao: cách ly chương trình chưa có chữ ký Windows hợp lệ",
+                        state="normal" if os.name == "nt" else "disabled",
                         variable=self.high_security, command=lambda: self.store.set_setting(
                             "high_security", self.high_security.get())).pack(anchor="w", pady=10)
         ttk.Button(parent, text="Bật/tắt bảo vệ thư mục tải của trình duyệt…", command=self.toggle_guard).pack(anchor="w", pady=10)
@@ -315,20 +318,28 @@ class App:
         self.extension_id = tk.StringVar(value=self.store.setting("extension_id", ""))
         ttk.Entry(parent, textvariable=self.extension_id).pack(fill="x", pady=12)
         def register():
+            import shutil
             import sys
 
             from .browser import register
-            suggested = Path(sys.executable).parent / "HDMBridge.exe" if getattr(sys, "frozen", False) else Path.cwd()/"dist"/"HDMBridge.exe"
-            bridge = str(suggested) if suggested.exists() else filedialog.askopenfilename(title="Chọn HDMBridge.exe", filetypes=[("Bridge", "*.exe")])
+            name = "HDMBridge.exe" if os.name == "nt" else "HDMBridge"
+            if getattr(sys, "frozen", False):
+                suggested = Path(sys.executable).parent/name
+                if sys.platform == "darwin":
+                    suggested = Path(sys.executable).parents[3]/name
+            else:
+                installed = Path(sys.executable).parent/("hdm-bridge.exe" if os.name == "nt" else "hdm-bridge")
+                suggested = installed if installed.exists() else Path(shutil.which("hdm-bridge") or str(Path.cwd()/"dist"/name))
+            bridge = str(suggested) if suggested.exists() else filedialog.askopenfilename(title="Chọn native bridge")
             if bridge:
                 def action():
                     result = register(self.extension_id.get().strip(), bridge, self.data_dir)
                     self.store.set_setting("extension_id", self.extension_id.get().strip())
                     self.status.set(f"Đã đăng ký: {result}")
                 self.guarded(action)
-        ttk.Button(parent, text="Đăng ký kết nối cho tài khoản Windows này", command=register).pack(anchor="w", pady=12)
+        ttk.Button(parent, text="Đăng ký kết nối cho tài khoản này", command=register).pack(anchor="w", pady=12)
         ttk.Label(parent, text="Dùng menu chuột phải “Tải bằng HDM” hoặc bấm popup để hiện nút tải phía trên video. "
-                  "Yêu cầu được lưu trên máy. Phiên đăng nhập chỉ được gửi khi bạn bật tùy chọn và cấp quyền cookie trên trình duyệt; dữ liệu được mã hóa bằng Windows DPAPI.",
+                  "Yêu cầu được lưu trên máy. Chuyển phiên đăng nhập từ tiện ích hiện chỉ hỗ trợ Windows, với mã hóa DPAPI. Trên macOS/Linux, dùng tệp cookie bạn tự chọn trong mục Video & nhạc.",
                   wraplength=950, style="Muted.TLabel").pack(anchor="w", pady=16)
         ttk.Label(parent, text="Bộ lọc hỗ trợ quy tắc mạng, chặn tab quảng cáo đã nhận diện, chọn phần tử và thống kê. "
                   "Dùng popup để quản lý quyền, ngoại lệ và luồng HLS/DASH; một số cú pháp bộ lọc chưa được hỗ trợ.", wraplength=950, style="Muted.TLabel").pack(anchor="w", pady=12)
@@ -362,18 +373,20 @@ class App:
                         variable=self.close_to_tray, command=lambda: self.store.set_setting("close_to_tray", self.close_to_tray.get())).pack(anchor="w", pady=6)
         self.shutdown_after = tk.BooleanVar()
         ttk.Checkbutton(parent, text="Tắt máy sau khi các lượt HTTP đang chờ đều hoàn tất (đếm ngược 60 giây)",
+                        state="normal" if os.name == "nt" else "disabled",
                         variable=self.shutdown_after, command=lambda: setattr(self, "power_seen_work", False)).pack(anchor="w", pady=6)
-        ttk.Button(parent, text="Hủy lệnh tắt máy đã hẹn", command=self.cancel_shutdown).pack(anchor="w", pady=6)
+        if os.name == "nt":
+            ttk.Button(parent, text="Hủy lệnh tắt máy đã hẹn", command=self.cancel_shutdown).pack(anchor="w", pady=6)
 
     def _about(self, parent):
         ttk.Label(parent, text=f"hngoos-download-manager {__version__}", font=("Segoe UI", 18, "bold")).pack(anchor="w", pady=12)
         paragraphs = [
-            "HDM là ứng dụng đóng mã nguồn dành cho Windows, tích hợp các trình duyệt nhân Chromium.",
+            "HDM là ứng dụng quản lý tải cho Windows, macOS và Linux, tích hợp các trình duyệt nhân Chromium.",
             ("HDM v0.1.0: giao diện với Morphicons, bộ nhớ tải HTTP cục bộ, tiếp quản lượt tải trình duyệt, "
              "khôi phục torrent, nén video hai lượt và lưu phiếu in thử nghiệm."),
             ("Máy chủ không có ETag mạnh hoặc không cho tải theo Range sẽ dùng một luồng. "
              "Nếu không xác minh được nội dung cũ, ứng dụng tải lại từ đầu để tránh ghép sai tệp."),
-            "HDM giúp tải, quản lý và xử lý tệp trên Windows. Các công cụ có điều kiện hỗ trợ riêng theo máy chủ và định dạng.",
+            "HDM giúp tải, quản lý và xử lý tệp trên máy của bạn. Các công cụ có điều kiện hỗ trợ riêng theo nền tảng, máy chủ và định dạng.",
             "Biểu tượng dùng Morphicons kết hợp Lucide. Thiết kế giao diện tham khảo React Bits."
         ]
         for paragraph in paragraphs:
@@ -390,7 +403,7 @@ class App:
     def open_invoices(self):
         folder = self.data_dir/"invoices"
         folder.mkdir(parents=True, exist_ok=True)
-        self.guarded(lambda: os.startfile(folder))
+        self.guarded(lambda: open_path(folder))
 
     def add(self):
         def action():
@@ -430,8 +443,8 @@ class App:
     def open_folder(self):
         job = self.store.get(self.selected()) if self.selected() else None
         folder = Path(job["directory"] if job else self.directory.get())
-        if folder.exists() and os.name == "nt":
-            os.startfile(folder)
+        if folder.exists():
+            self.guarded(lambda: open_path(folder))
 
     def show_details(self, _event=None):
         if job_id := self.selected():
@@ -761,6 +774,9 @@ class App:
             self.guarded(action)
 
     def check_update(self):
+        if os.name != "nt":
+            messagebox.showinfo("Cập nhật HDM", "Bản preview macOS/Linux được cập nhật bằng cách chạy lại install.sh. Bộ cập nhật trong ứng dụng hiện dành cho Windows.", parent=self.root)
+            return
         from .updater import check_update, download_installer
         def found(payload):
             if not payload:

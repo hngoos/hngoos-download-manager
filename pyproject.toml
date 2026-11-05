@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "hngoos-download-manager"
 version = "0.1.0"
-description = "Windows download manager with resumable parallel downloads and Vietnamese desktop UI"
+description = "Desktop download manager with resumable parallel downloads and local media tools"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "LicenseRef-Proprietary"}
@@ -25,6 +25,8 @@ build = ["pyinstaller>=6.11"]
 dev = ["ruff>=0.9"]
 
 [project.scripts]
+hdm = "hngoos_dm.app:main"
+hdm-bridge = "hngoos_dm.bridge:main"
 hngoos-dm = "hngoos_dm.app:main"
 
 [tool.setuptools.packages.find]

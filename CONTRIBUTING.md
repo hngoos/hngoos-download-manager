@@ -1,7 +1,7 @@
 # Development guide
 
-HDM targets Windows 10/11, 64-bit. Development requires Python 3.11+ with
-Tkinter and Node.js 22+. Core portable tests also run on Linux. Source access
+HDM provides a Windows 10/11 x64 release and macOS/Linux desktop previews.
+Development requires Python 3.11+ with Tkinter and Node.js 22+. Source access
 is governed by LICENSE; public visibility does not grant an open-source license.
 
 ## Set up
@@ -56,6 +56,20 @@ The build uses a separate `.venv-build` environment. Outputs are written to
 `build/` and `dist/`; the extension ZIP includes runtime files only. Check the
 EXE with `--smoke-test` and `--self-test-report <report.json>` before release.
 See MAINTAINER.md for signing and publishing.
+
+### macOS and Linux preview
+
+See [platform installation](docs/PLATFORMS.md) for the source installer and
+platform differences. With the optional build dependencies installed, native
+preview archives can be built on their target operating system:
+
+```sh
+python scripts/build-desktop.py
+```
+
+The desktop preview workflow tests the per-user installer and packaged UI on
+macOS and Linux. Windows-only Defender, DPAPI and power actions remain scoped
+to Windows. Do not enable plaintext browser-session storage as a substitute.
 
 ## Submit a change
 

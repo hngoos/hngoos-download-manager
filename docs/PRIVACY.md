@@ -6,7 +6,7 @@ Applies to **hngoos-download-manager (HDM) v0.1.0** and its Chromium extension. 
 
 ## Data stored on your device
 
-HDM stores download history, source URLs, filenames, destinations, progress, and settings in the current Windows account's data directory. Download URLs can contain private access tokens; treat this history as sensitive data.
+HDM stores download history, source URLs, filenames, destinations, progress, and settings in the current account's local data directory. Download URLs can contain private access tokens; treat this history as sensitive data. macOS/Linux previews use the platform data locations described in [platform support](PLATFORMS.md).
 
 The extension stores settings, site exceptions, and hidden-element selectors in local browser storage. Detected media URLs are held temporarily per tab, up to 30 candidates. Entries older than 30 minutes are excluded when the list is read; closing the tab or navigating to a new page clears its list.
 
@@ -40,7 +40,7 @@ These services have their own privacy policies. Local media conversion and PDF r
 
 ## Session cookies and invoices
 
-**Cookies are not read by default.** With explicit session access enabled, cookies are sent only when the video URL and source page share an origin. Queued session data is encrypted using Windows DPAPI. During a download, yt-dlp uses a temporary plaintext cookie file; HDM removes it during normal cleanup. Forced termination may leave temporary data. Cookie files you export and select yourself remain under your control.
+**Cookies are not read by default.** With explicit session access enabled, cookies are sent only when the video URL and source page share an origin. Queued session data is encrypted using Windows DPAPI. Automatic session transfer is unavailable on macOS/Linux; those platforms reject cookie-bearing native requests rather than persist them as plaintext. During a download, yt-dlp uses a temporary plaintext cookie file; HDM removes it during normal cleanup. Forced termination may leave temporary data. Cookie files you export and select yourself remain under your control.
 
 Invoice capture is enabled separately for each supported seller hostname. A captured invoice can contain customer information. Static HTML is passed to the local application and rendered locally, without an external PDF service. HTML is removed from the inbox after successful export. You control the resulting PDFs and where they are shared.
 
@@ -48,7 +48,7 @@ Invoice capture is enabled separately for each supported seller hostname. A capt
 
 You can revoke permissions in the browser's extension settings, clear extension data, or remove the extension.
 
-To remove application history and staging data, close HDM and remove its data directory at `%LOCALAPPDATA%\HDM`. An upgraded installation may continue to use `%LOCALAPPDATA%\HngoosDM`. Back up data you want to keep first. Removing application data does not delete downloaded files or exported PDFs saved elsewhere.
+To remove application history and staging data, close HDM and remove its data directory at `%LOCALAPPDATA%\HDM` on Windows, `~/Library/Application Support/HDM` on macOS, or `$XDG_DATA_HOME/hdm` (default `~/.local/share/hdm`) on Linux. An upgraded installation may continue to use a legacy data location. Back up data you want to keep first. The macOS/Linux source runtime lives in the data folder's `runtime` subdirectory. Removing application data does not delete downloaded files or exported PDFs saved elsewhere.
 
 ## Contact
 

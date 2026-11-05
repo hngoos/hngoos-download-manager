@@ -12,7 +12,8 @@ from urllib.parse import unquote, urlsplit
 RISKY = {".exe", ".msi", ".msix", ".com", ".scr", ".bat", ".cmd", ".ps1", ".vbs", ".js",
          ".jse", ".wsf", ".hta", ".lnk", ".url", ".pif", ".cpl", ".dll", ".reg",
          ".docm", ".xlsm", ".pptm", ".xlam", ".iso", ".img", ".vbe", ".wsh", ".sct",
-         ".scf", ".chm", ".jar", ".appref-ms", ".application", ".settingcontent-ms"}
+         ".scf", ".chm", ".jar", ".appref-ms", ".application", ".settingcontent-ms",
+         ".sh", ".command", ".desktop", ".app", ".pkg", ".dmg", ".deb", ".rpm", ".run", ".appimage"}
 WINDOWS_DEVICES = {"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$",
                    *(f"{prefix}{number}" for prefix in ("COM", "LPT") for number in "123456789¹²³")}
 BIDI = "\u202a\u202b\u202c\u202d\u202e\u2066\u2067\u2068\u2069"
@@ -73,6 +74,13 @@ def inspect_file(path, filename, password=None, high_security=False):
         prefix = source.read(8)
         if prefix[:2] == b"MZ":
             reasons.append("Tệp thực thi Windows (MZ)")
+        if prefix[:4] == b"\x7fELF":
+            reasons.append("Tệp thực thi Linux (ELF)")
+        if prefix[:4] in {b"\xfe\xed\xfa\xce", b"\xce\xfa\xed\xfe", b"\xfe\xed\xfa\xcf", b"\xcf\xfa\xed\xfe",
+                          b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca", b"\xca\xfe\xba\xbf", b"\xbf\xba\xfe\xca"}:
+            reasons.append("Tệp nhị phân macOS hoặc Java")
+        if prefix[:2] == b"#!":
+            reasons.append("Tệp script có thể thực thi")
     if prefix[:4] in {b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"}:
         try:
             with zipfile.ZipFile(path) as archive:
