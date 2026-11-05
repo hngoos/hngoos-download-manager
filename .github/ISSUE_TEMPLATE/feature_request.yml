@@ -1,0 +1,21 @@
+name: Đề xuất tính năng
+description: Mô tả nhu cầu và cách xác nhận tính năng hoạt động.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Vấn đề cần giải quyết
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Hành vi đề xuất
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Cách nghiệm thu
+      description: Ví dụ đầu vào, kết quả đầu ra và trường hợp lỗi cần xử lý.

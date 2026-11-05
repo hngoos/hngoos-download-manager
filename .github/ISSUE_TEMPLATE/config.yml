@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Báo cáo lỗ hổng riêng tư
+    url: https://github.com/hngoos/hngoos-download-manager/security/advisories/new
+    about: Không công khai thông tin khai thác hoặc dữ liệu đăng nhập.

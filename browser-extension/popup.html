@@ -1,0 +1,14 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>HDM</title>
+<link rel="stylesheet" href="style.css"><body><h2>HDM</h2><p>Gửi lượt tải tới ứng dụng Windows.</p>
+<button id="download">Tải trang/video hiện tại</button><button id="video">Hiện nút tải trên video</button>
+<label><input id="session" type="checkbox"> Dùng phiên đăng nhập của trang đang mở cho yêu cầu video</label>
+<label><input id="takeover" type="checkbox"> Tự chuyển lượt tải HTTP/HTTPS sang HDM (lỗi kết nối thì trình duyệt tiếp tục)</label>
+<label><input id="invoices" type="checkbox"> Tự lưu phiếu khi in trên trang bán hàng hiện tại</label>
+<label>Mức chặn quảng cáo<select id="mode"><option value="off">Tắt</option><option value="safe">An toàn tối thiểu</option><option value="ads">Chặn quảng cáo</option><option value="strong">Mạnh</option></select></label>
+<button id="enable">Cấp quyền và cập nhật bộ lọc</button><button id="allow">Trang lỗi? Cho quảng cáo trang này</button>
+<button id="pick">Chọn phần tử quảng cáo để ẩn</button><button id="stats">Xem những gì đã chặn</button>
+<pre id="blocked" style="white-space:pre-wrap;max-height:140px;overflow:auto"></pre>
+<label>Luồng video phát hiện trên trang<select id="streams"><option value="">Chưa phát hiện HLS/DASH</option></select></label>
+<button id="stream-download">Gửi luồng đã chọn tới HDM</button>
+<button id="reset">Về mặc định (tắt bộ lọc)</button><p id="status" role="status"></p>
+<a href="options.html" target="_blank">Cài kết nối và xem nguồn bộ lọc</a><script type="module" src="popup.js"></script></body></html>

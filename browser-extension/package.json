@@ -1,0 +1,16 @@
+{
+  "name": "hngoos-browser-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "lucide": "1.69.0",
+    "morphicons": "2.0.2"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

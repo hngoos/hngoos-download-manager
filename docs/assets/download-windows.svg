@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="176" viewBox="0 0 640 176" role="img" aria-labelledby="title desc">
-  <title id="title">Download HDM for Windows</title><desc id="desc">Version 0.1.0. Windows 10 and 11, 64-bit.</desc>
-  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#6d28d9"/></linearGradient></defs>
-  <rect x="1" y="1" width="638" height="174" rx="20" fill="url(#bg)" stroke="#aa85ff" stroke-width="2"/>
-  <path d="M72 51v46m-19-18 19 19 19-19M49 112v12h46v-12" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="130" y="81" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="700">Download for Windows</text>
-  <text x="131" y="120" fill="#e9ddff" font-family="Segoe UI,Arial,sans-serif" font-size="22">v0.1.0 · Windows 10 / 11 · x64</text>
-  <path d="m576 75 13 13-13 13" fill="none" stroke="#e9ddff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>

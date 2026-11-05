@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "hngoos-download-manager",
+  "version": "0.1.0",
+  "description": "Gửi link/video tới HDM, nút tải ngoài khung video và chặn quảng cáo tùy chọn.",
+  "minimum_chrome_version": "120",
+  "homepage_url": "https://github.com/hngoos/hngoos-download-manager",
+  "icons": {"16":"assets/icons/hdm-16.png","32":"assets/icons/hdm-32.png","48":"assets/icons/hdm-48.png","128":"assets/icons/hdm-128.png"},
+  "permissions": ["nativeMessaging", "contextMenus", "storage", "activeTab", "scripting", "declarativeNetRequest", "alarms", "webRequest", "webNavigation"],
+  "optional_host_permissions": ["<all_urls>"],
+  "optional_permissions": ["cookies", "downloads"],
+  "background": {"service_worker": "background.js", "type": "module"},
+  "action": {"default_popup": "popup.html", "default_title": "hngoos-download-manager"},
+  "options_page": "options.html"
+}

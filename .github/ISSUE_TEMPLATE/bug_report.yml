@@ -1,0 +1,32 @@
+name: Báo lỗi
+description: Gửi một lỗi có thể tái hiện, đã loại dữ liệu riêng tư.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Không gửi cookie, API key, URL có token hoặc database lịch sử. Lỗ hổng bảo mật dùng kênh báo cáo riêng trong SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: Phiên bản ứng dụng và Windows
+      placeholder: HDM v0.1.0, Windows 11 x64
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Các bước tái hiện
+      description: Dùng URL công khai hoặc dữ liệu tự tạo, nếu cần.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Kết quả mong đợi và thực tế
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Thông tin bổ sung
+      description: Thông báo lỗi hoặc ảnh đã che thông tin cá nhân.
