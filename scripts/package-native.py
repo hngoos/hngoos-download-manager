@@ -83,6 +83,9 @@ def package_linux():
     appdir.mkdir()
     shutil.copytree(ROOT/'dist/HDM', appdir/'usr/lib/hdm', symlinks=True)
     shutil.copy2(ICON, appdir/'hdm.png')
+    notices = appdir/'usr/share/licenses/hdm'
+    notices.mkdir(parents=True)
+    shutil.copy2(ROOT/'docs/licenses/appimage-runtime.txt', notices/'appimage-runtime.txt')
     (appdir/'hdm.desktop').write_text(desktop_entry('HDM'))
     launcher = appdir/'AppRun'
     launcher.write_text('#!/bin/sh\nset -eu\n'

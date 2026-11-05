@@ -9,6 +9,7 @@ The hngoos-download-manager (HDM) application is proprietary. Included or option
 | Python | Python Software Foundation License | https://www.python.org/downloads/source/ |
 | Tcl/Tk | Tcl/Tk BSD-style licenses | https://www.tcl.tk/software/tcltk/ |
 | PyInstaller bootloader | GPL-2.0-or-later with bootloader exception | https://github.com/pyinstaller/pyinstaller |
+| AppImage type-2 runtime | MIT and statically linked component licenses; preserved in docs/licenses/appimage-runtime.txt and inside the AppImage | https://github.com/AppImage/type2-runtime |
 | yt-dlp | Unlicense, with separately licensed bundled components | https://github.com/yt-dlp/yt-dlp |
 | openpyxl | MIT | https://foss.heptapod.net/openpyxl/openpyxl |
 | imageio-ffmpeg | BSD-2-Clause wrapper; bundled FFmpeg has its own LGPL/GPL notices | https://github.com/imageio/imageio-ffmpeg |
