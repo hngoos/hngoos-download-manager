@@ -6,21 +6,22 @@ param(
     [string]$InstallerPath
 )
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
     throw 'Use install.sh on macOS or Linux.'
 }
 if (-not [Environment]::Is64BitOperatingSystem) { throw 'HDM requires 64-bit Windows 10 or later.' }
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-$hdmVersion = '0.1.0'
-$hdmHash = '8b22a85423e81fb92e75942bce223c48a455675f32987bfdbf7c945e36b12ae7'
-$hdmSize = 136092836
-$hdmUrl = "https://github.com/hngoos/hngoos-download-manager/releases/download/v$hdmVersion/HDM-Setup-$hdmVersion.exe?build=chromium-20261106"
+$hdmVersion = '0.1.1'
+$hdmHash = '0050ce90eb785e67f2a502e7c987cd62ec8ba7e5edd9585388b4e6ecbf5d3157'
+$hdmSize = 137127113
+$hdmUrl = "https://github.com/hngoos/hngoos-download-manager/releases/download/v$hdmVersion/HDM-Setup-$hdmVersion.exe"
 if (-not $InstallerPath) {
     $hdmFolder = Join-Path ([IO.Path]::GetTempPath()) ('HDM-install-' + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $hdmFolder | Out-Null
     $InstallerPath = Join-Path $hdmFolder "HDM-Setup-$hdmVersion.exe"
     Write-Output "Downloading HDM $hdmVersion..."
-    Invoke-WebRequest -Uri $hdmUrl -OutFile $InstallerPath -UseBasicParsing
+    Invoke-WebRequest -Uri $hdmUrl -OutFile $InstallerPath -UseBasicParsing -TimeoutSec 300
 }
 $hdmInstaller = Get-Item -LiteralPath $InstallerPath
 if ($hdmInstaller.Length -ne $hdmSize -or

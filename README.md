@@ -19,13 +19,13 @@ checks into a single workspace. Download history and processing stay on your
 computer.
 
 <p align="center">
-  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe?build=chromium-20261106"><img src="docs/assets/install-windows.svg" width="190" height="72" alt="Download HDM for Windows 10/11 x64"></a>
-  <a href="#macos-and-linux-preview"><img src="docs/assets/install-macos.svg" width="190" height="72" alt="Install the macOS desktop preview"></a>
-  <a href="#macos-and-linux-preview"><img src="docs/assets/install-linux.svg" width="190" height="72" alt="Install the Linux desktop preview"></a>
+  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Setup-0.1.1.exe"><img src="docs/assets/install-windows.svg" width="190" height="72" alt="Download HDM for Windows 10/11 x64"></a>
+  <a href="#macos"><img src="docs/assets/install-macos.svg" width="190" height="72" alt="Download HDM for macOS"></a>
+  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-Linux-x64.AppImage"><img src="docs/assets/install-linux.svg" width="190" height="72" alt="Download HDM for Linux"></a>
 </p>
 <p align="center">
   <a href="#platforms"><img src="docs/assets/install-mobile.svg" width="190" height="72" alt="Mobile: coming soon"></a>
-  <a href="#browser-extension"><img src="docs/assets/install-browser.svg" width="190" height="72" alt="Browser extension: Chrome Web Store coming soon"></a>
+  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Browser-Extension.zip"><img src="docs/assets/install-browser.svg" width="190" height="72" alt="Download the HDM browser extension ZIP"></a>
 </p>
 
 ## Features
@@ -53,8 +53,8 @@ for details. HDM does not bypass DRM or website access controls.
 
 ### Windows
 
-1. [Download the installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe?build=chromium-20261106).
-2. Run `HDM-Setup-0.1.0.exe` and complete the setup.
+1. [Download the installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Setup-0.1.1.exe).
+2. Run `HDM-Setup-0.1.1.exe` and complete the setup.
 3. Open HDM, paste a link, choose a save folder, and start downloading.
 
 Or install from **Command Prompt (CMD)**:
@@ -67,36 +67,55 @@ The script verifies the installer's size and SHA-256 before installing for your
 account. No administrator privileges are required. The execution-policy option
 applies to this PowerShell process. [More installation options](docs/PLATFORMS.md#windows).
 
-### macOS and Linux preview
+### macOS
 
-With **Python 3.11+**, **Tkinter** and **venv** installed:
+Download the DMG for your Mac:
+
+- [Apple Silicon (M-series)](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-macOS-arm64.dmg)
+- [Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-macOS-x64.dmg)
+
+Open the DMG, drag **HDM** to **Applications**, then open it from there.
+These desktop previews are tested on macOS 15 and include the application runtime.
+
+### Linux
+
+For Ubuntu/Debian x64, [download the DEB](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-Linux-x64.deb), then install:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/hngoos/hngoos-download-manager/main/install.sh -o /tmp/hdm-install.sh
-sh /tmp/hdm-install.sh
+sudo apt install ./HDM-0.1.1-Linux-x64.deb
 ```
 
-Open **HDM** from your applications menu, or run `~/.local/bin/hdm`.
-The preview installs the current source in an isolated user environment.
-[Requirements, native preview builds and platform differences](docs/PLATFORMS.md#macos-and-linux-preview).
+For other compatible x64 desktops, [download the AppImage](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-Linux-x64.AppImage):
 
-Prefer a packaged preview? [Download macOS and Linux builds](https://github.com/hngoos/hngoos-download-manager/actions/workflows/desktop-preview.yml)
-from a successful workflow run. GitHub sign-in may be required.
+```sh
+chmod +x HDM-0.1.1-Linux-x64.AppImage
+./HDM-0.1.1-Linux-x64.AppImage
+```
+
+The Linux previews require glibc 2.35 or later. Python is bundled.
+[Platform support and optional source installation](docs/PLATFORMS.md).
 
 ### Browser extension
 
-**Chrome Web Store — coming soon.** Once published, this section will link
-directly to the official listing. Install the HDM desktop app first, then add
-the extension to your Chromium browser and connect it to HDM.
+1. [Download the extension ZIP](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Browser-Extension.zip) and extract it to a permanent folder.
+2. Open your browser's extensions page: `chrome://extensions`, `edge://extensions`,
+   or `brave://extensions`.
+3. Enable **Developer mode**, click **Load unpacked**, and choose the extracted
+   folder containing `manifest.json`.
+4. Copy the extension ID. Open HDM → **Browser (Trình duyệt)**, paste the ID, and register the
+   connection. In the extension's options, click **Test connection (Kiểm tra kết nối)**.
+
+Install the HDM desktop app first. Keep the extracted folder after installation.
+The ZIP is loaded manually; Chrome Web Store publication is pending.
 
 ### Platforms
 
 | Platform | Availability |
 | --- | --- |
 | Windows 10/11 x64 | Stable EXE installer and CMD installation |
-| macOS | Desktop preview; terminal installation from source |
-| Linux | Desktop preview; terminal installation from source |
-| Browser extension | Chrome Web Store publication pending |
+| macOS | DMG preview for Apple Silicon and Intel |
+| Linux x64 | DEB and AppImage previews |
+| Browser extension | Chromium ZIP; install with Load unpacked |
 | Android / iOS | Coming soon |
 
 ## Community and help

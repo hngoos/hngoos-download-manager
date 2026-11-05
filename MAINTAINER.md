@@ -28,11 +28,20 @@ separate hosted server or proprietary library service to publish.
    `HNGOOS_RELEASE_SIGNING_KEY`, then run `scripts/sign-release.py`.
 5. Run `scripts/publish-release.py --publish` to publish verified packages.
 
-Upload only `HDM-Setup-<version>.exe` and `HDM-Browser-Extension.zip` as release
-assets. The extension ZIP contains runtime files with `manifest.json` at its
-root. License notices stay inside the distributed packages. Signed update
-metadata is embedded in the release body. Automatic source archives include
-the source files at the release tag.
+Release assets include the Windows EXE, macOS arm64/x64 DMGs, Linux x64 DEB
+and AppImage, and `HDM-Browser-Extension.zip`. The extension ZIP contains runtime
+files with `manifest.json` at its root. License notices stay inside the packages.
+The signed manifest and SHA-256 table cover every installer and the extension.
+Update metadata is embedded in the release body. Automatic source archives
+include the source files at the release tag.
+
+Run `scripts/build-desktop.py` on macOS or Linux to build native packages. The
+desktop workflow verifies the packaged UI and native messaging protocol before
+uploading its artifacts. Download successful Windows and native build artifacts
+into `dist/`, then sign and publish together. The tag-triggered Release packages
+workflow also collects all target builds; publication remains an explicit
+maintainer step. Never claim Apple notarization or Windows Authenticode signing
+from the Ed25519 update signature or macOS ad-hoc bundle signature.
 
 Use a new version for future binary changes. The existing `--replace` option
 is for an explicitly requested refresh: it stages and verifies new assets,

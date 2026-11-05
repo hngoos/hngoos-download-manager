@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1 — 2026-11-06
+
+- Add macOS DMGs for Apple Silicon and Intel, plus Linux x64 DEB and AppImage installers.
+- Keep the native browser bridge inside the macOS app bundle and use persistent AppImage host launchers.
+- Provide direct extension ZIP downloads with Developer mode / Load unpacked instructions.
+- Include command-line installation and clear platform-specific feature availability.
+- Inspect disguised Linux/macOS binaries and executable scripts during preliminary file checks.
+
 ## [0.1.0]
 
 - Resumable parallel downloads, verified mirrors, expired-link replacement,

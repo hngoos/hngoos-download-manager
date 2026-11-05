@@ -2,11 +2,13 @@
 
 [Home](../README.md) · [Feature reference](FEATURES.md) · [Privacy](PRIVACY.md) · [Security](SECURITY.md)
 
-This guide covers **HDM v0.1.0** on Windows 10/11, 64-bit. The current application and extension interface is in Vietnamese; menu labels below include the wording you will see on screen.
+This guide covers **HDM v0.1.1** on Windows 10/11 x64, with macOS and Linux desktop previews. The current application and extension interface is in Vietnamese; menu labels below include the wording you will see on screen.
 
 ## Install HDM
 
-1. Download [HDM-Setup-0.1.0.exe](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe?build=chromium-20261106).
+For macOS DMGs and Linux DEB/AppImage installation, see [platform installation](PLATFORMS.md). The steps below describe the Windows EXE.
+
+1. Download [HDM-Setup-0.1.1.exe](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Setup-0.1.1.exe).
 2. Run the installer. By default it installs for the current account at `%LOCALAPPDATA%\Programs\HDM`.
 3. Open **HDM**. The runtime, browser bridge, media dependencies, and component notices are included; Python and Node.js are not required.
 
@@ -14,10 +16,10 @@ The extension is optional and installed separately. The current installer is not
 
 ## Verify a package
 
-Compare this command's result with the SHA-256 for the same filename in the [release notes](https://github.com/hngoos/hngoos-download-manager/releases/tag/v0.1.0):
+Compare this command's result with the SHA-256 for the same filename in the [release notes](https://github.com/hngoos/hngoos-download-manager/releases/tag/v0.1.1):
 
 ```powershell
-Get-FileHash .\HDM-Setup-0.1.0.exe -Algorithm SHA256
+Get-FileHash .\HDM-Setup-0.1.1.exe -Algorithm SHA256
 ```
 
 The in-app updater additionally checks Ed25519-signed metadata against its pinned publisher key before checking the installer bytes. A matching checksum alone is not a publisher signature.
@@ -87,7 +89,7 @@ Compression uses two passes and preserves the source. HDM discards results that 
 Supported browsers are **Chrome, Cốc Cốc, Edge, Brave, and Opera**, based on Chromium 120 or later. The extension currently installs from ZIP; it is not on the Chrome Web Store.
 
 1. Install the HDM desktop application.
-2. Download [HDM-Browser-Extension.zip](https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip?build=chromium-20261106) and extract it to a permanent folder.
+2. Download [HDM-Browser-Extension.zip](https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip) and extract it to a permanent folder.
 3. Open the browser's extensions page, such as `chrome://extensions` or `edge://extensions`.
 4. Enable **Developer mode → Load unpacked**. Select the extracted folder containing `manifest.json`. Alternatively, use the installed application's `browser-extension` folder.
 5. Copy the **Extension ID**, open **Trình duyệt** (Browser) in HDM, and register the native host for that ID. Registration affects the current Windows account.

@@ -1,15 +1,32 @@
 {
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "HDM: resumable downloads, batch imports and local media tools",
     "homepage": "https://github.com/hngoos/hngoos-download-manager",
-    "license": {"identifier": "Proprietary", "url": "https://github.com/hngoos/hngoos-download-manager/blob/main/LICENSE"},
+    "license": {
+        "identifier": "Proprietary",
+        "url": "https://github.com/hngoos/hngoos-download-manager/blob/main/LICENSE"
+    },
     "architecture": {
         "64bit": {
-            "url": "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe?build=chromium-20261106#/HDM-Setup.exe",
-            "hash": "8b22a85423e81fb92e75942bce223c48a455675f32987bfdbf7c945e36b12ae7"
+            "url": "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Setup-0.1.1.exe#/HDM-Setup.exe",
+            "hash": "0050ce90eb785e67f2a502e7c987cd62ec8ba7e5edd9585388b4e6ecbf5d3157"
         }
     },
     "innosetup": true,
-    "bin": [["HDM.exe", "hdm"], ["HDMBridge.exe", "hdm-bridge"]],
-    "shortcuts": [["HDM.exe", "HDM"]]
+    "bin": [
+        [
+            "HDM.exe",
+            "hdm"
+        ],
+        [
+            "HDMBridge.exe",
+            "hdm-bridge"
+        ]
+    ],
+    "shortcuts": [
+        [
+            "HDM.exe",
+            "HDM"
+        ]
+    ]
 }
