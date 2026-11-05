@@ -9,7 +9,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Proprietary-64748b?style=flat-square" alt="Proprietary license"></a>
   <a href="https://www.facebook.com/hngoos"><img src="https://img.shields.io/badge/Facebook-hngoos-0866ff?style=flat-square&amp;logo=facebook&amp;logoColor=white" alt="HDM on Facebook"></a>
   <a href="https://www.instagram.com/hngoos/"><img src="https://img.shields.io/badge/Instagram-hngoos-e4405f?style=flat-square&amp;logo=instagram&amp;logoColor=white" alt="HDM on Instagram"></a>
-  <a href="https://discord.gg/xn2AnqcQhS"><img src="https://img.shields.io/badge/Discord-Join%20community-5865f2?style=flat-square&amp;logo=discord&amp;logoColor=white" alt="Join the HDM Discord"></a>
+  <a href="mailto:1hngoos@gmail.com"><img src="https://img.shields.io/badge/Gmail-1hngoos%40gmail.com-EA4335?style=flat-square&amp;logo=gmail&amp;logoColor=white" alt="Email HDM at 1hngoos@gmail.com"></a>
 </p>
 
 > Download, organize, and process your files in one desktop app.
@@ -121,8 +121,8 @@ The ZIP is loaded manually; Chrome Web Store publication is pending.
 ## Community and help
 
 Follow HDM on [Facebook](https://www.facebook.com/hngoos) and
-[Instagram](https://www.instagram.com/hngoos/), or join the
-[Discord community](https://discord.gg/xn2AnqcQhS).
+[Instagram](https://www.instagram.com/hngoos/), or email
+[1hngoos@gmail.com](mailto:1hngoos@gmail.com).
 
 - [User guide](docs/USAGE.md)
 - [Report a problem or suggest a feature](https://github.com/hngoos/hngoos-download-manager/issues)
