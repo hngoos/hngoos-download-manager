@@ -80,6 +80,9 @@ Open **HDM** from your applications menu, or run `~/.local/bin/hdm`.
 The preview installs the current source in an isolated user environment.
 [Requirements, native preview builds and platform differences](docs/PLATFORMS.md#macos-and-linux-preview).
 
+Prefer a packaged preview? [Download macOS and Linux builds](https://github.com/hngoos/hngoos-download-manager/actions/workflows/desktop-preview.yml)
+from a successful workflow run. GitHub sign-in may be required.
+
 ### Browser extension
 
 **Chrome Web Store — coming soon.** Once published, this section will link

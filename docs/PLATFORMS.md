@@ -103,7 +103,7 @@ as safe.
 
 ### Native preview builds
 
-The **macOS and Linux desktop preview** workflow builds on macOS 15 (arm64)
+The [macOS and Linux desktop preview workflow](https://github.com/hngoos/hngoos-download-manager/actions/workflows/desktop-preview.yml) builds on macOS 15 (arm64)
 and Ubuntu 22.04 (x64), tests the source installer, runs unit tests and opens
 the packaged UI in a smoke test. Successful runs provide downloadable ZIP
 and tar.gz artifacts in GitHub Actions. These are unsigned development builds,

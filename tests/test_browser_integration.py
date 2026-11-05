@@ -136,7 +136,7 @@ class BrowserIntegrationTests(unittest.TestCase):
                 page.goto(f"chrome-extension://{extension_id}/options.html")
                 self.assertIn(extension_id, page.locator("#identity").inner_text())
                 page.locator("#ping").click()
-                page.wait_for_function("document.querySelector('#status').textContent.length > 0")
+                page.wait_for_function("() => document.querySelector('#status').textContent.length > 0")
                 self.assertTrue(page.locator("#status").inner_text())
                 page = context.new_page()
                 page.set_content("<html><body><video src='https://example.com/video.mp4'></video></body></html>")
@@ -149,7 +149,7 @@ class BrowserIntegrationTests(unittest.TestCase):
                 page.evaluate("document.querySelector('button').click()")
                 self.assertEqual(page.evaluate("globalThis.__hngoosMessages"), 0)
                 button.click()
-                page.wait_for_function("document.querySelector('button').textContent.includes('Đã gửi')")
+                page.wait_for_function("() => document.querySelector('button').textContent.includes('Đã gửi')")
                 self.assertEqual(page.evaluate("globalThis.__hngoosMessages"), 1)
             finally:
                 context.close()
