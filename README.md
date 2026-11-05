@@ -59,6 +59,7 @@ Chất lượng và khả năng tải phụ thuộc từng website, nội dung v
 
 - Dán hai cột **link | tên tệp** từ Excel hoặc Google Sheets.
 - Mở **XLSX / CSV / TXT**, đọc hyperlink trong ô và tự đánh số khi thiếu tên.
+- Xem trước, sửa tên, đổi tên hàng loạt và bỏ dòng trước khi tải; xuất báo cáo từng dòng sau khi xử lý.
 - Phân loại thư mục theo loại tệp; xuất lịch sử CSV không kèm URL/token.
 - Lưu danh sách trang web thành **PDF / PNG**, kèm nguồn và thời điểm lưu.
 
@@ -79,22 +80,24 @@ Ví dụ hai cột có thể dán vào cửa sổ nhập danh sách:
 
 ### Kiểm tra tệp và xử lý PDF
 
-- Tính hoặc đối chiếu **MD5, SHA-1, SHA-256, SHA-512**; tra VirusTotal bằng hash mà không gửi tệp lên.
+- Tính hoặc đối chiếu **MD5, SHA-1, SHA-256, SHA-512**; tra VirusTotal, MetaDefender hoặc Kaspersky bằng hash mà không gửi tệp lên.
 - Phát hiện một số dấu hiệu như chương trình đội lốt tài liệu, đuôi kép, ký tự điều hướng, macro và lối tắt trong ZIP.
 - Cách ly bằng đuôi `.chuakiemtra`, hỗ trợ quét Windows Defender và xác nhận rủi ro khi khôi phục.
-- Theo dõi tệp mới hoặc vừa sửa trong thư mục bạn chọn; giải nén ZIP có giới hạn và kiểm tra đường dẫn.
+- Theo dõi tệp mới hoặc vừa sửa trong thư mục bạn chọn; giải nén ZIP có giới hạn, tùy chọn tự giải nén sau tải.
+- Kiểm tra nội dung RAR/7z có giới hạn, nhận mật khẩu khi cần; chế độ an toàn cao đánh dấu chương trình chưa có chữ ký số hợp lệ.
 - Che vùng PDF bằng kéo chuột và xuất PDF dạng ảnh mới, không giữ lớp chữ gốc trong đầu ra. Đổi lại, PDF mới mất khả năng tìm kiếm văn bản.
 
-Kiểm tra sơ bộ và cách ly hỗ trợ giảm rủi ro; chúng không thay thế phần mềm chống mã độc. [Xem chính sách bảo mật](docs/SECURITY.md).
+Kiểm tra sơ bộ và cách ly hỗ trợ giảm rủi ro; chúng không thay thế phần mềm chống mã độc. [Bảo mật](docs/SECURITY.md) · [Quyền riêng tư](docs/PRIVACY.md).
 
 ### Tích hợp trình duyệt
 
 - Menu tải link/video và nút tải nằm ngoài khung video.
 - Tùy chọn chuyển lượt tải HTTP/HTTPS mới từ trình duyệt sang HDM; khi không bàn giao được, trình duyệt tiếp tục xử lý.
-- Gói tiện ích chung chứa bản **Chromium** và **Firefox**; cookie và quyền truy cập website được cấp riêng theo nhu cầu.
-- Bộ lọc quảng cáo thử nghiệm có bốn mức và danh sách cho phép từng trang; hiện chỉ xử lý một phần quy tắc chặn theo miền.
+- Một gói **Chromium Manifest V3** cho Chrome, Cốc Cốc, Edge, Brave và Opera; quyền website, cookie và tiếp quản lượt tải được cấp theo nhu cầu.
+- Phát hiện luồng HLS/DASH trên trang đã cấp quyền, chọn luồng trong popup để gửi sang HDM.
+- Bộ lọc quảng cáo thử nghiệm có bốn mức, danh sách cho phép từng trang, chặn tab từ miền quảng cáo đã biết và chọn phần tử để ẩn.
 
-Chưa có engine lọc đầy đủ, chống popup/lớp phủ hoặc chọn phần tử. Bản Firefox hiện dùng cài tạm vì chưa được ký AMO.
+Bộ lọc chỉ dịch các quy tắc mạng tương thích, tối đa 4.500 quy tắc; chưa tương đương một engine lọc đầy đủ. Tiện ích hiện cài thủ công từ ZIP, chưa được phát hành trên Chrome Web Store.
 
 ### Tài liệu bán hàng và tiện ích khác
 
@@ -122,7 +125,7 @@ Chưa có engine lọc đầy đủ, chống popup/lớp phủ hoặc chọn ph�
 | Gói | Khi nào cần? |
 | --- | --- |
 | [**HDM-Setup-0.1.0.exe**](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe) | **Tải gói này để cài HDM.** Đã có ứng dụng, bridge và thông báo giấy phép thư viện. |
-| [**HDM-Browser-Extension.zip**](https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip) | Thêm tích hợp trình duyệt. Một ZIP chứa cả thư mục Chromium và Firefox. |
+| [**HDM-Browser-Extension.zip**](https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip) | Thêm tích hợp trình duyệt. Gói Chromium duy nhất, có `manifest.json` ngay trong thư mục giải nén. |
 
 ### Cài HDM trên Windows
 
@@ -137,23 +140,11 @@ Mặc định, ứng dụng được cài tại `%LOCALAPPDATA%\Programs\HDM`. B
 
 1. Tải và giải nén `HDM-Browser-Extension.zip` vào thư mục cố định.
 2. Mở trang quản lý tiện ích: `chrome://extensions` trên Chrome hoặc `edge://extensions` trên Edge. Với Cốc Cốc, Brave và Opera, mở mục quản lý tiện ích tương ứng.
-3. Bật **Developer mode → Load unpacked**, chọn thư mục **Chromium** trong ZIP đã giải nén.
+3. Bật **Developer mode → Load unpacked**, chọn thư mục vừa giải nén có tệp `manifest.json`.
 4. Sao chép **Extension ID**, mở **HDM → Trình duyệt**, đăng ký kết nối bằng ID đó.
 5. Mở **Options** của tiện ích và kiểm tra kết nối. Chỉ cấp quyền website, cookie hoặc tiếp quản lượt tải khi bạn cần.
 
-Giữ nguyên thư mục đã giải nén sau khi nạp tiện ích. Chromium và Firefox đã có kiểm thử kết nối; các trình duyệt Chromium khác cần kiểm lại trên phiên bản bạn đang dùng.
-
-<details>
-<summary><strong>Cài tiện ích trên Firefox</strong></summary>
-
-1. Dùng thư mục **Firefox** trong cùng ZIP.
-2. Mở `about:debugging` → **This Firefox → Load Temporary Add-on**.
-3. Chọn `Firefox/manifest.json`.
-4. Mở **HDM → Trình duyệt**, đăng ký Firefox rồi kiểm tra kết nối trong Options.
-
-Bản hiện tại chưa ký AMO nên cần nạp lại sau khi khởi động lại Firefox.
-
-</details>
+Giữ nguyên thư mục đã giải nén sau khi nạp tiện ích. HDM hỗ trợ các trình duyệt nhân Chromium từ phiên bản 120; luồng kết nối đã được kiểm thử trên Chromium thực tế. Cần kiểm lại theo phiên bản và chính sách của từng trình duyệt.
 
 <details>
 <summary><strong>Không kết nối được tiện ích hoặc không thấy video?</strong></summary>

@@ -1,6 +1,6 @@
 # Hướng dẫn sử dụng
 
-[Trang chủ](../README.md) · [Chi tiết tính năng](FEATURES.md) · [Bảo mật](SECURITY.md)
+[Trang chủ](../README.md) · [Chi tiết tính năng](FEATURES.md) · [Bảo mật](../SECURITY.md)
 
 ## Cài trên Windows
 
@@ -28,7 +28,7 @@ Dán URL HTTP/HTTPS, nhập tên nếu muốn, chọn nơi lưu và số luồng
 
 Mã băm và mirror nằm trong **Tùy chọn nâng cao**. Ba ô phía trên hiển thị lượt đang tải, số tệp hoàn tất và tổng tốc độ HTTP. Icon chuyển trạng thái tuân theo tùy chọn giảm hiệu ứng của Windows.
 
-Lượt HTTP mới tải vào bộ nhớ đệm tại `%LOCALAPPDATA%\HDM\staging`, sau khi hoàn tất mới chuyển tới thư mục đã chọn. Khi khác ổ đĩa, app chép vào tên `.tmp`, kiểm SHA-256 rồi mới công bố tên cuối; phần mềm đồng bộ có thể nhìn thấy tệp `.tmp`. Video và torrent vẫn dùng thư mục riêng của tác vụ.
+Lượt HTTP mới tải vào bộ nhớ đệm tại `%LOCALAPPDATA%\HDM\staging`, sau khi hoàn tất mới chuyển tới thư mục đã chọn. Khi khác ổ đĩa, app chép vào tên `.tmp`, kiểm SHA-256 rồi mới công bố tên cuối; phần mềm đồng bộ có thể nhìn thấy tệp `.tmp`. Video cũng tải và xử lý trong bộ nhớ đệm cục bộ trước khi chuyển tệp hoàn chỉnh tới đích; torrent vẫn dùng thư mục riêng của tác vụ.
 
 Tiếp tục qua lần mở app cần máy chủ giữ nguyên ETag mạnh và kích thước. Đổi link hết hạn khi đã dừng; app chỉ giữ phần cũ khi xác minh được cùng nội dung. Mirror cần SHA-256 từ một nguồn độc lập đáng tin.
 
@@ -44,27 +44,27 @@ https://example.com/report.pdf | Báo cáo.pdf
 https://example.com/photo.jpg | Ảnh sản phẩm.jpg
 ```
 
-Không có tên thì app đánh số. XLSX hỗ trợ hyperlink của ô. Nhập cả danh sách hợp lệ trước khi bắt đầu để dễ đối chiếu tên và thứ tự.
+Không có tên thì app đánh số. XLSX hỗ trợ hyperlink của ô. Xem trước danh sách, bấm đúp để sửa dòng, chọn nhiều dòng để đổi tên hoặc bỏ dòng trước khi tải. Danh sách tối đa 500 dòng. Xuất báo cáo từng dòng từ Công cụ để đối chiếu thứ tự và trạng thái; báo cáo không kèm URL hay token.
 
 ## Video và phiên đăng nhập
 
 Mở **Video & nhạc**, dán URL, chọn độ cao tối đa hoặc MP3/M4A rồi tải. Khả năng lấy video phụ thuộc extractor và quyền truy cập hợp lệ của bạn; không hỗ trợ DRM. Xử lý nội bộ bằng FFmpeg nằm trong **Công cụ**.
 
-Mặc định app không đọc phiên đăng nhập. Chỉ bật **Dùng phiên đăng nhập** trong extension khi cần; quyền cookie được xin riêng theo website. Cookie chỉ được gửi cho yêu cầu cùng origin với trang nguồn, mã hóa bằng Windows DPAPI khi lưu trong inbox. Tác vụ yt-dlp cần cookie tạm ở dạng văn bản trong lúc chạy; xem [ranh giới dữ liệu](SECURITY.md).
+Mặc định app không đọc phiên đăng nhập. Chỉ bật **Dùng phiên đăng nhập** trong extension khi cần; quyền cookie được xin riêng theo website. Cookie chỉ được gửi cho yêu cầu cùng origin với trang nguồn, mã hóa bằng Windows DPAPI khi lưu trong inbox. Tác vụ yt-dlp cần cookie tạm ở dạng văn bản trong lúc chạy; xem [ranh giới dữ liệu](../SECURITY.md#du-lieu-cuc-bo).
 
-## Kết nối trình duyệt
+## Kết nối trình duyệt Chromium
 
 1. Cài HDM bằng bộ cài Windows.
-2. Giải nén `HDM-Browser-Extension.zip`. Tại `chrome://extensions` / `edge://extensions`, bật Developer mode, Load unpacked thư mục **Chromium**. Cũng có thể dùng thư mục `browser-extension` trong thư mục cài HDM.
+2. Giải nén `HDM-Browser-Extension.zip`. Tại `chrome://extensions` / `edge://extensions`, bật Developer mode, Load unpacked thư mục vừa giải nén chứa `manifest.json`. Cũng có thể dùng thư mục `browser-extension` trong thư mục cài HDM.
 3. Sao chép ID extension, mở thẻ **Trình duyệt** trong app và đăng ký native host. Chỉ ghi registry tài khoản hiện tại.
 4. Mở Options của extension → Kiểm tra kết nối. Dùng menu chuột phải hoặc popup để tải.
 5. Quyền lọc mạng và dùng phiên đăng nhập là tùy chọn, được xin riêng trong popup. Không bật session nếu bạn không muốn gửi cookie của trang được chọn tới ứng dụng trên máy.
 
 Chromium đã được kiểm thử tải thật → native EXE → inbox và quay về trình duyệt khi native host lỗi. Bật **Tự chuyển lượt tải HTTP/HTTPS sang HDM** trong popup nếu muốn tiếp quản lượt tải mới; quyền downloads được xin riêng. URL cần truy cập được từ app và có kích thước phù hợp. Cookie, POST, blob và nguồn không xác minh được sẽ tiếp tục tải trong trình duyệt. Chrome/Edge/Brave/Cốc Cốc/Opera cần nghiệm thu thêm trên từng bản; thời điểm hộp lưu tùy trình duyệt/cấu hình.
 
-### Firefox
+Hỗ trợ Chrome, Cốc Cốc, Edge, Brave và Opera từ Chromium 120. Hiện cài thủ công; chưa có trang phát hành Chrome Web Store.
 
-Dùng thư mục **Firefox** trong cùng gói `HDM-Browser-Extension.zip`. Mở `about:debugging` → **This Firefox → Load Temporary Add-on**, chọn `Firefox/manifest.json`. Trong HDM → **Trình duyệt**, dùng nút đăng ký Firefox, chọn bridge EXE. Mở Options để kiểm tra kết nối. Đã kiểm thử tải tạm và kết nối native trên Firefox riêng biệt; gói chưa ký AMO, không tự cài bền vững và cần nạp lại sau khi khởi động lại trình duyệt.
+Trong popup, mục luồng video liệt kê HLS/DASH đã phát hiện trên trang được cấp quyền. Phát video trước rồi mở lại popup nếu danh sách trống. Nút chọn phần tử chỉ hoạt động khi bật chặn quảng cáo; nhấn Escape để hủy và dùng **Về mặc định cho trang này** để bỏ các phần tử đã ẩn.
 
 ## Phiếu giao hàng (thử nghiệm)
 
