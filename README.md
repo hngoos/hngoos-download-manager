@@ -6,7 +6,7 @@
 
 [![Release](https://img.shields.io/github/v/release/hngoos/hngoos-download-manager?color=8b5cf6)](https://github.com/hngoos/hngoos-download-manager/releases/latest) [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011%20x64-0078d4)](#yêu-cầu-hệ-thống) [![License](https://img.shields.io/badge/License-Proprietary-64748b)](LICENSE)
 
-[**Tải HDM v0.1.0 cho Windows**](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe) · [**Tải tiện ích trình duyệt**](https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip)
+[**Tải HDM v0.1.0 cho Windows**](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe?build=chromium-20261106) · [**Tải tiện ích trình duyệt**](https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip?build=chromium-20261106)
 
 [Giới thiệu](#giới-thiệu) · [Ưu điểm](#ưu-điểm) · [Chức năng](#chức-năng) · [Cài đặt](#cài-đặt) · [Hướng dẫn sử dụng](docs/USAGE.md)
 
@@ -124,8 +124,8 @@ Bộ lọc chỉ dịch các quy tắc mạng tương thích, tối đa 4.500 qu
 
 | Gói | Khi nào cần? |
 | --- | --- |
-| [**HDM-Setup-0.1.0.exe**](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe) | **Tải gói này để cài HDM.** Đã có ứng dụng, bridge và thông báo giấy phép thư viện. |
-| [**HDM-Browser-Extension.zip**](https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip) | Thêm tích hợp trình duyệt. Gói Chromium duy nhất, có `manifest.json` ngay trong thư mục giải nén. |
+| [**HDM-Setup-0.1.0.exe**](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe?build=chromium-20261106) | **Tải gói này để cài HDM.** Đã có ứng dụng, bridge và thông báo giấy phép thư viện. |
+| [**HDM-Browser-Extension.zip**](https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip?build=chromium-20261106) | Thêm tích hợp trình duyệt. Gói Chromium duy nhất, có `manifest.json` ngay trong thư mục giải nén. |
 
 ### Cài HDM trên Windows
 
