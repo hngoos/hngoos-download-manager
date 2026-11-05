@@ -1,12 +1,10 @@
 <p align="center">
-  <img src="browser-extension/assets/icons/hdm-128.png" width="96" height="96" alt="HDM logo">
+  <img src="docs/assets/hdm-logo.svg" width="112" height="112" alt="Hngoos Download Manager (HDM) logo">
 </p>
 
-<h1 align="center">hngoos-download-manager</h1>
+<h1 align="center">Hngoos Download Manager</h1>
 
 <p align="center">
-  <a href="https://github.com/hngoos/hngoos-download-manager/releases/latest"><img src="https://img.shields.io/github/v/release/hngoos/hngoos-download-manager?style=flat-square&amp;label=Release&amp;color=8b5cf6" alt="Latest release"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Proprietary-64748b?style=flat-square" alt="Proprietary license"></a>
   <a href="https://www.facebook.com/hngoos"><img src="https://img.shields.io/badge/Facebook-hngoos-0866ff?style=flat-square&amp;logo=facebook&amp;logoColor=white" alt="HDM on Facebook"></a>
   <a href="https://www.instagram.com/hngoos/"><img src="https://img.shields.io/badge/Instagram-hngoos-e4405f?style=flat-square&amp;logo=instagram&amp;logoColor=white" alt="HDM on Instagram"></a>
   <a href="mailto:1hngoos@gmail.com"><img src="https://img.shields.io/badge/Gmail-1hngoos%40gmail.com-EA4335?style=flat-square&amp;logo=gmail&amp;logoColor=white" alt="Email HDM at 1hngoos@gmail.com"></a>
@@ -14,7 +12,7 @@
 
 > Download, organize, and process your files in one desktop app.
 
-HDM brings resumable downloads, batch imports, video and audio tools, and file
+Hngoos Download Manager (HDM) brings resumable downloads, batch imports, video and audio tools, and file
 checks into a single workspace. Download history and processing stay on your
 computer.
 
