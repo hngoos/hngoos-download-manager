@@ -19,7 +19,7 @@ separate hosted server or proprietary library service to publish.
 
 ## Release process
 
-1. Run the checks in CONTRIBUTING.md.
+1. Run the checks in [the Development Guide](docs/DEVELOPMENT.md).
 2. Run `scripts/build.ps1` on Windows, then compile `scripts/installer.iss`
    with Inno Setup 6.
 3. Check the packaged application using `--smoke-test` and

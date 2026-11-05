@@ -3,7 +3,7 @@
 [Home](../README.md) · [Report a vulnerability](../SECURITY.md) · [Privacy](PRIVACY.md)
 
 This reference describes HDM's safeguards, their limitations, and local data handling.
-For supported versions and private reporting, see the [security policy](../SECURITY.md).
+For private reporting, see the [security policy](../SECURITY.md).
 
 ## Protection boundaries
 

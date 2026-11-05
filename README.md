@@ -126,4 +126,4 @@ Follow HDM on [Facebook](https://www.facebook.com/hngoos) and
 
 - [User guide](docs/USAGE.md)
 - [Report a problem or suggest a feature](https://github.com/hngoos/hngoos-download-manager/issues)
-- [Privacy](docs/PRIVACY.md) · [Security](SECURITY.md) · [Development](CONTRIBUTING.md)
+- [Privacy](docs/PRIVACY.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Development](docs/DEVELOPMENT.md)
