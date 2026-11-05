@@ -2,7 +2,7 @@
 
 [Trang chủ](../README.md) · [Hướng dẫn sử dụng](USAGE.md) · [Bảo mật](SECURITY.md)
 
-Các mô tả dưới đây phản ánh chức năng đã triển khai; trạng thái nghiệm thu từng yêu cầu nằm trong lộ trình.
+Các mô tả dưới đây phản ánh chức năng đã triển khai trong v0.1.0, cùng điều kiện hỗ trợ và những phần chưa được nghiệm thu thực tế. Đây chưa phải bản hoàn tất mọi mục tiêu phát triển.
 
 - **Tải HTTP/HTTPS 1–32 luồng**, hàng đợi hai tệp, chia khối cho luồng rảnh, tạm dừng/tiếp tục sau khi mở lại. Chỉ ghép nhiều phản hồi khi có Range và ETag mạnh; thiếu xác minh thì dùng một phản hồi hoặc tải lại.
 - **Mirror có xác minh SHA-256**: cần mã băm độc lập do bạn cung cấp; loại mirror lỗi/kích thước sai. Nếu kết quả ghép sai hash, tải lại toàn bộ từ nguồn chính. Chưa định vị và chỉ tải lại riêng khối của mirror sai.
