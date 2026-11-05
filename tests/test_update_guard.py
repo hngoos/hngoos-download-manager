@@ -9,6 +9,7 @@ from hngoos_dm.updater import canonical, verify_manifest
 
 
 class UpdateTests(unittest.TestCase):
+    @patch("hngoos_dm.updater.__version__", "0.1.0")
     def test_signed_release_body_accepts_valid_and_rejects_tampered_updates(self):
         import json
         from unittest.mock import patch
