@@ -1,23 +1,30 @@
-# hngoos-download-manager (HDM)
+<p align="center">
+  <img src="browser-extension/assets/icons/hdm-128.png" width="96" height="96" alt="HDM logo">
+</p>
 
-A download manager for Windows 10/11, 64-bit.
+<h1 align="center">hngoos-download-manager</h1>
 
-## Highlights
+<p align="center">
+  <a href="https://github.com/hngoos/hngoos-download-manager/releases/latest"><img src="https://img.shields.io/github/v/release/hngoos/hngoos-download-manager?style=flat-square&amp;label=Release&amp;color=8b5cf6" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078d4?style=flat-square" alt="Windows 10 and 11">
+  <img src="https://img.shields.io/badge/Architecture-x64-64748b?style=flat-square" alt="64-bit">
+</p>
+
+> Download, organize, and process your files in one desktop app.
+
+**Features**
 
 - Resume supported downloads with up to 32 parallel connections.
 - Import file lists, assign filenames, and manage downloads in batches.
 - Download and process video and audio locally.
 - Check file integrity and redact sensitive PDF content.
 
-## Install HDM
+## Download and quick start
 
-1. Download [HDM-Setup-0.1.0.exe](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe?build=chromium-20261106).
-2. Run the installer and follow the setup steps.
-3. Open HDM, paste a link, choose a save folder, and start downloading.
+- [Download HDM for Windows](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe?build=chromium-20261106)
+- Browser extension: Chrome Web Store — coming soon.
 
-## Install the browser extension
+**Desktop application**
 
-1. Download [HDM-Browser-Extension.zip](https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip?build=chromium-20261106) and extract it to a permanent folder.
-2. In your Chromium-based browser, open the extensions page, enable **Developer mode**, and choose **Load unpacked**.
-3. Select the extracted folder containing `manifest.json`.
-4. Copy the extension ID, register it in **HDM → Trình duyệt**, and check the connection in the extension's **Options** page.
+1. Run `HDM-Setup-0.1.0.exe` and complete the setup.
+2. Open HDM, paste a link, choose a save folder, and start downloading.
