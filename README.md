@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/hdm-wordmark.svg" width="740" alt="Hngoos Download Manager (HDM) — Easy &amp; fast">
+  <img src="docs/assets/hdm-wordmark-monochrome.svg" width="740" alt="Hngoos Download Manager (HDM) — Easy &amp; fast">
 </p>
 
 > Download, organize, and process your files in one desktop app.
@@ -9,11 +9,7 @@ checks into a single workspace. Download history and processing stay on your
 computer.
 
 <p align="center">
-  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Setup-0.1.1.exe"><img src="docs/assets/install-windows.svg" alt="Download HDM for Windows 10/11 x64"></a>
-  <a href="#macos"><img src="docs/assets/install-macos.svg" alt="Download HDM for macOS"></a>
-  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-Linux-x64.AppImage"><img src="docs/assets/install-linux.svg" alt="Download HDM for Linux"></a>
-  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Browser-Extension.zip"><img src="docs/assets/install-browser.svg" alt="Download the HDM browser extension ZIP"></a>
-  <a href="#mobile"><img src="docs/assets/install-mobile.svg" alt="Mobile: coming soon"></a>
+  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Setup-0.1.1.exe"><img src="docs/assets/install-windows.svg" width="20%" alt="Download HDM for Windows 10/11 x64"></a><a href="#macos"><img src="docs/assets/install-macos.svg" width="20%" alt="Download HDM for macOS"></a><a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-Linux-x64.AppImage"><img src="docs/assets/install-linux.svg" width="20%" alt="Download HDM for Linux"></a><a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Browser-Extension.zip"><img src="docs/assets/install-browser.svg" width="20%" alt="Download the HDM browser extension ZIP"></a><a href="#mobile"><img src="docs/assets/install-mobile.svg" width="20%" alt="Mobile: coming soon"></a>
 </p>
 
 ## Features
@@ -119,7 +115,7 @@ The ZIP is loaded manually; Chrome Web Store publication is pending.
 <a id="mobile"></a>
 
 <details>
-<summary><strong>Mobile — Coming soon</strong></summary>
+<summary><strong>Mobile</strong></summary>
 
 **Coming soon.** Android and iOS applications are planned for a future release.
 
