@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="224" viewBox="0 0 1120 224" role="img" aria-labelledby="title desc">
+  <title id="title">hngoos-download-manager</title>
+  <desc id="desc">Windows download manager. Download, organize, process.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y2="1"><stop stop-color="#0f172a"/><stop offset="1" stop-color="#172d49"/></linearGradient>
+    <linearGradient id="accent" x2="1" y2="1"><stop stop-color="#60a5fa"/><stop offset="1" stop-color="#38bdf8"/></linearGradient>
+  </defs>
+  <rect width="1120" height="224" rx="20" fill="url(#bg)"/>
+  <circle cx="1030" cy="36" r="150" fill="#38bdf8" opacity=".045"/>
+  <circle cx="1030" cy="36" r="108" fill="none" stroke="#60a5fa" opacity=".13"/>
+  <rect x="48" y="60" width="104" height="104" rx="26" fill="#1d3555" stroke="#31557c"/>
+  <path d="M100 83v45m-18-17 18 18 18-18M78 137v9h44v-9" fill="none" stroke="url(#accent)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="184" y="89" fill="#7dd3fc" font-family="Segoe UI,Arial,sans-serif" font-size="16" letter-spacing="4" font-weight="700">hngoos-download-manager</text>
+  <text x="181" y="134" fill="#f1f5f9" font-family="Segoe UI,Arial,sans-serif" font-size="40" font-weight="700">HDM</text>
+  <text x="184" y="168" fill="#a5b8d1" font-family="Segoe UI,Arial,sans-serif" font-size="18">Download. Organize. Process.</text>
+  <rect x="906" y="160" width="166" height="30" rx="15" fill="#243d5c"/>
+  <text x="989" y="180" text-anchor="middle" fill="#c4d7ee" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="600">WINDOWS 10 / 11 x64</text>
+</svg>
