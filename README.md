@@ -1,13 +1,11 @@
 <p align="center">
-  <img src="docs/assets/hdm-logo.svg" width="112" height="112" alt="Hngoos Download Manager (HDM) logo">
+  <img src="docs/assets/hdm-wordmark.svg" width="740" alt="Hngoos Download Manager (HDM) — Easy &amp; fast">
 </p>
 
-<h1 align="center">Hngoos Download Manager</h1>
-
 <p align="center">
-  <a href="https://www.facebook.com/hngoos"><img src="https://img.shields.io/badge/Facebook-hngoos-0866ff?style=flat-square&amp;logo=facebook&amp;logoColor=white" alt="HDM on Facebook"></a>
-  <a href="https://www.instagram.com/hngoos/"><img src="https://img.shields.io/badge/Instagram-hngoos-e4405f?style=flat-square&amp;logo=instagram&amp;logoColor=white" alt="HDM on Instagram"></a>
-  <a href="mailto:1hngoos@gmail.com"><img src="https://img.shields.io/badge/Gmail-1hngoos%40gmail.com-EA4335?style=flat-square&amp;logo=gmail&amp;logoColor=white" alt="Email HDM at 1hngoos@gmail.com"></a>
+  <a href="https://www.facebook.com/hngoos"><img src="docs/assets/contact-facebook.svg" alt="HDM on Facebook"></a>
+  <a href="https://www.instagram.com/hngoos/"><img src="docs/assets/contact-instagram.svg" alt="HDM on Instagram"></a>
+  <a href="mailto:1hngoos@gmail.com"><img src="docs/assets/contact-gmail.svg" alt="Email HDM at 1hngoos@gmail.com"></a>
 </p>
 
 > Download, organize, and process your files in one desktop app.
@@ -18,10 +16,10 @@ computer.
 
 <p align="center">
   <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Setup-0.1.1.exe"><img src="docs/assets/install-windows.svg" alt="Download HDM for Windows 10/11 x64"></a>
-  <a href="#macos"><img src="docs/assets/install-macos.svg" alt="HDM for macOS: Preview"></a>
-  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-Linux-x64.AppImage"><img src="docs/assets/install-linux.svg" alt="HDM for Linux: Preview"></a>
-  <a href="#mobile"><img src="docs/assets/install-mobile.svg" alt="Mobile: coming soon"></a>
+  <a href="#macos"><img src="docs/assets/install-macos.svg" alt="Download HDM for macOS"></a>
+  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-Linux-x64.AppImage"><img src="docs/assets/install-linux.svg" alt="Download HDM for Linux"></a>
   <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Browser-Extension.zip"><img src="docs/assets/install-browser.svg" alt="Download the HDM browser extension ZIP"></a>
+  <a href="#mobile"><img src="docs/assets/install-mobile.svg" alt="Mobile: coming soon"></a>
 </p>
 
 ## Features

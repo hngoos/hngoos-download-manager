@@ -167,7 +167,7 @@ for the tested operating systems and packaging requirements.
 </details>
 
 Publisher signing and release publication are covered by the
-[maintainer guide](../MAINTAINER.md). Never include signing keys in a contribution.
+[maintainer guide](MAINTAINER.md). Never include signing keys in a contribution.
 
 ## Submit a pull request
 

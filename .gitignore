@@ -23,3 +23,21 @@ cookies*.txt
 *.log
 tools/
 node_modules/
+
+# Local caches, reports and editor backups
+.DS_Store
+Thumbs.db
+Desktop.ini
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage/
+playwright-report/
+test-results/
+*.tmp
+*.bak
+*.orig
+*.rej
+*.swp
+*.swo

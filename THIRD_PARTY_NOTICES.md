@@ -6,6 +6,7 @@ The hngoos-download-manager (HDM) application is proprietary. Included or option
 | --- | --- | --- |
 | Morphicons | MIT, Copyright (c) 2026 Guillermo | https://www.morphicons.com and https://github.com/guillermolg00/morphicons |
 | Lucide icon data used with Morphicons | ISC | https://lucide.dev and https://github.com/lucide-icons/lucide |
+| Simple Icons social-brand artwork in README badges | CC0-1.0 | https://github.com/simple-icons/simple-icons |
 | Python | Python Software Foundation License | https://www.python.org/downloads/source/ |
 | Tcl/Tk | Tcl/Tk BSD-style licenses | https://www.tcl.tk/software/tcltk/ |
 | PyInstaller bootloader | GPL-2.0-or-later with bootloader exception | https://github.com/pyinstaller/pyinstaller |

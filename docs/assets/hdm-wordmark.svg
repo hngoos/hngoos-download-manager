@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="850" height="220" viewBox="0 0 850 220" role="img" aria-labelledby="title desc"><title id="title">Hngoos Download Manager</title><desc id="desc">Overlapping blue panels with an H and a download arrow. Easy and fast.</desc><defs>
+<linearGradient id="back" x1="80" y1="24" x2="228" y2="228" gradientUnits="userSpaceOnUse"><stop stop-color="#429ed2"/><stop offset="1" stop-color="#2487bd"/></linearGradient>
+<linearGradient id="front" x1="20" y1="70" x2="138" y2="206" gradientUnits="userSpaceOnUse"><stop stop-color="#61c6fc"/><stop offset="1" stop-color="#2c99df"/></linearGradient>
+</defs><g transform="translate(8 5) scale(.8)"><rect x="82" y="22" width="150" height="210" rx="10" fill="url(#back)"/>
+<path d="M166 65v99m-28-28 28 28 28-28" fill="none" stroke="#ecf7ff" stroke-width="17" stroke-linecap="square" stroke-linejoin="miter"/>
+<rect x="29" y="74" width="114" height="138" rx="6" fill="#123955" opacity=".25"/>
+<rect x="20" y="66" width="114" height="138" rx="6" fill="url(#front)"/>
+<path d="M46 98h15v29h32V98h15v77H93v-33H61v33H46z" fill="#fff"/></g><g font-family="Segoe UI,Arial,sans-serif"><text x="228" y="101" fill="#329fdb" font-size="42" font-weight="400">Hngoos Download Manager</text><rect x="228" y="122" width="154" height="36" rx="5" fill="#0078b7"/><text x="305" y="147" text-anchor="middle" fill="#fff" font-size="22" font-weight="500">Easy &amp; fast</text></g></svg>
