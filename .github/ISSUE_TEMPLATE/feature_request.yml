@@ -1,21 +1,21 @@
-name: Đề xuất tính năng
-description: Mô tả nhu cầu và cách xác nhận tính năng hoạt động.
+name: Feature request
+description: Suggest an improvement and describe how it should work.
 labels: [enhancement]
 body:
   - type: textarea
     id: problem
     attributes:
-      label: Vấn đề cần giải quyết
+      label: Problem to solve
     validations:
       required: true
   - type: textarea
     id: proposal
     attributes:
-      label: Hành vi đề xuất
+      label: Proposed behavior
     validations:
       required: true
   - type: textarea
     id: acceptance
     attributes:
-      label: Cách nghiệm thu
-      description: Ví dụ đầu vào, kết quả đầu ra và trường hợp lỗi cần xử lý.
+      label: How to verify the improvement
+      description: Include example inputs, expected results and error cases to handle.

@@ -1,11 +1,15 @@
-## Thay đổi
+## What changed?
 
-Mô tả lỗi/nhu cầu và hành vi sau thay đổi.
+Describe the problem and the resulting behavior. Link the relevant issue, if any.
 
-## Kiểm chứng
+## Validation
 
-Ghi các kiểm thử đã chạy và kết quả, kèm ảnh nếu thay đổi giao diện.
+List the checks you ran and their results. Include screenshots for UI changes.
 
-## Ảnh hưởng
+## Impact
 
-Nêu thay đổi về dữ liệu, quyền truy cập, dependency hoặc giới hạn tính năng nếu có.
+Describe changes to data handling, permissions, dependencies or supported
+platforms. Note any limitations and documentation updates.
+
+Do not include credentials, cookies, private URLs, download databases or personal
+files. Report security vulnerabilities privately through SECURITY.md.

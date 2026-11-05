@@ -1,32 +1,32 @@
-name: Báo lỗi
-description: Gửi một lỗi có thể tái hiện, đã loại dữ liệu riêng tư.
+name: Bug report
+description: Report a reproducible problem using non-sensitive data.
 labels: [bug]
 body:
   - type: markdown
     attributes:
-      value: Không gửi cookie, API key, URL có token hoặc database lịch sử. Lỗ hổng bảo mật dùng kênh báo cáo riêng trong SECURITY.md.
+      value: Do not include cookies, API keys, URLs containing tokens, personal files or download history databases. Report security vulnerabilities privately through SECURITY.md.
   - type: input
     id: version
     attributes:
-      label: Phiên bản ứng dụng và Windows
-      placeholder: HDM v0.1.0, Windows 11 x64
+      label: HDM version and operating system
+      placeholder: HDM v0.1.1, Windows 11 x64; include browser and extension versions if relevant.
     validations:
       required: true
   - type: textarea
     id: reproduce
     attributes:
-      label: Các bước tái hiện
-      description: Dùng URL công khai hoặc dữ liệu tự tạo, nếu cần.
+      label: Steps to reproduce
+      description: Use a public URL or synthetic data when an example is needed.
     validations:
       required: true
   - type: textarea
     id: behavior
     attributes:
-      label: Kết quả mong đợi và thực tế
+      label: Expected and actual behavior
     validations:
       required: true
   - type: textarea
     id: diagnostics
     attributes:
-      label: Thông tin bổ sung
-      description: Thông báo lỗi hoặc ảnh đã che thông tin cá nhân.
+      label: Additional information
+      description: Include error messages or screenshots with personal information removed.

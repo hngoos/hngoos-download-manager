@@ -1,10 +1,48 @@
-# Development guide
+# Contributing to HDM
 
-HDM provides a Windows 10/11 x64 release and macOS/Linux desktop previews.
-Development requires Python 3.11+ with Tkinter and Node.js 22+. Source access
-is governed by LICENSE; public visibility does not grant an open-source license.
+Help improve HDM by reporting bugs, suggesting features, improving documentation,
+or submitting focused changes. This guide covers the desktop app, browser
+extension and development tools.
 
-## Set up
+[Report a bug](https://github.com/hngoos/hngoos-download-manager/issues/new?template=bug_report.yml) · [Suggest a feature](https://github.com/hngoos/hngoos-download-manager/issues/new?template=feature_request.yml) · [Report a vulnerability](SECURITY.md)
+
+## Before you start
+
+- Search existing issues and pull requests to avoid duplicate work.
+- For a substantial code contribution, discuss the proposed change in an issue
+  before starting. Small fixes can go directly to a pull request.
+- Read the [license](LICENSE). HDM is proprietary software with publicly
+  inspectable source. This guide does not grant additional rights to modify,
+  redistribute or relicense the software.
+- Report security vulnerabilities privately using the [security policy](SECURITY.md).
+
+## Prerequisites
+
+| Tool | Requirement |
+| --- | --- |
+| Git | To clone the repository and manage changes |
+| Python | 3.11 or later, with Tkinter and virtual-environment support |
+| Node.js | 22 or later, with npm |
+| Chromium browser | For manual extension testing |
+
+Windows is the primary release platform. macOS and Linux editions are previews;
+see [platform support](docs/PLATFORMS.md) for available features and dependencies.
+
+## Get the source
+
+```sh
+git clone https://github.com/hngoos/hngoos-download-manager.git
+cd hngoos-download-manager
+git switch -c fix/describe-your-change
+```
+
+## Set up your environment
+
+Run commands from the repository root. Use an isolated virtual environment
+so development dependencies do not change your system Python installation.
+
+<details open>
+<summary><strong>Windows / PowerShell</strong></summary>
 
 ```powershell
 python -m venv .venv
@@ -14,23 +52,74 @@ npm ci --prefix browser-extension --ignore-scripts
 .\.venv\Scripts\python.exe -m hngoos_dm
 ```
 
-Optional feature dependencies are declared in `pyproject.toml`. The HTTP core
-can run without the media, PDF, browser capture, or torrent extras.
+The archive-tool script downloads and verifies the Windows tools used for
+RAR/7z inspection. Windows installer builds also require Inno Setup 6.
 
-## Check changes
+</details>
+
+<details>
+<summary><strong>macOS / Linux</strong></summary>
+
+Install Python with Tkinter and venv support for your platform. See
+[platform prerequisites](docs/PLATFORMS.md#optional-installation-from-source).
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -e ".[media,processing,excel,pdf,web,tray,torrent,updates,dev,build]"
+npm ci --prefix browser-extension --ignore-scripts
+.venv/bin/python -m hngoos_dm
+```
+
+Optional native dependencies depend on the operating system and architecture.
+RAR/7z inspection requires `7z` or `7zz` on PATH. Browser-session transfer using
+Windows DPAPI is unavailable on these platforms.
+
+</details>
+
+Optional extras are declared in [pyproject.toml](pyproject.toml). For work on the
+HTTP core, `pip install -e ".[dev]"` is enough; install the extras needed by the
+features you are changing.
+
+## Find your way around
+
+| Path | Contents |
+| --- | --- |
+| [`src/hngoos_dm/`](src/hngoos_dm) | Desktop app, download engine and native messaging bridge |
+| [`browser-extension/`](browser-extension) | Chromium extension and JavaScript tests |
+| [`tests/`](tests) | Python unit and integration tests |
+| [`scripts/`](scripts) | Build, package and release tools |
+| [`docs/`](docs) | User guides, platform support and technical references |
+| [`.github/`](.github) | CI workflows and contribution templates |
+
+## Check your changes
+
+With the Windows environment above:
 
 ```powershell
 .\.venv\Scripts\python.exe -m ruff check .
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
-node --test browser-extension/test/*.test.js
+npm test --prefix browser-extension
 .\.venv\Scripts\python.exe -m hngoos_dm --smoke-test
 ```
 
-HTTP tests use local fixture servers and synthetic data. Add meaningful
-regression coverage for changes to data integrity, concurrency, and security.
-Review interface changes at the default and minimum window sizes.
+On macOS/Linux, replace `.\.venv\Scripts\python.exe` with `.venv/bin/python`.
+The UI smoke test needs a graphical desktop, or a virtual display on Linux.
+Tests that require optional dependencies or browser integration may be skipped
+unless those dependencies are installed and the relevant test mode is enabled.
 
-### Browser integration
+Use local fixtures and synthetic data. Add regression coverage for changes to
+data integrity, concurrency and security. Review UI changes at the default and
+minimum window sizes. Documentation-only changes need a formatting and link
+check rather than a full application build.
+
+### Browser extension
+
+Load `browser-extension/` through **Developer mode → Load unpacked** in your
+Chromium browser. Register its extension ID in HDM's **Browser** tab, then use
+**Test connection** in the extension options. Keep the extension folder in a
+stable location. The packaged user ZIP contains runtime files only.
+
+For Windows integration tests with a real browser and native bridge:
 
 ```powershell
 .\.venv\Scripts\python.exe -m playwright install chromium
@@ -41,42 +130,60 @@ $env:HNGOOS_BRIDGE_EXE = (Resolve-Path dist/HDMBridge.exe).Path
 .\.venv\Scripts\python.exe -m unittest discover -s tests -p test_invoices.py -v
 ```
 
-Browser tests use temporary profiles. The Windows native-host test temporarily
-registers a Chromium host under the current account and restores the previous
-setting. Do not run two copies of that test concurrently.
+These tests use temporary browser profiles. The Windows native-host test
+temporarily registers a Chromium host for the current account and restores the
+previous setting. Run one copy at a time.
 
-## Build
+## Build a package
+
+<details>
+<summary><strong>Windows installer and extension ZIP</strong></summary>
 
 ```powershell
 .\scripts\build.ps1
 & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" scripts/installer.iss
 ```
 
-The build uses a separate `.venv-build` environment. Outputs are written to
-`build/` and `dist/`; the extension ZIP includes runtime files only. Check the
-EXE with `--smoke-test` and `--self-test-report <report.json>` before release.
-See MAINTAINER.md for signing and publishing.
+The build uses a separate `.venv-build` environment. Outputs go to `build/`
+and `dist/`. Check the packaged EXE with `--smoke-test` and
+`--self-test-report <report.json>` before release.
 
-### macOS and Linux preview
+</details>
 
-See [platform installation](docs/PLATFORMS.md) for the source installer and
-platform differences. With the optional build dependencies installed, native
-preview archives can be built on their target operating system:
+<details>
+<summary><strong>macOS / Linux packages</strong></summary>
+
+Build on the target operating system with the optional build dependencies
+installed:
 
 ```sh
-python scripts/build-desktop.py
+.venv/bin/python scripts/build-desktop.py
 ```
 
-The desktop preview workflow tests the per-user installer and packaged UI on
-macOS and Linux. Windows-only Defender, DPAPI and power actions remain scoped
-to Windows. Do not enable plaintext browser-session storage as a substitute.
+The workflow builds macOS DMGs and Linux DEB/AppImage packages, then checks the
+packaged UI and native messaging bridge. See [platform support](docs/PLATFORMS.md)
+for the tested operating systems and packaging requirements.
 
-## Submit a change
+</details>
 
-Keep each change focused, describe the resulting behavior, and include the
-checks you ran. Update documentation when permissions, data handling, or
-supported workflows change. Report vulnerabilities privately using SECURITY.md.
+Publisher signing and release publication are covered by the
+[maintainer guide](MAINTAINER.md). Never include signing keys in a contribution.
 
-Do not commit credentials, cookie files, signing keys, private URLs, personal
-files, download databases, local backups, dependency directories, or binaries.
-Keep dependency notices and license obligations with redistributed components.
+## Submit a pull request
+
+1. Keep the change focused and use a descriptive commit message.
+2. Push your branch to a repository where you have permission, then open a
+   pull request targeting HDM's `main` branch.
+3. Explain the problem and resulting behavior. Include the checks you ran and
+   screenshots for UI changes.
+4. Update documentation when permissions, data handling, dependencies or
+   supported workflows change. Address review feedback and check CI results.
+
+Do not commit credentials, cookie files, private URLs, personal files, download
+history databases, signing keys, local backups, dependency directories or built
+binaries. Preserve the notices and license obligations of bundled components.
+
+For non-sensitive project questions, use
+[GitHub Issues](https://github.com/hngoos/hngoos-download-manager/issues) or email
+[1hngoos@gmail.com](mailto:1hngoos@gmail.com). Keep reports specific and discussions
+respectful.
