@@ -1,6 +1,6 @@
 # User guide
 
-[Home](../README.md) · [Feature reference](FEATURES.md) · [Privacy](PRIVACY.md) · [Security](SECURITY.md)
+[Home](../README.md) · [Feature reference](FEATURES.md) · [Privacy](PRIVACY.md) · [Security](SECURITY_MODEL.md)
 
 This guide covers **HDM v0.1.1** on Windows 10/11 x64, with macOS and Linux desktop previews. The current application and extension interface is in Vietnamese; menu labels below include the wording you will see on screen.
 
@@ -148,4 +148,4 @@ Tray operation, sleep prevention during active work, and shutdown after HTTP job
 | Incomplete invoice PDF | Review resource limitations and use the browser's Save as PDF. |
 | A quarantined file cannot open | Review inspection findings before considering restoration; do not remove the suffix just to bypass the check. |
 
-For ordinary bugs, open an [issue](https://github.com/hngoos/hngoos-download-manager/issues) with the HDM version, Windows/browser versions, reproducible steps, and a non-sensitive sample URL or file. Report security vulnerabilities privately using the [security policy](SECURITY.md).
+For ordinary bugs, open an [issue](https://github.com/hngoos/hngoos-download-manager/issues) with the HDM version, Windows/browser versions, reproducible steps, and a non-sensitive sample URL or file. Report security vulnerabilities privately using the [vulnerability reporting guide](VULNERABILITY_REPORTING.md).

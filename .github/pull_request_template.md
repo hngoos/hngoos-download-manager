@@ -12,4 +12,4 @@ Describe changes to data handling, permissions, dependencies or supported
 platforms. Note any limitations and documentation updates.
 
 Do not include credentials, cookies, private URLs, download databases or personal
-files. Report security vulnerabilities privately through SECURITY.md.
+files. Report vulnerabilities privately using docs/VULNERABILITY_REPORTING.md.

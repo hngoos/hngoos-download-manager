@@ -1,9 +1,9 @@
 # Security model and data handling
 
-[Home](../README.md) · [Report a vulnerability](../SECURITY.md) · [Privacy](PRIVACY.md)
+[Home](../README.md) · [Report a vulnerability](VULNERABILITY_REPORTING.md) · [Privacy](PRIVACY.md)
 
 This reference describes HDM's safeguards, their limitations, and local data handling.
-For private reporting, see the [security policy](../SECURITY.md).
+For private reporting, see the [security policy](VULNERABILITY_REPORTING.md).
 
 ## Protection boundaries
 

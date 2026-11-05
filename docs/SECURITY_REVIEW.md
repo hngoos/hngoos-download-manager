@@ -36,4 +36,4 @@ Giữ source, test và tài liệu theo thư mục hiện có. File build nằm 
 - App và thư viện native chạy với quyền tài khoản người dùng; kiểm tra đuôi/MZ/ZIP không phải antivirus hoặc sandbox.
 - Nghiệm thu đầy đủ bộ lọc quảng cáo, phát hành Chrome Web Store, video riêng tư và phiếu trên tài khoản sàn thật còn trong lộ trình. Tiện ích chỉ hỗ trợ Chromium, cài thủ công từ ZIP.
 
-Xem [SECURITY.md](../SECURITY.md) để báo lỗ hổng và hiểu ranh giới tin cậy.
+Xem [Vulnerability reporting](VULNERABILITY_REPORTING.md) để báo lỗ hổng và hiểu ranh giới tin cậy.

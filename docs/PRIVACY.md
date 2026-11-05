@@ -1,6 +1,6 @@
 # Privacy policy
 
-[Home](../README.md) · [User guide](USAGE.md) · [Security](SECURITY.md)
+[Home](../README.md) · [User guide](USAGE.md) · [Security](SECURITY_MODEL.md)
 
 Applies to **hngoos-download-manager (HDM) v0.1.1** and its Chromium extension. Last updated: **6 November 2026**.
 
@@ -52,4 +52,4 @@ To remove application history and staging data, close HDM and remove its data di
 
 ## Contact
 
-Contact the maintainer through [hngoos on GitHub](https://github.com/hngoos) or the [HDM issue tracker](https://github.com/hngoos/hngoos-download-manager/issues). Do not post cookies, credentials, customer invoices, access tokens, or private download histories in public issues. Security reports should follow the [security policy](SECURITY.md).
+Contact the maintainer through [hngoos on GitHub](https://github.com/hngoos) or the [HDM issue tracker](https://github.com/hngoos/hngoos-download-manager/issues). Do not post cookies, credentials, customer invoices, access tokens, or private download histories in public issues. Security reports should follow the [vulnerability reporting guide](VULNERABILITY_REPORTING.md).

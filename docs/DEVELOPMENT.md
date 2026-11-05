@@ -4,7 +4,7 @@ Help improve HDM by reporting bugs, suggesting features, improving documentation
 or submitting focused changes. This guide covers the desktop app, browser
 extension and development tools.
 
-[Report a bug](https://github.com/hngoos/hngoos-download-manager/issues/new?template=bug_report.yml) · [Suggest a feature](https://github.com/hngoos/hngoos-download-manager/issues/new?template=feature_request.yml) · [Report a vulnerability](../SECURITY.md)
+[Report a bug](https://github.com/hngoos/hngoos-download-manager/issues/new?template=bug_report.yml) · [Suggest a feature](https://github.com/hngoos/hngoos-download-manager/issues/new?template=feature_request.yml) · [Report a vulnerability](VULNERABILITY_REPORTING.md)
 
 ## Before you start
 
@@ -14,7 +14,7 @@ extension and development tools.
 - Read the [license](../LICENSE). HDM is proprietary software with publicly
   inspectable source. This guide does not grant additional rights to modify,
   redistribute or relicense the software.
-- Report security vulnerabilities privately using the [security policy](../SECURITY.md).
+- Report security vulnerabilities privately using the [security policy](VULNERABILITY_REPORTING.md).
 
 ## Prerequisites
 

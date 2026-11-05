@@ -37,7 +37,7 @@ File lock do hệ điều hành giữ ngăn hai phiên ứng dụng mở cùng t
 
 App nhận URL do chính người dùng nhập và có thể truy cập địa chỉ mạng nội bộ để tải từ NAS. Không có HTTP server lắng nghe cổng mạng. Không nhận lệnh thực thi qua URL hoặc shell. FFmpeg và Defender được gọi bằng danh sách đối số, không qua shell. Tệp rủi ro không tự thực thi, không tự khôi phục. Đầu ra HTTP và tệp được khôi phục cố gắng gắn Mark of the Web trên NTFS; FAT/exFAT và một số ổ mạng không hỗ trợ.
 
-Các luồng HTTP, yt-dlp, FFmpeg và giải nén cố gắng gắn Mark of the Web. Manifest cập nhật dùng Ed25519; bộ cài chưa có chứng thư Authenticode. Xem [chính sách bảo mật](../SECURITY.md) cho các giới hạn còn lại.
+Các luồng HTTP, yt-dlp, FFmpeg và giải nén cố gắng gắn Mark of the Web. Manifest cập nhật dùng Ed25519; bộ cài chưa có chứng thư Authenticode. Xem [chính sách bảo mật](VULNERABILITY_REPORTING.md) cho các giới hạn còn lại.
 
 ## Trình duyệt và phiên đăng nhập
 

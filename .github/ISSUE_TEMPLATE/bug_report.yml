@@ -4,7 +4,7 @@ labels: [bug]
 body:
   - type: markdown
     attributes:
-      value: Do not include cookies, API keys, URLs containing tokens, personal files or download history databases. Report security vulnerabilities privately through SECURITY.md.
+      value: Do not include cookies, API keys, URLs containing tokens, personal files or download history databases. Report vulnerabilities privately at https://github.com/hngoos/hngoos-download-manager/security/advisories/new.
   - type: input
     id: version
     attributes:

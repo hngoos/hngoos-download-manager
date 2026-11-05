@@ -2,12 +2,6 @@
   <img src="docs/assets/hdm-wordmark.svg" width="740" alt="Hngoos Download Manager (HDM) — Easy &amp; fast">
 </p>
 
-<p align="center">
-  <a href="https://www.facebook.com/hngoos"><img src="docs/assets/contact-facebook.svg" alt="HDM on Facebook"></a>
-  <a href="https://www.instagram.com/hngoos/"><img src="docs/assets/contact-instagram.svg" alt="HDM on Instagram"></a>
-  <a href="mailto:1hngoos@gmail.com"><img src="docs/assets/contact-gmail.svg" alt="Email HDM at 1hngoos@gmail.com"></a>
-</p>
-
 > Download, organize, and process your files in one desktop app.
 
 Hngoos Download Manager (HDM) brings resumable downloads, batch imports, video and audio tools, and file
@@ -130,3 +124,11 @@ The ZIP is loaded manually; Chrome Web Store publication is pending.
 **Coming soon.** Android and iOS applications are planned for a future release.
 
 </details>
+
+## Contact
+
+<p align="center">
+  <a href="https://www.facebook.com/hngoos"><img src="docs/assets/contact-facebook.svg" alt="HDM on Facebook"></a>
+  <a href="https://www.instagram.com/hngoos/"><img src="docs/assets/contact-instagram.svg" alt="HDM on Instagram"></a>
+  <a href="mailto:1hngoos@gmail.com"><img src="docs/assets/contact-gmail.svg" alt="Email HDM at 1hngoos@gmail.com"></a>
+</p>
