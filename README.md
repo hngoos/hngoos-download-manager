@@ -17,13 +17,11 @@ checks into a single workspace. Download history and processing stay on your
 computer.
 
 <p align="center">
-  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Setup-0.1.1.exe"><img src="docs/assets/install-windows.svg" width="190" height="72" alt="Download HDM for Windows 10/11 x64"></a>
-  <a href="#macos"><img src="docs/assets/install-macos.svg" width="190" height="72" alt="Download HDM for macOS"></a>
-  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-Linux-x64.AppImage"><img src="docs/assets/install-linux.svg" width="190" height="72" alt="Download HDM for Linux"></a>
-</p>
-<p align="center">
-  <a href="#mobile"><img src="docs/assets/install-mobile.svg" width="190" height="72" alt="Mobile: coming soon"></a>
-  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Browser-Extension.zip"><img src="docs/assets/install-browser.svg" width="190" height="72" alt="Download the HDM browser extension ZIP"></a>
+  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Setup-0.1.1.exe"><img src="docs/assets/install-windows.svg" alt="Download HDM for Windows 10/11 x64"></a>
+  <a href="#macos"><img src="docs/assets/install-macos.svg" alt="HDM for macOS: Preview"></a>
+  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-Linux-x64.AppImage"><img src="docs/assets/install-linux.svg" alt="HDM for Linux: Preview"></a>
+  <a href="#mobile"><img src="docs/assets/install-mobile.svg" alt="Mobile: coming soon"></a>
+  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Browser-Extension.zip"><img src="docs/assets/install-browser.svg" alt="Download the HDM browser extension ZIP"></a>
 </p>
 
 ## Features
