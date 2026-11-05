@@ -1,158 +1,198 @@
 <div align="center">
 
-![hngoos-download-manager — HDM](docs/assets/banner.svg)
+![HDM — Download. Organize. Get things done.](docs/assets/banner.svg)
 
-**Tải tệp. Giữ tiến độ. Xử lý ngay trong HDM.**
+# hngoos-download-manager
 
-[![Release](https://img.shields.io/github/v/release/hngoos/hngoos-download-manager?color=8b5cf6)](https://github.com/hngoos/hngoos-download-manager/releases/latest) [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011%20x64-0078d4)](#yêu-cầu-hệ-thống) [![License](https://img.shields.io/badge/License-Proprietary-64748b)](LICENSE)
+**A Windows download manager for files, media, and the work that comes next.**
 
-[**Tải HDM v0.1.0 cho Windows**](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe?build=chromium-20261106) · [**Tải tiện ích trình duyệt**](https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip?build=chromium-20261106)
+[![Latest release](https://img.shields.io/github/v/release/hngoos/hngoos-download-manager?style=flat&color=8b5cf6&label=release)](https://github.com/hngoos/hngoos-download-manager/releases/latest) [![Windows 10 and 11](https://img.shields.io/badge/Windows-10%20%2F%2011%20x64-0078d4?style=flat)](#requirements) [![Chromium extension](https://img.shields.io/badge/browser-Chromium%20MV3-64748b?style=flat)](#browser-integration) [![Proprietary license](https://img.shields.io/badge/license-Proprietary-64748b?style=flat)](LICENSE)
 
-[Giới thiệu](#giới-thiệu) · [Ưu điểm](#ưu-điểm) · [Chức năng](#chức-năng) · [Cài đặt](#cài-đặt) · [Hướng dẫn sử dụng](docs/USAGE.md)
+[Overview](#overview) · [Highlights](#why-hdm) · [Features](#features) · [Installation](#installation) · [User guide](docs/USAGE.md)
+
+<a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe?build=chromium-20261106"><img src="docs/assets/download-windows.svg" width="320" height="88" alt="Download HDM for Windows — v0.1.0, 64-bit"></a> <a href="https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip?build=chromium-20261106"><img src="docs/assets/download-extension.svg" width="320" height="88" alt="Download the Chromium extension — Chrome, Edge, Brave, Cốc Cốc, Opera"></a>
+
+[Release notes](https://github.com/hngoos/hngoos-download-manager/releases/tag/v0.1.0) · [Feature reference](docs/FEATURES.md) · [Privacy](docs/PRIVACY.md) · [Report an issue](https://github.com/hngoos/hngoos-download-manager/issues)
 
 </div>
 
-![Giao diện quản lý tải xuống của HDM v0.1.0](docs/screenshot.png)
+![HDM v0.1.0 desktop application showing the download queue and local file controls](docs/screenshot.png)
 
-## Giới thiệu
+<p align="center"><sub>The current desktop interface is in Vietnamese. This repository's documentation is in English.</sub></p>
 
-**hngoos-download-manager (HDM)** là ứng dụng quản lý tải xuống cho **Windows 10/11 64-bit**. HDM tập hợp tải tệp, video, âm thanh, danh sách từ bảng tính và các công cụ xử lý media, PDF trong cùng một giao diện tiếng Việt.
+## Overview
 
-Bạn có thể dán một link để tải, nhập cả danh sách tài liệu, hoặc gửi link từ trình duyệt sang HDM. Sau khi tải, các thao tác cắt, ghép, nén, chuyển định dạng và kiểm tra tệp có sẵn trong ứng dụng.
+**hngoos-download-manager (HDM)** brings resumable downloads, browser integration, batch imports, media tools, and file checks into one desktop application for **Windows 10 and 11**.
 
-**v0.1.0 là bản phát hành đầu tiên.** Các tính năng và điều kiện hỗ trợ được mô tả bên dưới; lưu phiếu bán hàng và lọc quảng cáo hiện ở mức thử nghiệm. Xem [phạm vi hỗ trợ chi tiết](docs/FEATURES.md) trước khi dùng cho công việc cần độ tin cậy cao.
+Start with a single link, send a video from your browser, or paste a spreadsheet of files with the names you want. Keep track of the queue, continue supported downloads after a restart, and use local tools to trim a clip, compress a video, extract audio, or redact a PDF.
 
-## Ưu điểm
+**v0.1.0 is an early release.** Core workflows are implemented; website compatibility depends on the source, and invoice capture and content filtering remain experimental. The [feature reference](docs/FEATURES.md) describes the supported behavior and current limits.
 
-| Ưu điểm | Lợi ích khi sử dụng |
+## Why HDM?
+
+| Built around | What you get |
 | --- | --- |
-| **Giữ tiến độ tải** | Tạm dừng, tải tiếp khi mở lại ứng dụng và tự thử lại khi lỗi mạng, với máy chủ hỗ trợ xác minh phần đã tải. |
-| **Giảm việc đổi tên thủ công** | Nhập hai cột link–tên từ bảng tính; tài liệu được đặt tên theo danh sách. |
-| **Công cụ ngay trên máy** | Cắt, ghép, nén video, tách âm thanh và che PDF mà không cần gửi tệp lên website chuyển đổi. |
-| **Kiểm tra trước khi mở** | Đối chiếu mã băm, nhận diện dấu hiệu rủi ro, cách ly tệp và gọi Windows Defender. |
-| **Quyền trình duyệt tùy chọn** | Bạn quyết định trang nào được tích hợp và có cho phép dùng phiên đăng nhập hay không. |
-| **Cài rồi sử dụng** | Bộ cài đã chứa ứng dụng và thành phần kết nối trình duyệt; không cần cài Python. |
+| **Keeping your progress** | Pause and resume supported downloads, retry network failures, and replace expired links when the new source can be verified. |
+| **Less repetitive work** | Import link–filename pairs from a spreadsheet, edit the list before downloading, and export a report for each batch. |
+| **Local processing** | Cut, join, convert, and compress media or redact PDFs on your computer, without uploading them to an online converter. |
+| **Checks before opening** | Compare checksums, inspect common risk indicators, quarantine flagged files, and request a Windows Defender scan. |
+| **Permissions you control** | Enable website access, session cookies, download handoff, and invoice capture only when you need them. |
+| **A ready-to-install package** | The Windows installer includes the application, browser bridge, media dependencies, and bundled component notices. |
 
-## Chức năng
+## Features
 
-### Tải tệp và quản lý hàng đợi
+### Downloads that can pick up where you left off
 
-- Tải HTTP/HTTPS với **1–32 luồng**, chia khối cho luồng rảnh và theo dõi tốc độ, tiến độ trong hàng đợi.
-- Tạm dừng, tiếp tục sau khi mở lại HDM và tự thử lại khi kết nối gặp lỗi.
-- Thay link hết hạn sau khi dừng; giữ dữ liệu cũ khi nguồn mới có đủ thông tin xác minh cùng nội dung.
-- Đổi thư mục lưu khi đang tải; tiếp quản tệp `.crdownload` hoặc `.part` sau khi xác minh phần đã tải.
-- Dùng nhiều nguồn mirror khi có SHA-256 độc lập để kiểm kết quả; giảm số kết nối khi máy chủ báo quá tải.
-- Hẹn giờ và chọn băng thông **Tối đa / Vừa / Nhẹ**. Hẹn giờ cần HDM đang chạy.
+- **1–32 HTTP/HTTPS connections**, with work divided into chunks so available workers can take the next piece.
+- Pause, resume after reopening HDM, and retry interrupted connections. Resume and parallel assembly require suitable server support and content validators.
+- Replace an expired link after pausing; reuse downloaded data when the new source has matching verification information.
+- Change the save folder while a download is running, or adopt a browser's partial `.crdownload` / `.part` file after verifying its existing bytes.
+- Use multiple mirrors with an independently supplied **SHA-256** checksum. If the assembled file fails verification, retain primary-source chunks and retry mirror-sourced chunks.
+- Reduce connections after server throttling and gradually restore them after sustained success.
+- Schedule downloads and choose **Maximum / Moderate / Light** HTTP bandwidth presets. Scheduled jobs require HDM to be running.
 
-Tải nhiều luồng và tiếp tục từ phần cũ phụ thuộc khả năng Range/ETag của máy chủ. HDM không ghép các phần chưa đủ điều kiện xác minh.
+### Video and audio, with the formats that are actually available
 
-### Video và âm thanh
+- Download through **yt-dlp**, inspect available formats, and choose a maximum video height from **360p to 2160p**.
+- Prefer compatible **H.264 / MP4** formats when available; extract **MP3 / M4A**, playlists, and supported subtitles.
+- Send a page or video from the browser extension, with optional session access for content you are authorized to view.
+- Detect **HLS / DASH** manifest candidates on pages where website access has been granted.
+- Update the video downloader independently from official releases, with a required checksum check.
 
-- Tải qua yt-dlp, chọn độ cao tối đa từ **360p đến 2160p**, xem các định dạng nguồn thực sự cung cấp.
-- Lưu **MP3 / M4A**, danh sách phát và phụ đề khi nguồn hỗ trợ; ưu tiên H.264/MP4 nếu có định dạng phù hợp.
-- Gửi yêu cầu từ tiện ích trình duyệt, dùng phiên đăng nhập theo quyền bạn chủ động cấp.
-- Cập nhật yt-dlp riêng từ nguồn phát hành chính thức, có kiểm tra mã băm.
+Availability varies by website, account permissions, and source format. HDM does not bypass DRM, access controls, or a publisher's download restrictions.
 
-Chất lượng và khả năng tải phụ thuộc từng website, nội dung và quyền truy cập. HDM không vượt DRM; chưa nghiệm thu toàn bộ website hoặc video yêu cầu tài khoản riêng tư.
+### Turn a spreadsheet into a download queue
 
-### Tải theo danh sách
+- Paste two columns from **Excel or Google Sheets**: a link and the filename you want.
+- Import **XLSX, CSV, and TXT**, including hyperlinks in spreadsheet cells.
+- Preview and edit rows, rename multiple entries, remove unwanted rows, and number unnamed entries.
+- Export batch status reports without source URLs or access tokens.
+- Save lists of web pages as **PDF / PNG**, with the source URL and capture time.
 
-- Dán hai cột **link | tên tệp** từ Excel hoặc Google Sheets.
-- Mở **XLSX / CSV / TXT**, đọc hyperlink trong ô và tự đánh số khi thiếu tên.
-- Xem trước, sửa tên, đổi tên hàng loạt và bỏ dòng trước khi tải; xuất báo cáo từng dòng sau khi xử lý.
-- Phân loại thư mục theo loại tệp; xuất lịch sử CSV không kèm URL/token.
-- Lưu danh sách trang web thành **PDF / PNG**, kèm nguồn và thời điểm lưu.
+```text
+https://example.com/catalog.pdf | Product catalog.pdf
+https://example.com/photo.jpg   | Product photo 001.jpg
+```
 
-Ví dụ hai cột có thể dán vào cửa sổ nhập danh sách:
+### Finish the media task inside HDM
 
-| Link | Tên tệp |
+- **Trim:** copy streams for fast cuts, or re-encode for frame-accurate cuts.
+- **Join:** arrange files with Up / Down controls and normalize inputs to a common format, using the largest source canvas.
+- **Convert:** create MP4 files or extract MP3 / M4A audio.
+- **Compress:** use two-pass encoding for a target size; only keep an output that is smaller than the original and within that target.
+- **Use available encoders:** try Windows Media Foundation for MP4 conversion, with a software fallback when unavailable.
+
+Original files are preserved. Video downloads are staged and processed locally before completed outputs are delivered to the selected folder.
+
+### Inspect files and protect sensitive documents
+
+- Calculate or compare **MD5, SHA-1, SHA-256, and SHA-512**.
+- Look up a **SHA-256** on VirusTotal, MetaDefender, or Kaspersky without automatically uploading the file.
+- Flag indicators such as disguised Windows executables, double extensions, bidirectional filename characters, macros, and risky archive entries.
+- Inspect ZIP and supported RAR/7z contents with resource limits; enter a password when supported inspection requires one.
+- Quarantine flagged files with the `.chuakiemtra` suffix and require risk confirmation before restoring them through HDM.
+- Watch selected folders for new or changed files, run Defender scans, and enable a stricter policy for programs without a valid digital signature.
+- Redact PDF regions into a new raster PDF without carrying over the original text layer or embedded objects.
+
+File checks are preliminary triage, and renaming a file is not a sandbox. PDF redaction removes searchable text from the exported document. See the [feature reference](docs/FEATURES.md) for the practical limits.
+
+### Browser integration
+
+One **Chromium Manifest V3** extension serves **Chrome, Cốc Cốc, Edge, Brave, and Opera**.
+
+- Send links and videos from a context menu or a download button placed outside the video frame.
+- Optionally hand new HTTP/HTTPS downloads to HDM; the browser continues if the handoff fails.
+- Choose detected HLS/DASH streams from the extension popup.
+- Enable experimental filtering with **Off / Minimal safety / Ad blocking / Strong** modes, per-site exceptions, an element picker, and per-site reset.
+- Receive filter data directly from upstream lists, with a 12-hour update schedule while the browser is running and permissions are granted.
+
+The filter compiler supports a subset of network rules, with a 4,500-rule budget. Known-domain popup and overlay handling is conservative; it does not identify every advertisement. **The extension currently installs from ZIP and is not published on the Chrome Web Store.**
+
+### Everyday utilities
+
+- **Torrent and magnet links:** select files, save progress checkpoints, reopen tasks, and stop sharing when completion is detected.
+- **Public cloud links:** resolve supported Google Drive, Dropbox, OneDrive, and MediaFire links without bypassing access limits.
+- **Invoice capture — experimental:** opt in on a supported seller hostname to save static print content by platform, date, and order ID. Review the generated PDF; external images or frames may be missing.
+- **ZIP extraction:** inspect paths and resource limits, with optional automatic extraction after HTTP downloads.
+- **Background operation:** minimize to the system tray, prevent sleep during active work, or request shutdown after HTTP jobs finish, with a cancellable countdown.
+- **Subtitles:** look up Vietnamese subtitles by file hash through OpenSubtitles using your own API credentials.
+- **Updates:** verify signed Ed25519 update metadata and the installer checksum before accepting an application update.
+
+## Installation
+
+### Requirements
+
+| Component | Requirement |
 | --- | --- |
-| `https://example.com/catalog.pdf` | `Danh-muc-san-pham.pdf` |
-| `https://example.com/photo.jpg` | `Anh-san-pham-001.jpg` |
+| Operating system | **Windows 10 or Windows 11, 64-bit** |
+| Desktop interface | Vietnamese; complete English UI localization is not yet available |
+| Runtime | Included in the installer; Python and Node.js are not required |
+| Free space | Room for the application, downloads, and temporary files; chunked HTTP assembly may need close to twice the file size |
+| Website capture | Installed Microsoft Edge or a configured Playwright Chromium runtime |
+| Browser integration | A supported browser based on **Chromium 120+**, plus the optional HDM extension |
 
-### Cắt, ghép và nén media
+### 1. Install the desktop application
 
-- Cắt nhanh bằng cách giữ nguyên luồng hoặc cắt chính xác bằng mã hóa lại.
-- Ghép nhiều tệp, thay đổi thứ tự và chuẩn hóa video khi cần.
-- Chuyển sang MP4, tách nhạc thành MP3/M4A.
-- Nén video hai lượt theo dung lượng đích; chỉ xuất kết quả khi nhỏ hơn nguồn và không vượt mục tiêu.
-- Thử bộ mã hóa Windows Media Foundation khi chuyển MP4, dùng bộ dự phòng khi không khả dụng.
+1. Download [**HDM-Setup-0.1.0.exe**](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe?build=chromium-20261106) from the official release.
+2. Run the installer and follow the setup steps. The default location is `%LOCALAPPDATA%\Programs\HDM`.
+3. Open **HDM**, paste a URL, choose a destination and connection count, then select **Thêm lượt tải** (Add download).
+4. Right-click a queue entry to see the actions available for that file.
 
-### Kiểm tra tệp và xử lý PDF
+The installer includes `HDMBridge.exe` for browser communication and third-party license notices. The browser extension is optional.
 
-- Tính hoặc đối chiếu **MD5, SHA-1, SHA-256, SHA-512**; tra VirusTotal, MetaDefender hoặc Kaspersky bằng hash mà không gửi tệp lên.
-- Phát hiện một số dấu hiệu như chương trình đội lốt tài liệu, đuôi kép, ký tự điều hướng, macro và lối tắt trong ZIP.
-- Cách ly bằng đuôi `.chuakiemtra`, hỗ trợ quét Windows Defender và xác nhận rủi ro khi khôi phục.
-- Theo dõi tệp mới hoặc vừa sửa trong thư mục bạn chọn; giải nén ZIP có giới hạn, tùy chọn tự giải nén sau tải.
-- Kiểm tra nội dung RAR/7z có giới hạn, nhận mật khẩu khi cần; chế độ an toàn cao đánh dấu chương trình chưa có chữ ký số hợp lệ.
-- Che vùng PDF bằng kéo chuột và xuất PDF dạng ảnh mới, không giữ lớp chữ gốc trong đầu ra. Đổi lại, PDF mới mất khả năng tìm kiếm văn bản.
+### 2. Add the browser extension
 
-Kiểm tra sơ bộ và cách ly hỗ trợ giảm rủi ro; chúng không thay thế phần mềm chống mã độc. [Bảo mật](docs/SECURITY.md) · [Quyền riêng tư](docs/PRIVACY.md).
+1. Download [**HDM-Browser-Extension.zip**](https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip?build=chromium-20261106) and extract it to a permanent folder.
+2. Open your browser's extensions page, such as `chrome://extensions` or `edge://extensions`.
+3. Enable **Developer mode**, select **Load unpacked**, and choose the extracted folder containing `manifest.json`.
+4. Copy the **Extension ID**. In HDM, open **Trình duyệt** (Browser) and register the connection for that ID.
+5. Open the extension's **Options** page and check the connection. Grant website, cookie, or download permissions only for the features you use.
 
-### Tích hợp trình duyệt
+Keep the extracted folder in place. After updating the ZIP, reload the extension and check the connection again. See the [user guide](docs/USAGE.md#browser-setup) for details.
 
-- Menu tải link/video và nút tải nằm ngoài khung video.
-- Tùy chọn chuyển lượt tải HTTP/HTTPS mới từ trình duyệt sang HDM; khi không bàn giao được, trình duyệt tiếp tục xử lý.
-- Một gói **Chromium Manifest V3** cho Chrome, Cốc Cốc, Edge, Brave và Opera; quyền website, cookie và tiếp quản lượt tải được cấp theo nhu cầu.
-- Phát hiện luồng HLS/DASH trên trang đã cấp quyền, chọn luồng trong popup để gửi sang HDM.
-- Bộ lọc quảng cáo thử nghiệm có bốn mức, danh sách cho phép từng trang, chặn tab từ miền quảng cáo đã biết và chọn phần tử để ẩn.
+### 3. Verify your download
 
-Bộ lọc chỉ dịch các quy tắc mạng tương thích, tối đa 4.500 quy tắc; chưa tương đương một engine lọc đầy đủ. Tiện ích hiện cài thủ công từ ZIP, chưa được phát hành trên Chrome Web Store.
+Compare the result below with the SHA-256 shown in the [release notes](https://github.com/hngoos/hngoos-download-manager/releases/tag/v0.1.0):
 
-### Tài liệu bán hàng và tiện ích khác
+```powershell
+Get-FileHash .\HDM-Setup-0.1.0.exe -Algorithm SHA256
+```
 
-- Lưu bản in phiếu bán hàng theo **sàn / ngày / mã đơn** khi bạn bật quyền trên trang phù hợp. Tính năng đang thử nghiệm, cần kiểm lại PDF vì ảnh từ URL hoặc iframe có thể thiếu.
-- Torrent/magnet: chọn từng tệp, lưu checkpoint, mở lại lượt tải và dừng chia sẻ khi hoàn tất.
-- Xử lý link cloud công khai; với lượt HTTP mới, chỉ chuyển tệp tới đích sau khi tải xong.
-- Chạy dưới khay hệ thống, chống máy ngủ khi tải và tùy chọn tắt máy khi hàng đợi HTTP hoàn tất, có đếm ngược để hủy.
-- Tìm phụ đề Việt theo hash qua OpenSubtitles với API key/token do bạn cung cấp.
-- Kiểm tra bản cập nhật bằng **chữ ký Ed25519**, đối chiếu hash và kích thước bộ cài trước khi nhận.
-
-## Cài đặt
-
-### Yêu cầu hệ thống
-
-| Thành phần | Yêu cầu |
-| --- | --- |
-| Hệ điều hành | Windows 10 hoặc Windows 11, 64-bit |
-| Môi trường chạy | Đã đóng gói trong bộ cài; không cần Python hoặc Node.js |
-| Dung lượng trống | Đủ cho ứng dụng, tệp tải và dữ liệu tạm; lượt HTTP ghép khối có thể cần gần hai lần dung lượng tệp |
-| Lưu website PDF/ảnh | Cần Edge đã cài hoặc trình duyệt Chromium tương thích được cấu hình trên máy |
-| Tiện ích browser | Cài riêng từ ZIP nếu muốn gửi link từ trình duyệt |
-
-### Chọn gói tải
-
-| Gói | Khi nào cần? |
-| --- | --- |
-| [**HDM-Setup-0.1.0.exe**](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe?build=chromium-20261106) | **Tải gói này để cài HDM.** Đã có ứng dụng, bridge và thông báo giấy phép thư viện. |
-| [**HDM-Browser-Extension.zip**](https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip?build=chromium-20261106) | Thêm tích hợp trình duyệt. Gói Chromium duy nhất, có `manifest.json` ngay trong thư mục giải nén. |
-
-### Cài HDM trên Windows
-
-1. Tải bộ cài từ các liên kết phía trên hoặc [Releases chính thức](https://github.com/hngoos/hngoos-download-manager/releases/latest).
-2. Chạy `HDM-Setup-0.1.0.exe` và hoàn tất hướng dẫn cài đặt.
-3. Mở **HDM**, dán URL, chọn thư mục lưu và số luồng, rồi chọn **Thêm lượt tải**.
-4. Dùng menu chuột phải trên lượt tải để xem các thao tác phù hợp với tệp.
-
-Mặc định, ứng dụng được cài tại `%LOCALAPPDATA%\Programs\HDM`. Bộ cài chưa ký Authenticode; đối chiếu nguồn phát hành và SHA-256 tại Releases khi cần xác minh. Chữ ký Ed25519 của cập nhật là cơ chế riêng, không thay thế chữ ký nhà phát hành Windows.
-
-### Cài tiện ích trên Chrome / Edge / trình duyệt Chromium
-
-1. Tải và giải nén `HDM-Browser-Extension.zip` vào thư mục cố định.
-2. Mở trang quản lý tiện ích: `chrome://extensions` trên Chrome hoặc `edge://extensions` trên Edge. Với Cốc Cốc, Brave và Opera, mở mục quản lý tiện ích tương ứng.
-3. Bật **Developer mode → Load unpacked**, chọn thư mục vừa giải nén có tệp `manifest.json`.
-4. Sao chép **Extension ID**, mở **HDM → Trình duyệt**, đăng ký kết nối bằng ID đó.
-5. Mở **Options** của tiện ích và kiểm tra kết nối. Chỉ cấp quyền website, cookie hoặc tiếp quản lượt tải khi bạn cần.
-
-Giữ nguyên thư mục đã giải nén sau khi nạp tiện ích. HDM hỗ trợ các trình duyệt nhân Chromium từ phiên bản 120; luồng kết nối đã được kiểm thử trên Chromium thực tế. Cần kiểm lại theo phiên bản và chính sách của từng trình duyệt.
+The current installer is **not Authenticode-signed**. Signed update metadata is a separate integrity mechanism and does not establish Windows publisher trust.
 
 <details>
-<summary><strong>Không kết nối được tiện ích hoặc không thấy video?</strong></summary>
+<summary><strong>The extension cannot connect to HDM</strong></summary>
 
-Kiểm tra HDM đã được cài, đã đăng ký đúng Extension ID và đã cấp quyền cho website cần dùng. Thử nút kiểm tra kết nối trong Options trước khi gửi link. Với video, thử URL trang gốc và kiểm tra nội dung có yêu cầu đăng nhập hoặc DRM hay không.
-
-Hướng dẫn theo từng tác vụ nằm trong [Hướng dẫn sử dụng](docs/USAGE.md); điều kiện hỗ trợ nằm trong [Tính năng và phạm vi](docs/FEATURES.md).
+Confirm that HDM is installed, register the exact extension ID from your current browser, and use **Options → Kiểm tra kết nối** (Check connection). If choosing a bridge executable manually, use the installed `HDMBridge.exe`. Unpacked IDs can differ between folders and browser profiles.
 
 </details>
 
-Repo công khai chứa tài liệu và hình ảnh giới thiệu HDM. `git clone` và hai gói **Source code** GitHub tự sinh chỉ tải những tài liệu này, không chứa mã nguồn ứng dụng. Người dùng cài HDM bằng hai gói phát hành phía trên. [Điều khoản sử dụng](LICENSE).
+<details>
+<summary><strong>A download will not resume, or a video is unavailable</strong></summary>
+
+Resuming requires the server to provide suitable range and content verification information. For video, try the original page URL, check your access permissions, and use the explicit session option only when needed. DRM-protected media is unsupported. More cases are covered in the [user guide](docs/USAGE.md).
+
+</details>
+
+<details>
+<summary><strong>What does cloning this repository include?</strong></summary>
+
+This is HDM's public distribution and documentation repository. Cloning it downloads the README, guides, policy documents, license, and product images. Application source code, development tests, and build scripts are maintained separately and are not published here.
+
+Install HDM from the **Windows installer** and, optionally, the **browser extension ZIP**. GitHub's automatically generated “Source code” archives contain this repository's documentation only.
+
+</details>
+
+## Documentation
+
+| Resource | What you will find |
+| --- | --- |
+| [User guide](docs/USAGE.md) | Installation, browser setup, downloads, batch imports, media, and troubleshooting |
+| [Feature reference](docs/FEATURES.md) | Implemented behavior, support conditions, and known limitations |
+| [Privacy policy](docs/PRIVACY.md) | Local data, extension permissions, and connections to external services |
+| [Security policy](docs/SECURITY.md) | Supported versions and private vulnerability reporting |
+| [Release notes](https://github.com/hngoos/hngoos-download-manager/releases) | Current packages, changes, and download checksums |
+
+---
+
+HDM is developed by [hngoos](https://github.com/hngoos) and distributed under a [proprietary license](LICENSE). Third-party components retain their own licenses; notices are included in the distributed packages. The interface uses [Morphicons](https://www.morphicons.com/).

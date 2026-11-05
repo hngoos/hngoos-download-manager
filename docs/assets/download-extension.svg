@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="176" viewBox="0 0 640 176" role="img" aria-labelledby="title desc">
+  <title id="title">Get the browser extension</title><desc id="desc">Chromium extension ZIP for Chrome, Cốc Cốc, Edge, Brave, and Opera. Manual installation.</desc>
+  <rect x="1" y="1" width="638" height="174" rx="20" fill="#1a1e2e" stroke="#655080" stroke-width="2"/>
+  <g fill="none" stroke="#c4b5fd" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="72" cy="87" r="32"/><ellipse cx="72" cy="87" rx="14" ry="32"/><path d="M40 87h64"/></g>
+  <text x="130" y="81" fill="#f1f5f9" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="700">Get the extension</text>
+  <text x="131" y="120" fill="#b4accc" font-family="Segoe UI,Arial,sans-serif" font-size="22">Chromium browsers · ZIP</text>
+  <path d="m576 75 13 13-13 13" fill="none" stroke="#c4b5fd" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

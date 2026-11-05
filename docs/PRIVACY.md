@@ -1,41 +1,55 @@
-# Quyền riêng tư của HDM
+# Privacy policy
 
-[Trang chủ](../README.md) · [Hướng dẫn sử dụng](USAGE.md) · [Bảo mật](SECURITY.md)
+[Home](../README.md) · [User guide](USAGE.md) · [Security](SECURITY.md)
 
-Áp dụng cho hngoos-download-manager (HDM) v0.1.0 và tiện ích Chromium đi kèm. Cập nhật ngày 06/11/2026.
+Applies to **hngoos-download-manager (HDM) v0.1.0** and its Chromium extension. Last updated: **6 November 2026**.
 
-## Dữ liệu trên máy
+## Data stored on your device
 
-HDM lưu lịch sử, URL nguồn, tên và đường dẫn tệp, tiến độ và tùy chọn trong thư mục dữ liệu của tài khoản Windows. URL tải có thể chứa token truy cập; hãy coi lịch sử là dữ liệu riêng tư. Tiện ích lưu thiết lập, danh sách trang cho phép và phần tử đã ẩn trong bộ nhớ cục bộ của trình duyệt. Các luồng video phát hiện được lưu tạm theo tab, giới hạn 30 luồng mỗi tab; khi đọc danh sách, mục quá 30 phút bị bỏ và khi đóng/chuyển trang, danh sách được xóa.
+HDM stores download history, source URLs, filenames, destinations, progress, and settings in the current Windows account's data directory. Download URLs can contain private access tokens; treat this history as sensitive data.
 
-HDM không có dịch vụ thu thập lịch sử hay hệ thống quảng cáo của nhà phát triển. Ứng dụng và tiện ích không có cơ chế gửi phân tích sử dụng về máy chủ của HDM. Dữ liệu không được đưa lên repo GitHub.
+The extension stores settings, site exceptions, and hidden-element selectors in local browser storage. Detected media URLs are held temporarily per tab, up to 30 candidates. Entries older than 30 minutes are excluded when the list is read; closing the tab or navigating to a new page clears its list.
 
-## Kết nối tới bên thứ ba
+HDM has no developer-operated history collection or advertising service. The application and extension do not send usage analytics to an HDM server. Download data is not uploaded to this GitHub repository.
 
-- Tải tệp/video gửi yêu cầu tới website và máy chủ nội dung bạn chọn; chúng nhận địa chỉ IP và thông tin giao thức cần thiết. Khi tải luồng video từ trang, HDM có thể gửi origin của trang làm Referer, không kèm đường dẫn hoặc query của trang đó.
-- Cập nhật ứng dụng và bộ tải video kết nối GitHub. Bộ lọc quảng cáo được lấy trực tiếp từ EasyList, EasyPrivacy, ABPVN và uBlock badware khi bạn cấp quyền.
-- Tra mã băm mở VirusTotal, MetaDefender hoặc Kaspersky với SHA-256 của tệp, không tự tải nội dung tệp lên. Dịch vụ đó có chính sách riêng.
-- Tìm phụ đề kết nối OpenSubtitles khi bạn sử dụng tính năng và cung cấp thông tin truy cập. Torrent kết nối các peer và dịch vụ mạng torrent; peer có thể thấy địa chỉ IP của bạn.
+## Connections to other services
 
-## Quyền của tiện ích Chromium
-
-| Quyền | Mục đích |
+| Activity | Data involved |
 | --- | --- |
-| Native messaging | Gửi yêu cầu bạn chọn tới HDM trên cùng máy. |
-| Context menus, active tab, scripting | Menu tải, nút video, chọn phần tử và lưu phiếu trên trang bạn cho phép. |
-| Storage, alarms | Lưu thiết lập và hẹn cập nhật bộ lọc. |
-| Declarative net request | Áp dụng quy tắc chặn mạng khi bạn bật bộ lọc và cấp quyền website. |
-| Web request, web navigation | Nhận diện phản hồi HLS/DASH trên trang đã cấp quyền, dọn danh sách theo tab và xử lý tab quảng cáo từ miền đã biết. Không lưu header yêu cầu/phản hồi hay nội dung trang cho mục phát hiện luồng. |
-| Truy cập website (tùy chọn) | Chỉ xin khi bạn bật tích hợp cho trang hoặc bật bộ lọc toàn cục. |
-| Cookies (tùy chọn) | Dùng phiên đăng nhập cho yêu cầu video do bạn chọn, khi đã bật tùy chọn và cấp quyền đúng trang. |
-| Downloads (tùy chọn) | Chuyển lượt tải mới sang HDM; giữ tải trong trình duyệt nếu bàn giao thất bại. |
+| File and video downloads | Requests go to the websites and content servers you choose. Those servers receive your IP address and necessary protocol information. Browser-originated video requests may include the source website's origin as Referer, without the page path or query. |
+| Application and downloader updates | Requests go to GitHub for release information and assets. |
+| Optional content filtering | Lists are fetched directly from EasyList, EasyPrivacy, ABPVN, and uBlock badware sources after you grant access. |
+| Hash lookups | VirusTotal, MetaDefender, or Kaspersky opens with the file's SHA-256. HDM does not automatically upload the file's contents. |
+| Subtitle lookup | Requests go to OpenSubtitles when you use the feature with the credentials you provide. |
+| Torrents | Connections go to peers and torrent network services. Peers can see your IP address. |
 
-Mặc định HDM không đọc cookie. Cookie chỉ được gửi khi URL video cùng origin với trang nguồn, được mã hóa Windows DPAPI khi chờ trong inbox của ứng dụng. Khi tải, yt-dlp sử dụng tệp cookie tạm dạng văn bản; HDM xóa tệp khi tác vụ kết thúc bình thường. Dừng cưỡng bức có thể để lại dữ liệu tạm. Tệp cookie bạn tự chọn vẫn do bạn quản lý.
+These services have their own privacy policies. Local media conversion and PDF redaction do not require sending the file to an external conversion service.
 
-Lưu phiếu là tính năng tùy chọn theo từng hostname bán hàng. Nội dung phiếu có thể có thông tin cá nhân khách hàng; HTML được chuyển tới ứng dụng trên máy, không gửi tới dịch vụ dựng PDF bên ngoài. HDM xóa HTML khỏi inbox sau khi xuất PDF thành công. Bạn tự quản lý PDF đã lưu.
+## Chromium extension permissions
 
-## Xóa dữ liệu và liên hệ
+| Permission | Purpose |
+| --- | --- |
+| Native messaging | Send requests you choose to the HDM application on the same computer. |
+| Context menus, active tab, scripting | Provide download actions, video controls, element selection, and authorized invoice capture. |
+| Storage, alarms | Store settings and schedule filter updates. |
+| Declarative net request | Apply selected network-blocking rules when filtering is enabled and website access is granted. |
+| Web request, web navigation | Recognize HLS/DASH responses on authorized sites, manage per-tab lists, and handle known-domain advertising popups. Media detection does not store request/response headers or page content. |
+| Website access — optional | Requested when you enable relevant site integration or global filtering. |
+| Cookies — optional | Use the signed-in session for an explicitly selected video, when the setting and relevant site permission are enabled. |
+| Downloads — optional | Hand new downloads to HDM and leave them in the browser if acceptance fails. |
 
-Bạn có thể thu hồi quyền trong trang quản lý tiện ích, xóa dữ liệu tiện ích hoặc gỡ tiện ích. Đóng HDM rồi xóa dữ liệu tại `%LOCALAPPDATA%\HDM` để xóa lịch sử và bộ nhớ đệm; bản nâng cấp từ phiên bản cũ có thể tiếp tục dùng `%LOCALAPPDATA%\HngoosDM`. Việc này không tự xóa tệp bạn đã lưu ở thư mục khác. Hãy sao lưu dữ liệu cần giữ trước khi xóa.
+## Session cookies and invoices
 
-Liên hệ nhà phát triển qua [GitHub của hngoos](https://github.com/hngoos) hoặc [Issues của HDM](https://github.com/hngoos/hngoos-download-manager/issues). Không đăng cookie, token, phiếu khách hàng hoặc lịch sử tải riêng tư vào issue công khai.
+**Cookies are not read by default.** With explicit session access enabled, cookies are sent only when the video URL and source page share an origin. Queued session data is encrypted using Windows DPAPI. During a download, yt-dlp uses a temporary plaintext cookie file; HDM removes it during normal cleanup. Forced termination may leave temporary data. Cookie files you export and select yourself remain under your control.
+
+Invoice capture is enabled separately for each supported seller hostname. A captured invoice can contain customer information. Static HTML is passed to the local application and rendered locally, without an external PDF service. HTML is removed from the inbox after successful export. You control the resulting PDFs and where they are shared.
+
+## Remove data or revoke access
+
+You can revoke permissions in the browser's extension settings, clear extension data, or remove the extension.
+
+To remove application history and staging data, close HDM and remove its data directory at `%LOCALAPPDATA%\HDM`. An upgraded installation may continue to use `%LOCALAPPDATA%\HngoosDM`. Back up data you want to keep first. Removing application data does not delete downloaded files or exported PDFs saved elsewhere.
+
+## Contact
+
+Contact the maintainer through [hngoos on GitHub](https://github.com/hngoos) or the [HDM issue tracker](https://github.com/hngoos/hngoos-download-manager/issues). Do not post cookies, credentials, customer invoices, access tokens, or private download histories in public issues. Security reports should follow the [security policy](SECURITY.md).

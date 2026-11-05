@@ -1,79 +1,149 @@
-# Hướng dẫn sử dụng
+# User guide
 
-[Trang chủ](../README.md) · [Chi tiết tính năng](FEATURES.md) · [Bảo mật](../SECURITY.md)
+[Home](../README.md) · [Feature reference](FEATURES.md) · [Privacy](PRIVACY.md) · [Security](SECURITY.md)
 
-## Cài trên Windows
+This guide covers **HDM v0.1.0** on Windows 10/11, 64-bit. The current application and extension interface is in Vietnamese; menu labels below include the wording you will see on screen.
 
-1. Mở [Releases](https://github.com/hngoos/hngoos-download-manager/releases/latest), tải `HDM-Setup-<version>.exe`.
-2. Chạy bộ cài; mặc định cài cho tài khoản hiện tại tại `%LOCALAPPDATA%\Programs\HDM`.
-3. Mở **hngoos-download-manager**, chọn thư mục lưu và dán URL để thêm lượt tải.
+## Install HDM
 
-Bộ cài chứa sẵn ứng dụng, bridge và giấy phép thư viện. Cài extension là thao tác riêng, hướng dẫn bên dưới. Không cần cài Python. Repo công khai chỉ phân phối tài liệu và hai gói tải, không cung cấp mã nguồn ứng dụng.
+1. Download [HDM-Setup-0.1.0.exe](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe?build=chromium-20261106).
+2. Run the installer. By default it installs for the current account at `%LOCALAPPDATA%\Programs\HDM`.
+3. Open **HDM**. The runtime, browser bridge, media dependencies, and component notices are included; Python and Node.js are not required.
 
-Bộ cài chưa ký Authenticode, nên Windows có thể hiển thị cảnh báo về nhà phát hành. Kiểm tra nguồn phát hành và SHA-256; không tắt công cụ bảo vệ của Windows.
+The extension is optional and installed separately. The current installer is not Authenticode-signed. Verify its source and checksum rather than disabling Windows protection.
 
-## Xác minh SHA-256
+## Verify a package
 
-Mã SHA-256 của từng gói được hiển thị tại Releases. Chạy lệnh sau và so sánh mã của đúng tên bộ cài:
+Compare this command's result with the SHA-256 for the same filename in the [release notes](https://github.com/hngoos/hngoos-download-manager/releases/tag/v0.1.0):
 
 ```powershell
-Get-FileHash .\HDM-Setup-<version>.exe -Algorithm SHA256
+Get-FileHash .\HDM-Setup-0.1.0.exe -Algorithm SHA256
 ```
 
-Thay `<version>` bằng phiên bản đã tải. Bộ cập nhật bên trong app còn kiểm manifest Ed25519 trong dữ liệu phát hành bằng khóa công khai được ghim trong ứng dụng, rồi kiểm hash và kích thước bộ cài. Tự so hash không thay thế bước kiểm chữ ký.
+The in-app updater additionally checks Ed25519-signed metadata against its pinned publisher key before checking the installer bytes. A matching checksum alone is not a publisher signature.
 
-## Tải tệp
+## Download a file
 
-Dán URL HTTP/HTTPS, nhập tên nếu muốn, chọn nơi lưu và số luồng, rồi chọn **Thêm lượt tải**. Dùng **Tạm dừng** / **Tiếp tục** để điều khiển hàng đợi. Các thao tác theo tệp nằm trong menu chuột phải.
+1. Paste an HTTP/HTTPS URL into **Đường dẫn** (URL).
+2. Optionally enter a filename, choose **Lưu tại** (Save to), and select the connection count.
+3. Select **Thêm lượt tải** (Add download).
+4. Use **Tạm dừng / Tiếp tục** (Pause / Resume), or right-click the entry for actions available in its current state.
 
-Mã băm và mirror nằm trong **Tùy chọn nâng cao**. Ba ô phía trên hiển thị lượt đang tải, số tệp hoàn tất và tổng tốc độ HTTP. Icon chuyển trạng thái tuân theo tùy chọn giảm hiệu ứng của Windows.
+Expected checksums and mirrors are under **Tùy chọn nâng cao** (Advanced options). The overview shows active jobs, completed files, and combined HTTP speed. Bandwidth presets are **Tối đa** (Maximum), **Vừa** (Moderate, 4 MB/s), and **Nhẹ** (Light, 512 KB/s).
 
-Lượt HTTP mới tải vào bộ nhớ đệm tại `%LOCALAPPDATA%\HDM\staging`, sau khi hoàn tất mới chuyển tới thư mục đã chọn. Khi khác ổ đĩa, app chép vào tên `.tmp`, kiểm SHA-256 rồi mới công bố tên cuối; phần mềm đồng bộ có thể nhìn thấy tệp `.tmp`. Video cũng tải và xử lý trong bộ nhớ đệm cục bộ trước khi chuyển tệp hoàn chỉnh tới đích; torrent vẫn dùng thư mục riêng của tác vụ.
+New HTTP jobs download into `%LOCALAPPDATA%\HDM\staging` before delivery. When moving between volumes, HDM copies through a temporary destination file and verifies SHA-256 before the final filename appears. A sync client may see the temporary file. Video tasks also stage locally; torrents use their own task directories.
 
-Tiếp tục qua lần mở app cần máy chủ giữ nguyên ETag mạnh và kích thước. Đổi link hết hạn khi đã dừng; app chỉ giữ phần cũ khi xác minh được cùng nội dung. Mirror cần SHA-256 từ một nguồn độc lập đáng tin.
+### Resume, replace a link, or move a download
 
-Muốn tiếp quản `.crdownload` hoặc `.part`, dừng tải trong trình duyệt trước, mở **Công cụ → Tiếp quản tệp trình duyệt tải dở**, rồi cung cấp URL trực tiếp. App giữ tệp gốc và xác minh toàn bộ tiền tố đã tải.
+Resume across application restarts requires the source to retain a matching strong ETag and size. If a link expires, pause the job and use its context-menu replacement action. HDM keeps old chunks only when the new source can be verified as the same content.
 
-## Nhập danh sách
+Changing the save folder during a download pauses reads, moves partial data, and resumes. Keep both locations accessible until the move finishes.
 
-Dán hai cột từ Excel/Sheets hoặc mở CSV/TXT/XLSX:
+Mirror downloads require a SHA-256 from an independent, trusted source. If final verification fails, HDM retries mirror-origin chunks from the primary source and preserves chunks already taken from that primary source.
+
+### Adopt a browser partial file
+
+Stop the browser's download first. Open **Công cụ → Tiếp quản tệp trình duyệt tải dở** (Tools → Adopt partial browser download), select the partial file, and provide its direct URL. HDM preserves the original and verifies the complete existing prefix before reuse. The source must support ranges and a strong ETag.
+
+## Import a list
+
+Open **Nhập danh sách…** (Import list). Paste link–filename columns from Excel/Google Sheets, or open CSV, TXT, or XLSX, including cell hyperlinks.
 
 ```text
-link | tên tệp
-https://example.com/report.pdf | Báo cáo.pdf
-https://example.com/photo.jpg | Ảnh sản phẩm.jpg
+https://example.com/report.pdf | Monthly report.pdf
+https://example.com/photo.jpg  | Product photo 001.jpg
 ```
 
-Không có tên thì app đánh số. XLSX hỗ trợ hyperlink của ô. Xem trước danh sách, bấm đúp để sửa dòng, chọn nhiều dòng để đổi tên hoặc bỏ dòng trước khi tải. Danh sách tối đa 500 dòng. Xuất báo cáo từng dòng từ Công cụ để đối chiếu thứ tự và trạng thái; báo cáo không kèm URL hay token.
+Select **Xem trước** (Preview), then double-click a row to edit it. Select multiple rows to rename or remove them. Entries without names receive numbered filenames. Keep imports within 500 rows and check the preview before starting.
 
-## Video và phiên đăng nhập
+Start the batch when the names and order are correct. Use the batch-report command in **Công cụ** (Tools) to export per-row status without source URLs or tokens.
 
-Mở **Video & nhạc**, dán URL, chọn độ cao tối đa hoặc MP3/M4A rồi tải. Khả năng lấy video phụ thuộc extractor và quyền truy cập hợp lệ của bạn; không hỗ trợ DRM. Xử lý nội bộ bằng FFmpeg nằm trong **Công cụ**.
+Website capture tools can save a list of pages as PDF/PNG with the source and capture time. They use an isolated browser session, not your normal signed-in profile; an installed Edge or configured Playwright Chromium runtime is required.
 
-Mặc định app không đọc phiên đăng nhập. Chỉ bật **Dùng phiên đăng nhập** trong extension khi cần; quyền cookie được xin riêng theo website. Cookie chỉ được gửi cho yêu cầu cùng origin với trang nguồn, mã hóa bằng Windows DPAPI khi lưu trong inbox. Tác vụ yt-dlp cần cookie tạm ở dạng văn bản trong lúc chạy; xem [ranh giới dữ liệu](../SECURITY.md#du-lieu-cuc-bo).
+## Download video or audio
 
-## Kết nối trình duyệt Chromium
+Open **Video & nhạc** (Video & audio), paste the original page URL, inspect formats when needed, select the maximum video height or MP3/M4A, and start the task. Playlist and subtitle options depend on what the website exposes. Use the stop control to cancel.
 
-1. Cài HDM bằng bộ cài Windows.
-2. Giải nén `HDM-Browser-Extension.zip`. Tại `chrome://extensions` / `edge://extensions`, bật Developer mode, Load unpacked thư mục vừa giải nén chứa `manifest.json`. Cũng có thể dùng thư mục `browser-extension` trong thư mục cài HDM.
-3. Sao chép ID extension, mở thẻ **Trình duyệt** trong app và đăng ký native host. Chỉ ghi registry tài khoản hiện tại.
-4. Mở Options của extension → Kiểm tra kết nối. Dùng menu chuột phải hoặc popup để tải.
-5. Quyền lọc mạng và dùng phiên đăng nhập là tùy chọn, được xin riêng trong popup. Không bật session nếu bạn không muốn gửi cookie của trang được chọn tới ứng dụng trên máy.
+The height setting is a cap, not a promise of source quality. HDM prefers H.264/MP4 when suitable formats are available. DRM-protected content and access-control bypass are unsupported.
 
-Chromium đã được kiểm thử tải thật → native EXE → inbox và quay về trình duyệt khi native host lỗi. Bật **Tự chuyển lượt tải HTTP/HTTPS sang HDM** trong popup nếu muốn tiếp quản lượt tải mới; quyền downloads được xin riêng. URL cần truy cập được từ app và có kích thước phù hợp. Cookie, POST, blob và nguồn không xác minh được sẽ tiếp tục tải trong trình duyệt. Chrome/Edge/Brave/Cốc Cốc/Opera cần nghiệm thu thêm trên từng bản; thời điểm hộp lưu tùy trình duyệt/cấu hình.
+### Use a signed-in session explicitly
 
-Hỗ trợ Chrome, Cốc Cốc, Edge, Brave và Opera từ Chromium 120. Hiện cài thủ công; chưa có trang phát hành Chrome Web Store.
+Enable **Dùng phiên đăng nhập** (Use signed-in session) in the extension only when needed, and grant cookie access for that website. Cookies are read only when the requested video URL and the source page share an origin. HDM stores the queued session using Windows DPAPI and creates a temporary cookie file for yt-dlp while the task runs.
 
-Trong popup, mục luồng video liệt kê HLS/DASH đã phát hiện trên trang được cấp quyền. Phát video trước rồi mở lại popup nếu danh sách trống. Nút chọn phần tử chỉ hoạt động khi bật chặn quảng cáo; nhấn Escape để hủy và dùng **Về mặc định cho trang này** để bỏ các phần tử đã ẩn.
+The temporary cookie file is removed during normal cleanup. Forced termination may leave temporary data; files you export and select yourself remain under your control. See [Privacy](PRIVACY.md#session-cookies-and-invoices).
 
-## Phiếu giao hàng (thử nghiệm)
+### Process media locally
 
-Tại trang bán hàng Shopee/Lazada/TikTok Shop được hỗ trợ, mở popup và bật **Tự lưu phiếu khi in** cho đúng trang. Khi trang phát sự kiện in, extension chuyển bản HTML tĩnh tới app; thao tác in thông thường vẫn tiếp tục. PDF được lưu tại `%LOCALAPPDATA%\HDM\invoices\<sàn>\<ngày>`, có mã đơn trong tên và nguồn/thời điểm trong trang. Mở từ **Công cụ → Mở thư mục phiếu giao hàng**.
+Use **Công cụ → Cắt / ghép video, nhạc…** (Tools → Cut / join video and audio), or the appropriate downloaded-file context menu.
 
-Giới hạn 90 KB mỗi phiếu, không lấy ảnh qua mạng và không chạy script khi dựng PDF. Phiếu dùng ảnh barcode từ URL, stylesheet ngoài, iframe hoặc cửa sổ in ở hostname khác có thể thiếu nội dung; hãy kiểm tra PDF và dùng **Save as PDF** của trình duyệt khi cần. Đã kiểm thử phiếu mẫu; chưa nghiệm thu tài khoản thật trên từng sàn. App chỉ xóa HTML trong inbox sau khi xuất PDF thành công; tác vụ bị ngắt được thử lại khi mở app.
+- Choose stream-copy cuts for speed or re-encode for frame-accurate cuts.
+- Arrange join inputs with Up / Down controls. Video inputs are normalized to the largest source canvas and a common format.
+- Convert to MP4, extract MP3/M4A, or compress to a target size.
 
-## Torrent và nén video
+Compression uses two passes and preserves the source. HDM discards results that are not smaller or exceed the target; try a larger target when the requested size is too low.
 
-**Công cụ → Mở lại torrent đã lưu** khôi phục lựa chọn và các mảnh đã xác minh từ checkpoint. App lưu checkpoint định kỳ, khi tạm dừng và khi đóng; mở lại ở trạng thái dừng để bạn chủ động tiếp tục. Hoàn tất sẽ dừng chia sẻ tiếp.
+## Browser setup
 
-Nén video dùng hai lượt libx264, tính dung lượng cho cả âm thanh và chi phí đóng gói. App chỉ xuất kết quả nếu nhỏ hơn nguồn và không vượt dung lượng đích; nếu mục tiêu quá thấp hoặc không đạt, tệp gốc được giữ nguyên. Có thể dừng ở cả hai lượt.
+Supported browsers are **Chrome, Cốc Cốc, Edge, Brave, and Opera**, based on Chromium 120 or later. The extension currently installs from ZIP; it is not on the Chrome Web Store.
+
+1. Install the HDM desktop application.
+2. Download [HDM-Browser-Extension.zip](https://github.com/hngoos/hngoos-download-manager/releases/latest/download/HDM-Browser-Extension.zip?build=chromium-20261106) and extract it to a permanent folder.
+3. Open the browser's extensions page, such as `chrome://extensions` or `edge://extensions`.
+4. Enable **Developer mode → Load unpacked**. Select the extracted folder containing `manifest.json`. Alternatively, use the installed application's `browser-extension` folder.
+5. Copy the **Extension ID**, open **Trình duyệt** (Browser) in HDM, and register the native host for that ID. Registration affects the current Windows account.
+6. Open the extension's **Options** page and select **Kiểm tra kết nối** (Check connection).
+
+If prompted to choose the bridge, select the installed `HDMBridge.exe`. Keep the extension folder in place. After an update, reload the extension; check the ID again if you moved the folder or changed browser profiles.
+
+### Send links, videos, and detected streams
+
+Use the context menu or extension popup to send a link/page. The video button appears outside the video frame. Grant access to the relevant site when requested.
+
+For HLS/DASH detection, play the video on an authorized page, then open or reopen the popup and choose a detected stream. An empty list can mean missing website access, no manifest request yet, an excluded advertising pattern, or a source the detector does not support. Try the original page URL in HDM as well.
+
+### Optional download handoff
+
+Enable **Tự chuyển lượt tải HTTP/HTTPS sang HDM** (Automatically send HTTP/HTTPS downloads to HDM) and grant the separate downloads permission.
+
+HDM takes ownership only after the native host verifies the source and saves the request. If acceptance fails, the browser resumes. Requests that depend on cookies, POST, blob URLs, or unverified sources continue in the browser. Save-dialog timing depends on the browser and configuration.
+
+### Optional filtering
+
+Grant network access from the popup to fetch and apply filter lists. Select Off, Minimal safety, Ad blocking, or Strong. Allow a site when filtering interferes; malware rules remain active.
+
+The element picker works when ad blocking is enabled and the page is eligible. Select a nonessential element and confirm; press **Escape** to cancel. Use **Về mặc định cho trang này** (Reset this site) to remove its hidden-element settings and explicit exception. Request statistics may be unavailable when the browser does not permit access.
+
+## Inspect files and redact PDFs
+
+Use **An toàn** (Safety) to inspect a file, compare hashes, request Defender/Authenticode checks, or open a SHA-256 lookup service. Enter an archive password when supported inspection requires it. A reported inspection limit is not a clean result.
+
+Flagged files receive `.chuakiemtra`. Restore only after reviewing the findings and checking the risk acknowledgement. A valid signature or a hash lookup does not guarantee safety.
+
+For PDFs, select the redaction tool under **Công cụ** (Tools), draw over sensitive regions, and export a new file. The output is rasterized and loses searchable text. Open the exported PDF and review every page before sharing it.
+
+## Invoice capture — experimental
+
+On a supported Shopee, Lazada, or TikTok Shop seller hostname, open the popup and enable **Tự lưu phiếu khi in** (Save invoices when printing). The normal print action continues; HDM receives static print HTML and exports it locally.
+
+Files are organized under `%LOCALAPPDATA%\HDM\invoices\<platform>\<date>`, with order IDs in their names. Open them through **Công cụ → Mở thư mục phiếu giao hàng** (Tools → Open invoice folder).
+
+Each capture is limited to 90 KB. The PDF renderer does not execute scripts or load external resources. URL-based images/barcodes, external stylesheets, frames, and print windows on another hostname may be absent. Review the PDF and use the browser's **Save as PDF** when capture is incomplete. Live seller accounts and every invoice format have not been accepted. Inbox HTML is removed after successful PDF creation; interrupted tasks can be retried when HDM reopens.
+
+## Torrents and background work
+
+Open a torrent/magnet task, select the files you want, and start it. HDM saves checkpoints periodically, on pause, and on close. Use **Công cụ → Mở lại torrent đã lưu** (Tools → Reopen saved torrent) to reopen a task in the paused state. Sharing stops when completion is detected.
+
+Tray operation, sleep prevention during active work, and shutdown after HTTP jobs finish are available as options. Shutdown includes a 60-second countdown and cancellation. Scheduled downloads require HDM to remain running.
+
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| Native host unavailable | Install HDM, register the exact current extension ID, and select the installed bridge executable. |
+| Video not detected | Grant site access, start playback, reopen the popup, or try the original page URL. |
+| Resume starts over | The source may lack ranges, a strong ETag, or matching content validators. |
+| Target compression size rejected | Increase the target; the original file is preserved. |
+| Incomplete invoice PDF | Review resource limitations and use the browser's Save as PDF. |
+| A quarantined file cannot open | Review inspection findings before considering restoration; do not remove the suffix just to bypass the check. |
+
+For ordinary bugs, open an [issue](https://github.com/hngoos/hngoos-download-manager/issues) with the HDM version, Windows/browser versions, reproducible steps, and a non-sensitive sample URL or file. Report security vulnerabilities privately using the [security policy](SECURITY.md).
