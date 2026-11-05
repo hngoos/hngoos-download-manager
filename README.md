@@ -86,8 +86,8 @@ from a successful workflow run. GitHub sign-in may be required.
 ### Browser extension
 
 **Chrome Web Store — coming soon.** Once published, this section will link
-directly to the official listing. Install the HDM desktop app first; the
-extension sends supported browser downloads to it.
+directly to the official listing. Install the HDM desktop app first, then add
+the extension to your Chromium browser and connect it to HDM.
 
 ### Platforms
 
@@ -97,7 +97,6 @@ extension sends supported browser downloads to it.
 | macOS | Desktop preview; terminal installation from source |
 | Linux | Desktop preview; terminal installation from source |
 | Browser extension | Chrome Web Store publication pending |
-| Standalone browser app | Not released |
 | Android / iOS | Coming soon |
 
 ## Community and help
