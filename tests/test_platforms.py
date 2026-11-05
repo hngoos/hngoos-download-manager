@@ -36,7 +36,7 @@ class PlatformTests(unittest.TestCase):
             bridge.write_text('#!/bin/sh\nexit 0\n')
             bridge.chmod(0o755)
             manifest = register('a'*32, bridge, root/'data')
-            self.assertEqual(json.loads(manifest.read_text())['path'], str(bridge))
+            self.assertEqual(json.loads(manifest.read_text())['path'], str(bridge.resolve()))
             for directory in host_directories():
                 self.assertEqual((directory/manifest.name).read_bytes(), manifest.read_bytes())
             with self.assertRaises(ValueError):
