@@ -1,4 +1,4 @@
-"""Publish two signed binary downloads to the HDM GitHub repository.
+"""Publish signed platform installers and the extension to the HDM GitHub repository.
 
 Run locally after building and signing dist/release-notes.md. Authentication
 uses Git Credential Manager; only the verified release assets are uploaded here.
@@ -28,8 +28,12 @@ notes = (folder/"release-notes.md").read_text(encoding="utf-8")
 assert notes.count(MANIFEST_START) == notes.count(MANIFEST_END) == 1
 payload = verify_manifest(json.loads(notes.split(MANIFEST_START, 1)[1].split(MANIFEST_END, 1)[0]))
 assert payload["version"] == __version__
-names = {f"HDM-Setup-{__version__}.exe", "HDM-Browser-Extension.zip"}
-assert {item["name"] for item in payload["assets"]} == names
+required = {f"HDM-Setup-{__version__}.exe", "HDM-Browser-Extension.zip"}
+allowed = required | {f"HDM-{__version__}-macOS-{arch}.dmg" for arch in ("arm64", "x64")} | {
+    f"HDM-{__version__}-Linux-x64.deb", f"HDM-{__version__}-Linux-x64.AppImage"}
+names = {item["name"] for item in payload["assets"]}
+assert required <= names <= allowed
+assert len(names) == len(payload["assets"])
 for item in payload["assets"]:
     path = folder/item["name"]
     assert path.stat().st_size == item["size"]

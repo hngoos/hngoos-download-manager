@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "hngoos-download-manager",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Gửi link/video tới HDM, nút tải ngoài khung video và chặn quảng cáo tùy chọn.",
   "minimum_chrome_version": "120",
   "homepage_url": "https://github.com/hngoos/hngoos-download-manager",

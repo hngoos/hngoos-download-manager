@@ -13,6 +13,9 @@ from hngoos_dm.updater import MANIFEST_END, MANIFEST_START, canonical
 
 folder = Path("dist")
 paths = [folder/name for name in (f"HDM-Setup-{__version__}.exe", "HDM-Browser-Extension.zip")]
+for pattern in (f"HDM-{__version__}-macOS-*.dmg", f"HDM-{__version__}-Linux-*.deb",
+                f"HDM-{__version__}-Linux-*.AppImage"):
+    paths.extend(sorted(folder.glob(pattern)))
 assets = [{"name": path.name, "size": path.stat().st_size,
            "sha256": hashlib.sha256(path.read_bytes()).hexdigest()} for path in paths]
 key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(os.environ["HNGOOS_RELEASE_SIGNING_KEY"], validate=True))

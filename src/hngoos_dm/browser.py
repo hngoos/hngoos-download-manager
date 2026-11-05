@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import shlex
 import sys
 from pathlib import Path
 
@@ -16,7 +17,16 @@ def register(extension_id, bridge_exe, data_dir):
     if os.name != "nt" and not os.access(executable, os.X_OK):
         raise ValueError("Native bridge cần có quyền thực thi.")
     folder = Path(data_dir) / "native-messaging"
-    folder.mkdir(parents=True, exist_ok=True)
+    folder.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if os.name != "nt" and os.environ.get("APPIMAGE"):
+        image = Path(os.environ["APPIMAGE"]).resolve()
+        if not image.is_file() or not os.access(image, os.X_OK):
+            raise ValueError("Không tìm thấy tệp AppImage gốc. Hãy giữ tệp tại một vị trí cố định.")
+        # AppImage mount points disappear when the process exits. Register a stable launcher.
+        executable = folder/"HDMBridge"
+        executable.write_text('#!/bin/sh\nexec env APPIMAGE_EXTRACT_AND_RUN=1 '
+                              + shlex.quote(str(image))+' --native-messaging "$@"\n', encoding="utf-8")
+        executable.chmod(0o700)
     manifest = folder / "com.hngoos.download_manager.json"
     manifest.write_text(json.dumps({
         "name": "com.hngoos.download_manager", "description": "hngoos-download-manager browser bridge",

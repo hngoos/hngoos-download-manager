@@ -326,7 +326,7 @@ class App:
             if getattr(sys, "frozen", False):
                 suggested = Path(sys.executable).parent/name
                 if sys.platform == "darwin":
-                    suggested = Path(sys.executable).parents[3]/name
+                    suggested = Path(sys.executable).parents[1]/"Helpers"/name
             else:
                 installed = Path(sys.executable).parent/("hdm-bridge.exe" if os.name == "nt" else "hdm-bridge")
                 suggested = installed if installed.exists() else Path(shutil.which("hdm-bridge") or str(Path.cwd()/"dist"/name))
@@ -382,7 +382,7 @@ class App:
         ttk.Label(parent, text=f"hngoos-download-manager {__version__}", font=("Segoe UI", 18, "bold")).pack(anchor="w", pady=12)
         paragraphs = [
             "HDM là ứng dụng quản lý tải cho Windows, macOS và Linux, tích hợp các trình duyệt nhân Chromium.",
-            ("HDM v0.1.0: giao diện với Morphicons, bộ nhớ tải HTTP cục bộ, tiếp quản lượt tải trình duyệt, "
+            (f"HDM v{__version__}: giao diện với Morphicons, bộ nhớ tải HTTP cục bộ, tiếp quản lượt tải trình duyệt, "
              "khôi phục torrent, nén video hai lượt và lưu phiếu in thử nghiệm."),
             ("Máy chủ không có ETag mạnh hoặc không cho tải theo Range sẽ dùng một luồng. "
              "Nếu không xác minh được nội dung cũ, ứng dụng tải lại từ đầu để tránh ghép sai tệp."),
@@ -1035,7 +1035,12 @@ def main():
     parser.add_argument("--smoke-test", action="store_true", help="Build UI then close")
     parser.add_argument("--self-test-report", type=Path, help="Run offline packaged feature checks; write JSON")
     parser.add_argument("--data-dir", type=Path, help="Override local metadata directory")
+    parser.add_argument("--native-messaging", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.native_messaging:
+        from .bridge import main as bridge_main
+        bridge_main()
+        return
     if args.self_test_report:
         from .diagnostics import run_diagnostics
         raise SystemExit(run_diagnostics(args.self_test_report))

@@ -52,3 +52,46 @@ class PlatformTests(unittest.TestCase):
                 with self.subTest(content=content):
                     path.write_bytes(content)
                     self.assertTrue(inspect_file(path, path.name))
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX native messaging launcher')
+    def test_appimage_registration_survives_mount_path_and_quotes(self):
+        import json
+        import subprocess
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            image = root/"HDM's app.AppImage"
+            image.write_text('#!/bin/sh\nprintf "%s\\n" "$@"\n')
+            image.chmod(0o755)
+            bridge = root/'mounted/HDMBridge'
+            bridge.parent.mkdir()
+            bridge.write_text('#!/bin/sh\nexit 1\n')
+            bridge.chmod(0o755)
+            with patch.dict(os.environ, {'APPIMAGE': str(image)}), \
+                    patch('hngoos_dm.browser.host_directories', return_value=[root/'hosts']):
+                manifest = register('a'*32, bridge, root/'data')
+            launcher = Path(json.loads(manifest.read_text())['path'])
+            bridge.unlink()
+            output = subprocess.check_output([str(launcher)], text=True)
+            self.assertEqual(output.strip(), '--native-messaging')
+            self.assertEqual(launcher.parent, root/'data/native-messaging')
+
+    def test_macos_bridge_launches_the_gui_inside_its_own_bundle(self):
+        from hngoos_dm.bridge import launch_app
+        with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ, {}, clear=True):
+            contents = Path(folder)/'HDM.app/Contents'
+            executable = contents/'MacOS/HDM'
+            executable.parent.mkdir(parents=True)
+            executable.touch()
+            with patch.object(sys, 'frozen', True, create=True), patch.object(sys, 'platform', 'darwin'), \
+                    patch.object(sys, 'executable', str(contents/'Helpers/HDMBridge')), \
+                    patch('hngoos_dm.bridge.subprocess.Popen') as spawn:
+                launch_app()
+            self.assertEqual(spawn.call_args.args[0], [str(executable)])
+
+    def test_native_message_mode_does_not_create_a_gui(self):
+        from hngoos_dm.app import main
+        with patch.object(sys, 'argv', ['HDM', '--native-messaging']), \
+                patch('hngoos_dm.bridge.main') as bridge, patch('tkinter.Tk') as root:
+            main()
+        bridge.assert_called_once_with()
+        root.assert_not_called()
