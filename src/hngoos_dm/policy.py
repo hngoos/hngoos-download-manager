@@ -36,7 +36,7 @@ class BandwidthBudget:
 
 
 class HostPolicy:
-    def __init__(self, store, default_limit=8, recovery_seconds=300, recovery_successes=32):
+    def __init__(self, store, default_limit=32, recovery_seconds=300, recovery_successes=32):
         self.store = store
         self.condition = threading.Condition()
         self.limits = store.setting("host_limits", {})

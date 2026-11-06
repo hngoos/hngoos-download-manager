@@ -9,11 +9,12 @@ import threading
 import time
 import urllib.error
 import urllib.request
+from contextlib import contextmanager
 from pathlib import Path
 
 from .files import category, checksums, deliver
 from .policy import BandwidthBudget, HostPolicy, TransferCancelled
-from .safety import inspect_file, safe_filename, validate_url
+from .safety import filename_from_url, inspect_download, safe_filename, validate_url
 
 BLOCK = 128 * 1024
 
@@ -72,13 +73,13 @@ class DownloadManager:
         self.scheduler = threading.Thread(target=self._schedule_loop, daemon=True)
         self.scheduler.start()
 
-    def add(self, url, directory, filename, connections=8, expected_sha256="", start=True,
+    def add(self, url, directory, filename, connections=32, expected_sha256="", start=True,
             mirrors=None, scheduled_at=0, expected_hashes=None):
         from urllib.parse import urlsplit
 
         from .cloud import resolve
         original_url = url
-        if urlsplit(url).hostname in {"drive.google.com", "docs.google.com", "dropbox.com", "www.dropbox.com", "onedrive.live.com", "1drv.ms"}:
+        if urlsplit(url).hostname in {"drive.google.com", "docs.google.com", "dropbox.com", "www.dropbox.com", "onedrive.live.com", "1drv.ms", "www.mediafire.com", "mediafire.com"}:
             url = resolve(url)
         validate_url(url)
         if expected_sha256 and not re.fullmatch(r"[a-fA-F0-9]{64}", expected_sha256):
@@ -107,7 +108,7 @@ class DownloadManager:
         self.bandwidth.configure(mode)
         self.store.set_setting("bandwidth_mode", mode)
 
-    def adopt_partial(self, url, partial, directory, filename, connections=8):
+    def adopt_partial(self, url, partial, directory, filename, connections=32):
         """Verify the entire contiguous browser prefix, keep its original, then adopt it."""
         import hashlib
         partial = Path(partial).resolve()
@@ -233,6 +234,7 @@ class DownloadManager:
         except Exception as exc:  # noqa: BLE001 -- Persist job errors at the worker boundary.
             self.store.update(job_id, state="error", error=str(exc), speed=0)
         finally:
+            self.store.update(job_id, active_connections=0)
             with self.lock:
                 self.active.pop(job_id, None)
                 destination = self.relocations.pop(job_id, None)
@@ -253,6 +255,10 @@ class DownloadManager:
         job = self.store.get(job_id)
         self.store.update(job_id, state="downloading", speed=0)
         info = probe(job["url"])
+        suggested = info.pop("filename", "")
+        if suggested and job["filename"] in {"download.bin", filename_from_url(job["url"])}:
+            job["filename"] = suggested
+            self.store.update(job_id, filename=suggested)
         sources = [(job["url"], info)]
         if job.get("expected_sha256") and not job.get("mirror_fallback") and strong_etag(info["etag"]):
             for mirror in job.get("mirrors", []):
@@ -295,11 +301,28 @@ class DownloadManager:
         chunk_sources = job.get("chunk_sources", {}) if reusable else {}
         for idx, start, end, done in chunks:
             part = staging / f"{idx}.part"
-            progress[idx] = end - start + 1 if done and part.exists() and part.stat().st_size == end-start+1 else 0
+            size = part.stat().st_size if part.exists() else 0
+            progress[idx] = size if (done or reusable) and 0 <= size <= end-start+1 else 0
         progress_lock = threading.Lock()
         began = time.monotonic()
         initial = sum(progress.values())
         last_write = [0.0]
+        active_lock = threading.Lock()
+        counts = {"active": 0, "peak": 0}
+
+        @contextmanager
+        def connection(source_url):
+            with self.hosts.connection(source_url, stop):
+                with active_lock:
+                    counts["active"] += 1
+                    counts["peak"] = max(counts["peak"], counts["active"])
+                    self.store.update(job_id, active_connections=counts["active"], peak_connections=counts["peak"])
+                try:
+                    yield
+                finally:
+                    with active_lock:
+                        counts["active"] -= 1
+                        self.store.update(job_id, active_connections=counts["active"])
 
         def report(idx, count, force=False):
             with progress_lock:
@@ -329,22 +352,30 @@ class DownloadManager:
                     available = [source for source in sources if source[0] not in rejected_sources]
                     source_url, source_info = available[(idx + attempt) % len(available)]
                 headers = {}
+                offset = 0
+                if (info["ranged"] and strong_etag(source_info["etag"]) and len(sources) == 1
+                        and target.exists() and target.stat().st_size <= end-start+1):
+                    offset = target.stat().st_size
+                if offset > 0 and offset == end-start+1:
+                    self.store.mark_chunk(job_id, idx)
+                    report(idx, offset, True)
+                    return
                 if info["ranged"]:
-                    headers["Range"] = f"bytes={start}-{end}"
+                    headers["Range"] = f"bytes={start+offset}-{end}"
                 if strong_etag(source_info["etag"]):
                     headers["If-Match"] = source_info["etag"]
                 try:
-                    with self.hosts.connection(source_url, stop), request(source_url, headers) as response:
+                    with connection(source_url), request(source_url, headers) as response:
                         if response.headers.get("Content-Encoding", "identity").lower() != "identity":
                             raise ValueError("Máy chủ trả nội dung đã nén ngoài dự kiến.")
                         if info["ranged"]:
-                            wanted = f"bytes {start}-{end}/{info['total']}"
+                            wanted = f"bytes {start+offset}-{end}/{info['total']}"
                             if response.status != 206 or response.headers.get("Content-Range") != wanted:
                                 raise ValueError("Máy chủ không giữ đúng Range; dừng để tránh hỏng tệp.")
                         if strong_etag(source_info["etag"]) and response.headers.get("ETag") != source_info["etag"]:
                             raise ValueError("ETag đã thay đổi hoặc bị thiếu trong lúc tải.")
-                        count = 0
-                        with target.open("wb") as output:
+                        count = offset
+                        with target.open("ab" if offset else "wb") as output:
                             while True:
                                 if stop.is_set():
                                     raise Paused()
@@ -376,6 +407,7 @@ class DownloadManager:
                         self.store.event(job_id, "mirror_rejected", f"Đã loại mirror lỗi: {type(exc).__name__}")
                         continue
                     if isinstance(exc, ValueError):
+                        target.unlink(missing_ok=True)
                         raise
                     if isinstance(exc, urllib.error.HTTPError) and exc.code not in {408, 429, 500, 502, 503, 504}:
                         raise
@@ -394,6 +426,7 @@ class DownloadManager:
 
         # Without a strong validator, multiple HTTP responses cannot prove identical content.
         workers = job["connections"] if info["ranged"] and strong_etag(info["etag"]) else 1
+        self.store.update(job_id, worker_limit=workers, safety_note="Chờ kiểm tra")
         if info["ranged"] and not strong_etag(info["etag"]):
             self.store.set_chunks(job_id, [(0, info["total"]-1)])
             chunks = self.store.chunks(job_id)
@@ -432,9 +465,15 @@ class DownloadManager:
                 for idx, *_ in chunks:
                     if chunk_sources.get(str(idx)) != job["url"]:
                         db.execute("UPDATE chunks SET done=0 WHERE job=? AND idx=?", (job_id, idx))
+                        (staging/f"{idx}.part").unlink(missing_ok=True)
             assembled.unlink()
             return self._download(job_id, stop)
-        reasons = inspect_file(assembled, job["filename"], high_security=self.store.setting("high_security", False))
+        inspection = inspect_download(assembled, job["filename"],
+            high_security=self.store.setting("high_security", False),
+            antivirus=self.store.setting("auto_defender", False) and os.name == "nt")
+        reasons = inspection["reasons"]
+        if stop.is_set():
+            raise Paused()
         if job["expected_sha256"] and digest != job["expected_sha256"]:
             reasons.append("SHA-256 không trùng mã băm mong đợi")
         for algorithm, expected in job.get("expected_hashes", {}).items():
@@ -451,7 +490,8 @@ class DownloadManager:
                 pass  # FAT/exFAT and some shares do not support alternate data streams.
         self.store.update(job_id, state="quarantined" if reasons else "complete", downloaded=size,
                           total=size, speed=0, sha256=digest, checksums=digests,
-                          output=str(candidate), error="; ".join(reasons))
+                          output=str(candidate), error="; ".join(reasons),
+                          safety_note="Cách ly" if reasons else inspection["safety_note"])
         if not reasons and self.store.setting("auto_extract", False) and candidate.suffix.lower() == ".zip":
             from .extraction import extract_zip
             try:

@@ -33,6 +33,50 @@ class PresentationTests(unittest.TestCase):
             time.sleep(0.01)
         self.assertEqual(self.errors, [])
 
+    def test_clipboard_detection_never_downloads_or_overwrites_typed_link(self):
+        with patch.object(self.root, "clipboard_get", return_value="https://youtu.be/example"), \
+                patch.object(self.app.manager, "add") as add:
+            self.app.url.set("")
+            self.app.clipboard_checked = 0
+            self.app.check_clipboard()
+            self.assertEqual(self.app.url.get(), "https://youtu.be/example")
+            self.assertIn("video/nhạc", self.app.source_hint.get())
+            add.assert_not_called()
+        self.app.url.set("https://example.com/typing.zip")
+        with patch.object(self.root, "clipboard_get", return_value="https://example.com/new.zip"):
+            self.app.clipboard_checked = 0
+            self.app.check_clipboard()
+            self.assertEqual(self.app.url.get(), "https://example.com/typing.zip")
+            self.assertTrue(self.app.clipboard_button.winfo_manager())
+            self.app.use_clipboard_link()
+            self.assertEqual(self.app.url.get(), "https://example.com/new.zip")
+        self.assertEqual(len(self.app.tabs.tabs()), 1)
+        self.assertEqual(self.app.connections.get(), "32")
+
+    def test_media_link_download_uses_shared_history_and_mp3_choice(self):
+        target = Path(self.folder.name)/"clip.mp3"
+        target.write_bytes(b"audio fixture")
+        self.app.url.set("https://youtu.be/example")
+        self.app.download_format.set("MP3")
+        with patch("hngoos_dm.media.download_video", return_value=[target]) as download:
+            self.app.add()
+            self.pump(0.6)
+        row = self.app.store.all()[0]
+        self.assertEqual(row["kind"], "media")
+        self.assertEqual(row["state"], "complete")
+        self.assertEqual(row["output"], str(target))
+        self.assertEqual(download.call_args.kwargs["options"].audio, "mp3")
+        self.assertFalse(self.app.media_busy)
+
+    def test_information_opens_once_and_keeps_main_screen_download_only(self):
+        self.app.open_information()
+        dialog = self.app.information_dialog
+        self.app.open_information()
+        self.pump()
+        self.assertIs(self.app.information_dialog, dialog)
+        self.assertEqual(len(self.app.tabs.tabs()), 1)
+        dialog.destroy()
+
     def test_switches_preserve_task_inputs_and_persist_settings(self):
         self.app.url.set("https://example.com/download?token=keep-me")
         self.app.filename.set("Tài liệu của tôi.pdf")
@@ -42,7 +86,7 @@ class PresentationTests(unittest.TestCase):
         self.pump()
         self.assertEqual(self.app.store.setting("theme"), "light")
         self.assertEqual(self.app.store.setting("language"), "en")
-        self.assertEqual(self.app.tabs.tab(0, "text"), "Downloads")
+        self.assertEqual(self.app.tabs.tab(0, "text"), "Download")
         self.assertEqual(self.app.table.heading("name", "text"), "FILENAME")
         self.assertEqual(inputs, (self.app.url.get(), self.app.filename.get(), self.app.connections.get()))
         self.app.bandwidth_selector.current(1)
@@ -73,7 +117,8 @@ class PresentationTests(unittest.TestCase):
             self.assertEqual(self.root.cget("background"), "#f5f6fa")
             for name, background, states in (("TButton", "background", ()),
                     ("Primary.TButton", "background", ()), ("Treeview", "background", ("selected",)),
-                    ("TCombobox", "fieldbackground", ("readonly",)), ("TCheckbutton", "background", ())):
+                    ("TCombobox", "fieldbackground", ("readonly",)), ("TCheckbutton", "background", ()),
+                    ("TNotebook.Tab", "background", ("selected",))):
                 with self.subTest(style=name):
                     fg = luminance(style.lookup(name, "foreground", states))
                     bg = luminance(style.lookup(name, background, states))

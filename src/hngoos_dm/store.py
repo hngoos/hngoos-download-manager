@@ -32,7 +32,7 @@ class Store:
         finally:
             connection.close()
 
-    def create(self, url, directory, filename, connections=8, expected_sha256=""):
+    def create(self, url, directory, filename, connections=32, expected_sha256=""):
         job = {"id": uuid.uuid4().hex, "url": url, "directory": str(directory), "filename": filename,
                "connections": max(1, min(32, int(connections))), "expected_sha256": expected_sha256.lower(),
                "state": "paused", "total": 0, "downloaded": 0, "speed": 0, "error": "", "created": time.time(),
@@ -80,7 +80,7 @@ class Store:
             db.execute("UPDATE inbox SET state='pending' WHERE state='reviewing'")
         for job in self.all():
             if job["state"] in {"queued", "downloading", "verifying"}:
-                self.update(job["id"], state="paused", speed=0)
+                self.update(job["id"], state="paused", speed=0, active_connections=0)
 
     def setting(self, key, default=None):
         with self.connect() as db:

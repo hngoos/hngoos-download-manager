@@ -1,4 +1,4 @@
-#define AppVersion "0.1.4"
+#define AppVersion "0.1.5"
 [Setup]
 AppId={{E82104D8-7840-4C75-9E28-3229D109FD13}
 AppName=Hngoos Download Manager
@@ -31,5 +31,7 @@ Name: "{group}\HDM"; Filename: "{app}\HDM.exe"
 Name: "{autodesktop}\HDM"; Filename: "{app}\HDM.exe"; Tasks: desktopicon
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
+[Registry]
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: "HDM"; Flags: uninsdeletevalue dontcreatekey
 [Run]
 Filename: "{app}\HDM.exe"; Description: "Open HDM"; Flags: nowait postinstall skipifsilent

@@ -208,5 +208,22 @@ def scan_defender(path):
     tool = root / "MpCmdRun.exe"
     if not tool.is_file():
         raise FileNotFoundError("Không tìm thấy Windows Defender trên máy này.")
-    return subprocess.run([str(tool), "-Scan", "-ScanType", "3", "-File", str(Path(path).resolve())],
+    return subprocess.run([str(tool), "-Scan", "-ScanType", "3", "-DisableRemediation", "-File", str(Path(path).resolve())],
                           check=False, capture_output=True, text=True, timeout=600, creationflags=0x08000000)
+
+
+def inspect_download(path, filename, high_security=False, antivirus=False):
+    """Distinguish unavailable antivirus from a completed scan; never certify a file clean."""
+    reasons = inspect_file(path, filename, high_security=high_security)
+    note = "Đã kiểm tra sơ bộ"
+    if antivirus:
+        try:
+            result = scan_defender(path)
+        except (OSError, subprocess.SubprocessError):
+            note = "Sơ bộ · Defender chưa quét"
+        else:
+            if result.returncode == 0:
+                note = "Sơ bộ + Defender"
+            else:
+                reasons.append("Defender phát hiện rủi ro hoặc chưa hoàn tất quét; cần kiểm tra trước khi mở")
+    return {"reasons": reasons, "safety_note": "Cách ly" if reasons else note}

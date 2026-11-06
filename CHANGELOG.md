@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.5 — 2026-11-06
+
+- Focus the main window on downloading, with an icon-only brand and top-right information/settings.
+- Recognize clipboard links locally and wait for confirmation; route files, cloud links, video/audio and magnets.
+- Default to 32 HTTP connections, show actual connection counts, and retain validated partial chunks on retries.
+- Track media downloads in the shared history and check every published media output.
+- Add automatic Windows Defender scanning with explicit unavailable/error states and opt-in launch at sign-in.
+
 ## 0.1.4 — 2026-11-06
 
 - Improve light-theme text, buttons, selected rows, icons and dialog backgrounds.

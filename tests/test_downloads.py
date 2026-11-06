@@ -152,8 +152,10 @@ class DownloadsTest(unittest.TestCase):
 
     def test_retry_after_truncated_response(self):
         Handler.dropped = False
+        Handler.seen = []
         self.assert_payload(self.wait(self.add("/drop")))
         self.assertTrue(Handler.dropped)
+        self.assertTrue(any(value and value.startswith("bytes=1024-") for path, value in Handler.seen if path == "/drop"))
 
     def test_retry_rate_limit(self):
         Handler.throttled = False

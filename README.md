@@ -8,19 +8,14 @@
 
 ## Features
 
-- **Resumable downloads** — download in parallel, pause, resume, and retry automatically.
-- **Mirrors and recovery** — use verified mirrors, replace expired links, and
-  change the save location during a download.
-- **Batch downloads** — paste links and filenames or import CSV, TXT and XLSX
-  files. Preview names, preserve row order, and export completion reports.
-- **Video and audio tools** — choose available formats, download playlists,
-  extract audio, and trim, merge, convert or compress files locally.
-- **File safety checks** — verify checksums and check filenames and archive
-  contents for signs of risk.
-- **PDF and web capture** — redact PDF content and save web pages as PDFs or
-  images with a compatible browser runtime.
-- **Scheduling and organization** — schedule downloads, limit bandwidth,
-  organize files by type, and keep download history on your computer.
+- **Fast downloads** — up to 32 connections, shared chunk scheduling, pause/resume,
+  automatic retries, verified mirrors and expired-link recovery.
+- **Built-in safety checks** — inspect file content, names, macros and archives,
+  verify checksums and quarantine risky files. Optional Windows Defender scanning.
+- **One download screen** — detect clipboard links and choose original files,
+  video or MP3/M4A from supported sources before downloading.
+- **Everyday essentials** — batch imports, scheduling, bandwidth limits,
+  background operation, optional launch at sign-in and in-app updates.
 
 ## Download
 

@@ -4,6 +4,7 @@ import argparse
 import os
 import queue
 import threading
+import time
 import tkinter as tk
 import webbrowser
 from pathlib import Path
@@ -13,7 +14,7 @@ from . import __version__
 from .engine import DownloadManager
 from .instance import InstanceLock
 from .paths import data_directory
-from .platforms import open_path, platform_label
+from .platforms import open_path
 from .safety import filename_from_url, scan_defender, sha256_file
 from .store import Store
 
@@ -40,6 +41,8 @@ class App:
         self.root.configure(bg=BG)
         data_dir = data_dir or data_directory()
         self.store = Store(data_dir / "downloads.sqlite3")
+        if self.store.setting("auto_defender") is None:
+            self.store.set_setting("auto_defender", os.name == "nt")
         self.data_dir = data_dir
         from .ui_preferences import PALETTES, Localizer
         self.theme = self.store.setting("theme", "dark")
@@ -53,13 +56,26 @@ class App:
         self.directory = tk.StringVar(value=str(Path.home() / "Downloads"))
         self.url = tk.StringVar()
         self.filename = tk.StringVar()
-        self.connections = tk.StringVar(value="8")
+        self.connections = tk.StringVar(value="32")
         self.expected_hash = tk.StringVar()
         self.hash_algorithm = tk.StringVar(value="SHA-256")
         self.mirrors = tk.StringVar()
         self.bandwidth_mode = tk.StringVar(value={"maximum": "Tối đa", "medium": "Vừa (4 MB/s)", "light": "Nhẹ (512 KB/s)"}[
             self.store.setting("bandwidth_mode", "maximum")])
         self.media_stop = threading.Event()
+        self.media_url = tk.StringVar()
+        self.media_quality = tk.StringVar(value="1080")
+        self.media_playlist = tk.BooleanVar()
+        self.media_subtitles = tk.BooleanVar()
+        self.media_cookie = tk.StringVar()
+        self.media_format = tk.StringVar()
+        self.download_format = tk.StringVar(value="Auto")
+        self.media_status = tk.StringVar()
+        self.clipboard_enabled = tk.BooleanVar(value=self.store.setting("clipboard_enabled", True))
+        self.clipboard_notice = tk.StringVar()
+        self.clipboard_last = ""
+        self.clipboard_pending = ""
+        self.clipboard_checked = 0
         self.browser_session = ""
         self.browser_session_url = ""
         self.video_inbox_busy = False
@@ -74,8 +90,6 @@ class App:
         self._layout()
         decorate_buttons(root, self.icons)
         self.playback_icon = MorphPlayback(self.transfer_button)
-        for index, icon in enumerate(("download", "video", "shield", "globe", "settings", "info")):
-            self.tabs.tab(index, image=self.icons[icon], compound="left")
         self.apply_preferences()
         self.root.bind_all("<Map>", self._presentation_mapped, add="+")
         self.root.protocol("WM_DELETE_WINDOW", self.request_close)
@@ -133,7 +147,8 @@ class App:
         style.configure("Vertical.TScrollbar", background="#30364b", troughcolor=PANEL,
                         arrowcolor=MUTED, bordercolor=PANEL, lightcolor=PANEL, darkcolor=PANEL)
         style.configure("TNotebook.Tab", background=PANEL, foreground=MUTED, padding=(20, 12))
-        style.map("TNotebook.Tab", background=[("selected", "#263d5c")], foreground=[("selected", TEXT)])
+        style.map("TNotebook.Tab", background=[("selected", "#e1e9f8" if light else "#263d5c")],
+                  foreground=[("selected", TEXT)])
         self.root.option_add("*TCombobox*Listbox.background", PANEL)
         self.root.option_add("*TCombobox*Listbox.foreground", TEXT)
         self.root.option_add("*TCombobox*Listbox.selectBackground", selected)
@@ -145,19 +160,11 @@ class App:
 
     def _layout(self):
         from .ui_preferences import SlideSwitch
-        sidebar = ttk.Frame(self.root, padding=(16, 22), width=190)
-        sidebar.pack(side="left", fill="y")
-        sidebar.pack_propagate(False)
-        ttk.Label(sidebar, text=" HDM", image=self.brand_icons[1], compound="left",
-                  foreground=TEXT, font=("Segoe UI", 24, "bold")).pack(anchor="w")
-        ttk.Label(sidebar, text="Hngoos Download\nManager", style="Muted.TLabel", wraplength=150,
-                  font=("Segoe UI", 9)).pack(anchor="w", padx=10, pady=(3, 28))
-        shell = ttk.Frame(self.root, padding=(6, 22, 22, 18))
-        shell.pack(side="left", fill="both", expand=True)
+        shell = ttk.Frame(self.root, padding=(24, 18, 24, 18))
+        shell.pack(fill="both", expand=True)
         header = ttk.Frame(shell)
-        header.pack(fill="x", pady=(0, 12))
-        self.page_title = tk.StringVar(value="Tải xuống")
-        ttk.Label(header, textvariable=self.page_title, style="Title.TLabel").pack(side="left")
+        header.pack(fill="x", pady=(0, 8))
+        ttk.Label(header, image=self.brand_icons[2]).pack(side="left")
         controls = ttk.Frame(header)
         controls.pack(side="right")
         self.theme_switch = SlideSwitch(controls, ("☀", "☾"), self.theme == "dark",
@@ -165,36 +172,62 @@ class App:
         self.theme_switch.pack(side="left", padx=(0, 10))
         self.language_switch = SlideSwitch(controls, ("VI", "EN"), self.locale.language == "en",
             lambda english: self.set_preference("language", "en" if english else "vi"), "Vietnamese / English")
-        self.language_switch.pack(side="left")
-        ttk.Label(shell, textvariable=self.status, style="Muted.TLabel", wraplength=1100).pack(side="bottom", fill="x", pady=(12, 0))
-        tabs = ttk.Notebook(shell, style="HDM.TNotebook")
-        tabs.pack(fill="both", expand=True)
-        self.tabs = tabs
-        downloads, media, safety, browser, tools, about = [ttk.Frame(tabs, padding=16) for _ in range(6)]
-        self.media_tab = media
-        nav_buttons = []
-        for index, (tab, title, icon) in enumerate(zip((downloads, media, safety, browser, tools, about),
-                              ("Tải xuống", "Video & nhạc", "An toàn", "Trình duyệt", "Công cụ", "Thông tin"),
-                              ("download", "video", "shield", "globe", "settings", "info"), strict=True)):
-            tabs.add(tab, text=title)
-            button = ttk.Button(sidebar, text=title, image=self.icons[icon], compound="left",
-                style="ActiveNav.TButton" if index == 0 else "Nav.TButton", command=lambda i=index: tabs.select(i))
-            button.pack(fill="x", pady=4)
-            nav_buttons.append(button)
-        ttk.Label(sidebar, text=f"HDM {__version__}\n{platform_label()}", style="Muted.TLabel").pack(side="bottom", pady=12)
-        ttk.Button(sidebar, text="Check for update", command=self.check_update).pack(side="bottom", fill="x", pady=8)
-        def select_page(_event):
-            selected = tabs.index(tabs.select())
-            self.page_title.set(tabs.tab(selected, "text"))
-            for index, button in enumerate(nav_buttons):
-                button.configure(style="ActiveNav.TButton" if index == selected else "Nav.TButton")
-        tabs.bind("<<NotebookTabChanged>>", select_page)
+        self.language_switch.pack(side="left", padx=(0, 10))
+        self.info_button = ttk.Button(controls, text="Thông tin", image=self.icons["info"],
+                                     compound="left", command=self.open_information)
+        self.info_button.pack(side="left")
+        self.page_title = tk.StringVar(value="Tải xuống")
+        ttk.Label(shell, textvariable=self.page_title, style="Title.TLabel").pack(anchor="w", pady=(0, 8))
+        ttk.Label(shell, textvariable=self.status, style="Muted.TLabel", wraplength=1100).pack(
+            side="bottom", fill="x", pady=(12, 0))
+        self.tabs = ttk.Notebook(shell, style="HDM.TNotebook")
+        self.tabs.pack(fill="both", expand=True)
+        downloads = ttk.Frame(self.tabs)
+        self.tabs.add(downloads, text="Tải xuống")
         self._downloads(downloads)
-        self._media(self.scrollable(media))
-        self._safety(self.scrollable(safety))
-        self._browser(self.scrollable(browser))
-        self._tools(tools)
-        self._about(self.scrollable(about))
+        self.close_to_tray = tk.BooleanVar(value=self.store.setting("close_to_tray", False))
+        self.shutdown_after = tk.BooleanVar()
+
+    def open_information(self):
+        if getattr(self, "information_dialog", None) and self.information_dialog.winfo_exists():
+            self.information_dialog.lift()
+            return
+        dialog = self.information_dialog = tk.Toplevel(self.root)
+        dialog.title("HDM · "+self.locale.text("Thông tin"))
+        dialog.geometry("960x680")
+        dialog.transient(self.root)
+        frame = ttk.Frame(dialog, padding=20)
+        frame.pack(fill="both", expand=True)
+        tabs = ttk.Notebook(frame)
+        tabs.pack(fill="both", expand=True)
+        for title, build in (("Thông tin", self._about), ("Thiết lập", self._download_settings),
+                             ("An toàn", self._safety), ("Trình duyệt", self._browser),
+                             ("Công cụ", self._tools)):
+            tab = ttk.Frame(tabs, padding=12)
+            tabs.add(tab, text=self.locale.text(title))
+            build(self.scrollable(tab))
+        self.apply_preferences()
+
+    def _download_settings(self, parent):
+        ttk.Checkbutton(parent, text="Tự nhận link từ clipboard", variable=self.clipboard_enabled,
+                        command=lambda: self.store.set_setting("clipboard_enabled", self.clipboard_enabled.get())).pack(
+                            anchor="w", pady=10)
+        ttk.Label(parent, text="Chỉ nhận link trên máy; chờ bạn bấm tải trước khi kết nối tới nguồn.",
+                  style="Muted.TLabel", wraplength=800).pack(anchor="w")
+        startup = tk.BooleanVar(value=self.store.setting("startup_enabled", False))
+        def toggle_startup():
+            from .startup import set_enabled
+            try:
+                set_enabled(startup.get())
+                self.store.set_setting("startup_enabled", startup.get())
+            except (OSError, ValueError) as exc:
+                startup.set(not startup.get())
+                messagebox.showerror("HDM", str(exc), parent=self.root)
+        ttk.Checkbutton(parent, text="Khởi động cùng hệ điều hành", variable=startup,
+                        command=toggle_startup).pack(anchor="w", pady=14)
+        self.startup_enabled = startup
+        ttk.Button(parent, text="Check for update", command=self.check_update).pack(anchor="w", pady=12)
+        ttk.Button(parent, text="Cập nhật bộ tải video…", command=self.update_ytdlp).pack(anchor="w", pady=12)
 
     def set_preference(self, key, value):
         self.store.set_setting(key, value)
@@ -241,9 +274,12 @@ class App:
             self.playback_icon.set_theme(self.theme == "light")
             self._icon_theme = self.theme
         self.theme_switch.theme = self.language_switch.theme = self.theme
+        self.theme_switch.value = self.theme == "dark"
+        self.language_switch.value = self.locale.language == "en"
         self.theme_switch.draw()
         self.language_switch.draw()
         self.locale.apply()
+        self.page_title.set(self.locale.text("Tải xuống"))
         self.overview.set_presentation(self.theme, self.locale.text)
         bandwidth_labels = ("Tối đa", "Vừa (4 MB/s)", "Nhẹ (512 KB/s)")
         self.bandwidth_selector.configure(values=tuple(self.locale.text(value) for value in bandwidth_labels))
@@ -285,6 +321,30 @@ class App:
         ttk.Label(form, text="Lưu tại").grid(row=2, column=0, sticky="w")
         ttk.Entry(form, textvariable=self.directory).grid(row=2, column=1, columnspan=3, sticky="ew")
         ttk.Button(form, text="Chọn thư mục", command=self.choose_directory).grid(row=2, column=4, padx=(8, 0))
+        source_options = ttk.Frame(form)
+        source_options.grid(row=3, column=0, columnspan=5, sticky="ew", pady=(10, 0))
+        ttk.Label(source_options, text="Định dạng").pack(side="left")
+        ttk.Combobox(source_options, textvariable=self.download_format,
+                     values=("Auto", "Original", "MP4", "MP3", "M4A"), state="readonly", width=10).pack(
+                         side="left", padx=(10, 20))
+        self.media_options_frame = ttk.Frame(source_options)
+        media_options = self.media_options_frame
+        ttk.Label(media_options, text="Độ cao tối đa").pack(side="left")
+        ttk.Combobox(media_options, textvariable=self.media_quality,
+                     values=(360, 480, 720, 1080, 1440, 2160), state="readonly", width=7).pack(side="left", padx=8)
+        ttk.Checkbutton(media_options, text="Cả danh sách phát", variable=self.media_playlist).pack(side="left", padx=8)
+        ttk.Checkbutton(media_options, text="Phụ đề vi/en", variable=self.media_subtitles).pack(side="left", padx=8)
+        self.source_hint = tk.StringVar(value="Tệp gốc · tối đa 32 kết nối · kiểm tra an toàn sau tải")
+        ttk.Label(form, textvariable=self.source_hint, style="Muted.TLabel", wraplength=1050).grid(
+            row=4, column=0, columnspan=5, sticky="w", pady=(8, 0))
+        self.url.trace_add("write", self.link_changed)
+        self.download_format.trace_add("write", self.link_changed)
+        clipboard = ttk.Frame(form)
+        clipboard.grid(row=5, column=0, columnspan=5, sticky="ew", pady=(4, 0))
+        ttk.Label(clipboard, textvariable=self.clipboard_notice, style="Muted.TLabel", wraplength=780).pack(side="left")
+        self.clipboard_button = ttk.Button(clipboard, text="Dùng link mới", command=self.use_clipboard_link)
+        self.clipboard_frame = clipboard
+        clipboard.grid_remove()
         self.advanced_options = ttk.Frame(form)
         advanced = self.advanced_options
         advanced.columnconfigure(1, weight=1)
@@ -295,21 +355,27 @@ class App:
         ttk.Label(advanced, text="Mirror").grid(row=1, column=0, sticky="w", pady=4)
         ttk.Entry(advanced, textvariable=self.mirrors).grid(row=1, column=1, sticky="ew")
         ttk.Label(advanced, text="Link cách bởi dấu |", style="Muted.TLabel").grid(row=1, column=2, padx=8)
+        ttk.Button(advanced, text="Chọn cookie do bạn xuất…", command=self.choose_cookie).grid(
+            row=2, column=0, columnspan=2, sticky="w", pady=8)
+        ttk.Label(advanced, text="Format ID").grid(row=3, column=0, sticky="w")
+        ttk.Entry(advanced, textvariable=self.media_format).grid(row=3, column=1, sticky="ew")
+        ttk.Button(advanced, text="Xem định dạng", command=self.inspect_video).grid(row=3, column=2, padx=8)
         def toggle_advanced():
             visible = bool(advanced.winfo_manager())
             if visible:
                 advanced.grid_remove()
             else:
-                advanced.grid(row=4, column=0, columnspan=5, sticky="ew")
+                advanced.grid(row=7, column=0, columnspan=5, sticky="ew")
             advanced_button.configure(text=self.locale.text("Tùy chọn nâng cao  ▸" if visible else "Thu gọn tùy chọn  ▾"))
         advanced_button = ttk.Button(form, text="Tùy chọn nâng cao  ▸", command=toggle_advanced)
-        advanced_button.grid(row=3, column=0, columnspan=5, sticky="w", pady=(10, 0))
+        advanced_button.grid(row=6, column=0, columnspan=5, sticky="w", pady=(8, 0))
         actions = ttk.Frame(parent)
         actions.pack(fill="x", pady=(12, 12))
         self.transfer_button = ttk.Button(actions, text="Tiếp tục", command=self.toggle_transfer)
         self.transfer_button.pack(side="left", padx=(0, 8))
         for label, command in (("Nhập danh sách…", self.batch_dialog), ("Mở thư mục", self.open_folder)):
             ttk.Button(actions, text=label, command=command).pack(side="left", padx=(0, 8))
+        ttk.Button(actions, text="Check for update", command=self.check_update).pack(side="left")
         self.bandwidth_display = tk.StringVar(value=self.bandwidth_mode.get())
         bandwidth = ttk.Combobox(actions, textvariable=self.bandwidth_display, state="readonly", width=18,
                                  values=("Tối đa", "Vừa (4 MB/s)", "Nhẹ (512 KB/s)"))
@@ -321,12 +387,12 @@ class App:
             self.manager.set_bandwidth(
                 {"Tối đa": "maximum", "Vừa (4 MB/s)": "medium", "Nhẹ (512 KB/s)": "light"}[self.bandwidth_mode.get()])
         bandwidth.bind("<<ComboboxSelected>>", set_bandwidth)
-        columns = ("name", "status", "progress", "size", "speed")
+        columns = ("name", "status", "progress", "size", "speed", "connections", "safety")
         table_frame = ttk.Frame(parent)
         table_frame.pack(fill="both", expand=True)
         self.table = ttk.Treeview(table_frame, columns=columns, show="headings", selectmode="browse", height=4)
-        for col, label, width in zip(columns, ("TÊN TỆP", "TRẠNG THÁI", "TIẾN ĐỘ", "ĐÃ TẢI / TỔNG", "TỐC ĐỘ"),
-                                     (330, 125, 85, 180, 110)):
+        for col, label, width in zip(columns, ("TÊN TỆP", "TRẠNG THÁI", "TIẾN ĐỘ", "ĐÃ TẢI / TỔNG", "TỐC ĐỘ", "LUỒNG", "AN TOÀN"),
+                                     (270, 110, 75, 160, 100, 70, 130)):
             self.table.heading(col, text=label)
             self.table.column(col, width=width, minwidth=65, stretch=col == "name")
         scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.table.yview)
@@ -339,53 +405,13 @@ class App:
                   font=("Segoe UI", 16, "bold")).pack()
         ttk.Label(self.empty_state, text="Dán đường dẫn ở trên hoặc nhập danh sách từ bảng tính.",
                   background=PANEL, foreground=MUTED).pack(pady=(8, 0))
-        self.empty_state.place(relx=0.5, rely=0.56, anchor="center")
+        self.empty_state.place(x=2, y=44, relwidth=1, width=-22, relheight=1, height=-46)
         self.table.bind("<<TreeviewSelect>>", self.show_details)
         self.table.bind("<Double-1>", lambda _: self.open_folder())
         self.table.bind("<Button-3>", self.context_menu)
         self.detail = tk.StringVar(value="Chọn một lượt tải để xem chi tiết. Bấm chuột phải để đổi link hoặc nơi lưu.")
         ttk.Label(parent, textvariable=self.detail, style="Muted.TLabel", wraplength=1000).pack(
             anchor="w", pady=(12, 0))
-
-    def _media(self, parent):
-        ttk.Label(parent, text="Lưu video hoặc tách MP3", font=("Segoe UI", 18, "bold")).pack(anchor="w", pady=(8, 12))
-        ttk.Label(parent, text="Dùng yt-dlp tùy chọn. Chỉ tải nội dung bạn có quyền truy cập; không hỗ trợ DRM.",
-                  style="Muted.TLabel", wraplength=900).pack(anchor="w", pady=(0, 20))
-        self.media_url = tk.StringVar()
-        ttk.Entry(parent, textvariable=self.media_url).pack(fill="x", pady=(0, 12))
-        options = ttk.Frame(parent)
-        options.pack(fill="x", pady=(0, 12))
-        self.media_quality = tk.StringVar(value="1080")
-        self.media_playlist = tk.BooleanVar()
-        self.media_subtitles = tk.BooleanVar()
-        self.media_cookie = tk.StringVar()
-        ttk.Label(options, text="Độ cao tối đa").pack(side="left")
-        ttk.Combobox(options, textvariable=self.media_quality, values=(360, 480, 720, 1080, 1440, 2160),
-                     state="readonly", width=7).pack(side="left", padx=8)
-        ttk.Checkbutton(options, text="Cả danh sách phát", variable=self.media_playlist).pack(side="left", padx=8)
-        ttk.Checkbutton(options, text="Phụ đề vi/en", variable=self.media_subtitles).pack(side="left", padx=8)
-        ttk.Button(options, text="Chọn cookie do bạn xuất…", command=self.choose_cookie).pack(side="right")
-        actions = ttk.Frame(parent)
-        actions.pack(fill="x")
-        self.media_buttons = []
-        for label, audio in (("Tải video", ""), ("Tải MP3", "mp3"), ("Tải M4A", "m4a")):
-            button = ttk.Button(actions, text=label, style="Primary.TButton",
-                                command=lambda a=audio: self.start_media(a))
-            button.pack(side="left", padx=(0, 10))
-            self.media_buttons.append(button)
-        ttk.Button(actions, text="Xem định dạng", command=self.inspect_video).pack(side="left", padx=8)
-        ttk.Button(actions, text="Dừng / bỏ link đang chọn", command=self.stop_media).pack(side="right")
-        self.media_status = tk.StringVar(value="Lưu vào thư mục đã chọn ở thẻ Tải xuống.")
-        ttk.Label(parent, textvariable=self.media_status, wraplength=950).pack(anchor="w", pady=20)
-        ttk.Separator(parent).pack(fill="x", pady=12)
-        ttk.Label(parent, text="Chuyển video sang MP4 H.264 / AAC", font=("Segoe UI", 14, "bold")).pack(anchor="w", pady=12)
-        ttk.Label(parent, text="Cần FFmpeg trong PATH. Tệp gốc được giữ lại; thao tác có thể mất vài phút.",
-                  style="Muted.TLabel").pack(anchor="w", pady=(0, 12))
-        ttk.Button(parent, text="Chọn video để chuyển…", command=self.convert).pack(anchor="w")
-        ttk.Button(parent, text="Cắt / ghép / nén / tách nhạc…", command=self.media_tools).pack(anchor="w", pady=10)
-        ttk.Button(parent, text="Cập nhật yt-dlp từ nguồn chính thức…", command=self.update_ytdlp).pack(anchor="w", pady=5)
-        ttk.Label(parent, text='Cài hỗ trợ video: pip install ".[media,processing]"\nTệp cookie là tùy chọn; app không tự đọc tài khoản trình duyệt.',
-                  style="Muted.TLabel").pack(anchor="w", pady=24)
 
     def _safety(self, parent):
         ttk.Label(parent, text="Kiểm tra trước khi mở tệp", font=("Segoe UI", 18, "bold")).pack(anchor="w", pady=(8, 12))
@@ -405,6 +431,11 @@ class App:
                      state="readonly", width=22).pack(anchor="w", pady=(0, 8))
         ttk.Button(parent, text="Tra mã băm trên dịch vụ đã chọn", command=self.lookup_hash).pack(anchor="w")
         self.high_security = tk.BooleanVar(value=self.store.setting("high_security", False))
+        self.auto_defender = tk.BooleanVar(value=self.store.setting("auto_defender", False))
+        ttk.Checkbutton(parent, text="Tự quét bằng Windows Defender sau khi tải", variable=self.auto_defender,
+                        state="normal" if os.name == "nt" else "disabled",
+                        command=lambda: self.store.set_setting("auto_defender", self.auto_defender.get())).pack(
+                            anchor="w", pady=10)
         ttk.Checkbutton(parent, text="An toàn cao: cách ly chương trình chưa có chữ ký Windows hợp lệ",
                         state="normal" if os.name == "nt" else "disabled",
                         variable=self.high_security, command=lambda: self.store.set_setting(
@@ -444,28 +475,21 @@ class App:
                 self.guarded(action)
         ttk.Button(parent, text="Đăng ký kết nối cho tài khoản này", command=register).pack(anchor="w", pady=12)
         ttk.Label(parent, text="Dùng menu chuột phải “Tải bằng HDM” hoặc bấm popup để hiện nút tải phía trên video. "
-                  "Yêu cầu được lưu trên máy. Chuyển phiên đăng nhập từ tiện ích hiện chỉ hỗ trợ Windows, với mã hóa DPAPI. Trên macOS/Linux, dùng tệp cookie bạn tự chọn trong mục Video & nhạc.",
+                  "Yêu cầu được lưu trên máy. Chuyển phiên đăng nhập từ tiện ích hiện chỉ hỗ trợ Windows, với mã hóa DPAPI. Trên macOS/Linux, chọn tệp cookie trong tùy chọn nâng cao.",
                   wraplength=950, style="Muted.TLabel").pack(anchor="w", pady=16)
         ttk.Label(parent, text="Bộ lọc hỗ trợ quy tắc mạng, chặn tab quảng cáo đã nhận diện, chọn phần tử và thống kê. "
                   "Dùng popup để quản lý quyền, ngoại lệ và luồng HLS/DASH; một số cú pháp bộ lọc chưa được hỗ trợ.", wraplength=950, style="Muted.TLabel").pack(anchor="w", pady=12)
 
     def _tools(self, parent):
-        parent = self.scrollable(parent)
-        ttk.Label(parent, text="Tài liệu và tác vụ bổ sung", font=("Segoe UI", 18, "bold")).pack(anchor="w", pady=12)
-        for label, callback in (("Che thông tin PDF bằng vùng kéo chuột…", self.redact_pdf),
-                                ("Lưu trang web thành PDF / ảnh…", self.capture_dialog),
-                                ("Cắt / ghép / nén video, nhạc…", self.media_tools),
-                                ("Giải mã link Drive / Dropbox / OneDrive / MediaFire…", self.resolve_cloud),
+        ttk.Label(parent, text="Tùy chọn tải", font=("Segoe UI", 18, "bold")).pack(anchor="w", pady=12)
+        for label, callback in (("Nhập danh sách…", self.batch_dialog),
                                 ("Tiếp quản tệp trình duyệt tải dở…", self.adopt_partial),
                                 ("Torrent / magnet — chọn từng tệp…", self.torrent_dialog),
                                 ("Mở lại torrent đã lưu…", self.torrent_history),
-                                ("Mở thư mục phiếu giao hàng…", self.open_invoices),
                                 ("Giải nén ZIP sau khi kiểm tra…", self.extract_zip),
-                                ("Tìm phụ đề Việt khớp tệp phim…", self.find_subtitle),
-                                ("Xuất lịch sử tải CSV…", self.export_history)):
+                                ("Xuất lịch sử tải CSV…", self.export_history),
+                                ("Xuất báo cáo danh sách từng dòng…", self.export_batch_report)):
             ttk.Button(parent, text=label, command=callback).pack(anchor="w", pady=7)
-        ttk.Button(parent, text="Kiểm tra bản cập nhật ký số…", command=self.check_update).pack(anchor="w", pady=7)
-        ttk.Button(parent, text="Xuất báo cáo danh sách từng dòng…", command=self.export_batch_report).pack(anchor="w", pady=7)
         self.auto_category = tk.BooleanVar(value=self.store.setting("auto_category", False))
         ttk.Checkbutton(parent, text="Tự chia thư mục Video / Music / Images / Documents / Archives cho lượt tải mới",
                         variable=self.auto_category, command=lambda: self.store.set_setting("auto_category", self.auto_category.get())).pack(anchor="w", pady=15)
@@ -473,10 +497,8 @@ class App:
         ttk.Checkbutton(parent, text="Tự giải nén ZIP sau khi tải và kiểm tra an toàn thành công",
                         variable=self.auto_extract, command=lambda: self.store.set_setting(
                             "auto_extract", self.auto_extract.get())).pack(anchor="w", pady=6)
-        self.close_to_tray = tk.BooleanVar(value=self.store.setting("close_to_tray", False))
         ttk.Checkbutton(parent, text="Thu xuống khay hệ thống khi đóng cửa sổ (dùng menu khay để thoát)",
                         variable=self.close_to_tray, command=lambda: self.store.set_setting("close_to_tray", self.close_to_tray.get())).pack(anchor="w", pady=6)
-        self.shutdown_after = tk.BooleanVar()
         ttk.Checkbutton(parent, text="Tắt máy sau khi các lượt HTTP đang chờ đều hoàn tất (đếm ngược 60 giây)",
                         state="normal" if os.name == "nt" else "disabled",
                         variable=self.shutdown_after, command=lambda: setattr(self, "power_seen_work", False)).pack(anchor="w", pady=6)
@@ -484,20 +506,18 @@ class App:
             ttk.Button(parent, text="Hủy lệnh tắt máy đã hẹn", command=self.cancel_shutdown).pack(anchor="w", pady=6)
 
     def _about(self, parent):
-        ttk.Label(parent, text=f"hngoos-download-manager {__version__}", font=("Segoe UI", 18, "bold")).pack(anchor="w", pady=12)
-        paragraphs = [
-            "HDM là ứng dụng quản lý tải cho Windows, macOS và Linux, tích hợp các trình duyệt nhân Chromium.",
-            (f"HDM v{__version__}: giao diện với Morphicons, bộ nhớ tải HTTP cục bộ, tiếp quản lượt tải trình duyệt, "
-             "khôi phục torrent, nén video hai lượt và lưu phiếu in thử nghiệm."),
-            ("Máy chủ không có ETag mạnh hoặc không cho tải theo Range sẽ dùng một luồng. "
-             "Nếu không xác minh được nội dung cũ, ứng dụng tải lại từ đầu để tránh ghép sai tệp."),
-            "HDM giúp tải, quản lý và xử lý tệp trên máy của bạn. Các công cụ có điều kiện hỗ trợ riêng theo nền tảng, máy chủ và định dạng.",
-            "Biểu tượng dùng Morphicons kết hợp Lucide. Thiết kế giao diện tham khảo React Bits."
-        ]
-        for paragraph in paragraphs:
-            ttk.Label(parent, text=paragraph, wraplength=950, style="Muted.TLabel").pack(anchor="w", pady=10)
-        ttk.Button(parent, text="Mở GitHub", command=lambda: webbrowser.open(
-            "https://github.com/hngoos/hngoos-download-manager")).pack(anchor="w", pady=12)
+        ttk.Label(parent, text=f"Hngoos Download Manager · HDM {__version__}",
+                  font=("Segoe UI", 18, "bold")).pack(anchor="w", pady=12)
+        for heading, body in (
+            ("Tải nhanh", "Tối đa 32 kết nối, chia khối cho luồng đang rảnh; tự giảm khi nguồn giới hạn. Tạm dừng, tiếp tục, thử lại và thay link hết hạn."),
+            ("Bảo vệ người dùng", "Kiểm tra nội dung, tệp giả dạng, macro, tệp nén và mã băm. Cách ly tệp rủi ro; tích hợp quét Windows Defender khi có sẵn."),
+            ("Một nơi để tải", "Tự nhận link clipboard. Tải tệp trực tiếp, link lưu trữ đám mây, video, MP3/M4A và torrent từ nguồn được hỗ trợ."),
+            ("Tiện ích hằng ngày", "Nhập danh sách, hẹn giờ, đổi nơi lưu, giới hạn băng thông, chạy nền và tùy chọn khởi động cùng hệ điều hành."),
+            ("Giới hạn nguồn", "Số kết nối thực tùy máy chủ. Một số nguồn yêu cầu đăng nhập; nội dung DRM, gồm nhạc Spotify, không tải trực tiếp thành MP3. Kiểm tra sơ bộ không chứng nhận tệp sạch."),
+        ):
+            ttk.Label(parent, text=heading, font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(14, 4))
+            ttk.Label(parent, text=body, style="Muted.TLabel", wraplength=800).pack(anchor="w")
+        ttk.Button(parent, text="Check for update", command=self.check_update).pack(anchor="w", pady=20)
 
     def guarded(self, action):
         try:
@@ -511,19 +531,113 @@ class App:
         self.guarded(lambda: open_path(folder))
 
     def add(self):
-        def action():
-            url = self.url.get().strip()
+        from .links import link_kind, resolve_source
+        url = self.url.get().strip()
+        if getattr(self, "source_busy", False):
+            return
+        def choose(kind, value):
+            self.source_busy = False
+            if self.url.get().strip() != url:
+                self.status.set(self.locale.text("Link đã thay đổi; bấm tải lại để dùng link mới."))
+                return
+            if kind == "spotify":
+                self.source_hint.set("Nhạc Spotify có DRM: không thể tải trực tiếp thành MP3.")
+                return
+            if kind == "torrent":
+                from .dialogs import torrent_dialog
+                self.guarded(lambda: torrent_dialog(self, value, self.directory.get()))
+                return
+            if kind == "media" or self.download_format.get() in {"MP4", "MP3", "M4A"}:
+                self.media_url.set(value)
+                self.start_media({"MP3": "mp3", "M4A": "m4a"}.get(self.download_format.get(), ""))
+                return
             digest = self.expected_hash.get().strip()
             algorithm = self.hash_algorithm.get().lower().replace("-", "")
-            self.manager.add(url, self.directory.get(), self.filename.get() or filename_from_url(url),
-                             int(self.connections.get()), digest if algorithm == "sha256" else "",
-                             expected_hashes={algorithm: digest} if digest else {},
-                             mirrors=[value.strip() for value in self.mirrors.get().split("|") if value.strip()])
-            self.url.set("")
-            self.filename.set("")
-            self.expected_hash.set("")
-            self.mirrors.set("")
+            directory, name, connections = self.directory.get(), self.filename.get(), int(self.connections.get())
+            mirrors = [value.strip() for value in self.mirrors.get().split("|") if value.strip()]
+            def accepted(_job):
+                if self.url.get().strip() == url:
+                    self.url.set("")
+                    self.filename.set("")
+                    self.expected_hash.set("")
+                    self.mirrors.set("")
+                self.status.set(self.locale.text("Đã thêm lượt tải; sẽ kiểm tra trước khi hoàn tất."))
+            self.background(lambda: self.manager.add(value, directory, name or filename_from_url(value),
+                connections, digest if algorithm == "sha256" else "",
+                expected_hashes={algorithm: digest} if digest else {}, mirrors=mirrors), accepted)
+        def action():
+            kind = link_kind(url)
+            if kind != "file":
+                choose(kind, url)
+                return
+            self.source_busy = True
+            force_file = self.download_format.get() == "Original"
+            self.status.set(self.locale.text("Đang nhận diện nguồn tải…"))
+            def resolve():
+                try:
+                    result = resolve_source(url, force_file)
+                    self.events.put(lambda result=result: self.guarded(lambda: choose(*result)))
+                except Exception as exc:  # noqa: BLE001 -- Worker errors must restore the input state.
+                    self.events.put(lambda error=str(exc): failed(error))
+            def failed(error):
+                self.source_busy = False
+                self.status.set(error)
+            worker = threading.Thread(target=resolve, daemon=True)
+            self.background_threads.append(worker)
+            worker.start()
         self.guarded(action)
+
+    def link_changed(self, *_args):
+        from .links import link_kind
+        try:
+            kind = link_kind(self.url.get())
+        except ValueError:
+            kind = "file"
+        hints = {"file": "Tệp gốc · tối đa 32 kết nối · kiểm tra an toàn sau tải",
+                 "media": "Đã nhận link video/nhạc · chọn MP4, MP3 hoặc M4A rồi tải",
+                 "torrent": "Đã nhận magnet · chọn tệp cần tải trong bước tiếp theo",
+                 "spotify": "Nhạc Spotify có DRM: không thể tải trực tiếp thành MP3."}
+        self.source_hint.set(self.locale.text(hints[kind]))
+        if self.url.get().strip() != self.browser_session_url:
+            self.video_inbox_busy = False
+            self.browser_session = self.browser_session_url = ""
+        if kind == "media" or self.download_format.get() in {"MP4", "MP3", "M4A"}:
+            self.media_options_frame.pack(side="left")
+        else:
+            self.media_options_frame.pack_forget()
+        self.media_format.set("")
+
+    def check_clipboard(self):
+        if getattr(self, "_closing", False):
+            return
+        if not self.clipboard_enabled.get() or time.monotonic()-self.clipboard_checked < 1:
+            return
+        self.clipboard_checked = time.monotonic()
+        try:
+            text = self.root.clipboard_get()
+        except tk.TclError:
+            return
+        if text == self.clipboard_last:
+            return
+        self.clipboard_last = text
+        from .links import clipboard_link
+        link = clipboard_link(text)
+        if not link:
+            return
+        self.clipboard_pending = link
+        if not self.url.get().strip():
+            self.use_clipboard_link()
+        elif self.url.get().strip() != link:
+            self.clipboard_notice.set(self.locale.text("Có link mới trong clipboard. Giữ nguyên link bạn đang sửa."))
+            self.clipboard_frame.grid()
+            self.clipboard_button.pack(side="right")
+
+    def use_clipboard_link(self):
+        if self.clipboard_pending:
+            self.url.set(self.clipboard_pending)
+            self.clipboard_notice.set(self.locale.text("Đã nhận link từ clipboard · chọn định dạng và bấm tải."))
+            self.clipboard_frame.grid()
+            self.clipboard_button.pack_forget()
 
     def choose_directory(self):
         folder = filedialog.askdirectory(initialdir=self.directory.get())
@@ -531,7 +645,10 @@ class App:
             self.directory.set(folder)
 
     def paste_url(self):
-        self.guarded(lambda: self.url.set(self.root.clipboard_get().strip()))
+        def paste():
+            self.clipboard_pending = self.root.clipboard_get().strip()
+            self.use_clipboard_link()
+        self.guarded(paste)
 
     def selected(self):
         selected = self.table.selection()
@@ -539,11 +656,18 @@ class App:
 
     def resume(self):
         if job_id := self.selected():
-            self.manager.start(job_id)
+            job = self.store.get(job_id)
+            if job.get("kind") == "media":
+                self.resume_media(job)
+            else:
+                self.manager.start(job_id)
 
     def pause(self):
         if job_id := self.selected():
-            self.manager.pause(job_id)
+            if self.store.get(job_id).get("kind") == "media":
+                self.media_stop.set()
+            else:
+                self.manager.pause(job_id)
 
     def open_folder(self):
         job = self.store.get(self.selected()) if self.selected() else None
@@ -554,7 +678,8 @@ class App:
     def show_details(self, _event=None):
         if job_id := self.selected():
             job = self.store.get(job_id)
-            self.detail.set(job["error"] or job["output"] or f"Lưu tại: {job['directory']}")
+            location = job["error"] or job["output"] or f"Lưu tại: {job['directory']}"
+            self.detail.set(location+" · "+self.locale.text(job.get("safety_note", "Chưa kiểm tra")))
 
     def context_menu(self, event):
         row = self.table.identify_row(event.y)
@@ -565,20 +690,20 @@ class App:
         menu = tk.Menu(self.root, tearoff=False, bg=PANEL, fg=TEXT)
         if job["state"] in {"paused", "error"}:
             menu.add_command(label="Tiếp tục tải", command=self.resume)
-            menu.add_command(label="Thay link tải…", command=self.replace_url_dialog)
-            menu.add_command(label="Đổi thư mục lưu…", command=self.relocate)
+            if job.get("kind") != "media":
+                menu.add_command(label="Thay link tải…", command=self.replace_url_dialog)
+                menu.add_command(label="Đổi thư mục lưu…", command=self.relocate)
         if job["state"] in {"downloading", "queued", "verifying"}:
             menu.add_command(label="Tạm dừng", command=self.pause)
-            menu.add_command(label="Đổi nơi lưu trong lúc tải…", command=self.relocate)
-        if job["state"] in {"paused", "error", "scheduled"}:
+            if job.get("kind") != "media":
+                menu.add_command(label="Đổi nơi lưu trong lúc tải…", command=self.relocate)
+        if job["state"] in {"paused", "error", "scheduled"} and job.get("kind") != "media":
             menu.add_command(label="Hẹn giờ tải…", command=self.schedule_dialog)
         menu.add_command(label="Mở thư mục", command=self.open_folder)
         if job["sha256"]:
             menu.add_command(label="Chép SHA-256", command=lambda: self.copy(job["sha256"]))
-        if job["state"] == "quarantined":
+        if job["state"] == "quarantined" and len(job.get("outputs", [])) <= 1:
             menu.add_command(label="Khôi phục tên gốc…", command=self.restore_dialog)
-        if job["output"] and Path(job["filename"]).suffix.lower() in {".mp4", ".mkv", ".webm", ".mov", ".mp3", ".m4a", ".wav", ".flac"}:
-            menu.add_command(label="Cắt / ghép / nén…", command=lambda: self.media_tools(job["output"]))
         menu.add_command(label="Nhật ký lượt tải…", command=self.job_log)
         for index in range((menu.index("end") or 0)+1):
             menu.entryconfigure(index, label=self.locale.text(menu.entrycget(index, "label")))
@@ -657,51 +782,112 @@ class App:
         self.background_threads.append(worker)
         worker.start()
 
-    def start_media(self, audio):
+    def start_media(self, audio, job=None):
+        from dataclasses import asdict
+
         from .media import MediaOptions, download_video
-        url, directory = self.media_url.get(), self.directory.get()
         if getattr(self, "media_busy", False):
+            self.status.set(self.locale.text("Đang có lượt tải video/nhạc. Hãy chờ hoặc tạm dừng lượt đó."))
             return
-        self.media_busy = True
-        self.media_stop.clear()
-        options = MediaOptions(height=int(self.media_quality.get()), audio=audio,
-                               playlist=self.media_playlist.get(), subtitles=self.media_subtitles.get(),
-                               cookie_file=self.media_cookie.get())
+        url = job["url"] if job else self.media_url.get().strip()
+        directory = job["directory"] if job else self.directory.get()
+        options = MediaOptions(**job["media_options"]) if job else MediaOptions(
+            height=int(self.media_quality.get()), audio=audio, playlist=self.media_playlist.get(),
+            subtitles=self.media_subtitles.get(), cookie_file=self.media_cookie.get(),
+            format_id=self.media_format.get(), connections=int(self.connections.get()),
+            filename="" if self.media_playlist.get() else self.filename.get().strip())
         if url == self.browser_session_url:
             options.referrer = getattr(self, "browser_referrer", "")
         session = self.browser_session if url == self.browser_session_url else ""
         if session:
-            self.browser_session = ""
-            self.browser_session_url = ""
-        for button in self.media_buttons:
-            button.configure(state="disabled")
-        self.media_status.set("Đang lấy thông tin và tải…")
+            self.browser_session = self.browser_session_url = ""
+        if job:
+            job_id = job["id"]
+        else:
+            row = self.store.create(url, directory, self.filename.get() or filename_from_url(url),
+                                    int(self.connections.get()))
+            job_id = row["id"]
+            saved_options = asdict(options)
+            saved_options["cookie_file"] = ""
+            self.store.update(job_id, kind="media", media_options=saved_options)
+        self.store.update(job_id, state="downloading", error="", safety_note="Chờ kiểm tra", speed=0)
+        self.media_busy = True
+        self.media_job_id = job_id
+        self.media_stop.clear()
+        if self.url.get().strip() == url:
+            self.url.set("")
+            self.filename.set("")
+        if not options.cookie_file:
+            options.cookie_file = self.media_cookie.get()
+        high_security = self.store.setting("high_security", False)
         def action():
+            from .media import MediaCancelled
+            from .policy import TransferCancelled
+            last_write = [0.0]
+            safety_notes = []
+            def progress(data):
+                now = time.monotonic()
+                if data.get("safety_note"):
+                    safety_notes.append(data["safety_note"])
+                    self.store.update(job_id, state="verifying", safety_note="Đang kiểm tra")
+                    return
+                if "downloaded_bytes" not in data and data.get("status") != "finished":
+                    return
+                if now-last_write[0] < 0.4 and data.get("status") != "finished":
+                    return
+                last_write[0] = now
+                changes = {"downloaded": int(data.get("downloaded_bytes") or 0),
+                           "total": int(data.get("total_bytes") or data.get("total_bytes_estimate") or 0),
+                           "speed": float(data.get("speed") or 0)}
+                title = (data.get("info_dict") or {}).get("title")
+                if title:
+                    changes["filename"] = title
+                if data.get("status") == "finished":
+                    changes.update(state="verifying", safety_note="Đang kiểm tra")
+                else:
+                    changes["state"] = "downloading"
+                self.store.update(job_id, **changes)
             try:
-                Path(directory).mkdir(parents=True, exist_ok=True)
-                def progress(data):
-                    text = data.get("_percent_str", data["status"])
-                    self.events.put(lambda: self.media_status.set(f"Video: {text}"))
+                kwargs = {"progress": progress, "options": options, "stop": self.media_stop,
+                          "high_security": high_security, "staging_root": self.data_dir/"media-staging",
+                          "antivirus": self.store.setting("auto_defender", False) and os.name == "nt"}
                 if session:
                     import tempfile
 
                     from .vault import cookie_jar, decrypt
-                    with tempfile.TemporaryDirectory(prefix="hngoos-session-", dir=self.data_dir) as temporary:
+                    with tempfile.TemporaryDirectory(prefix="hdm-session-", dir=self.data_dir) as temporary:
                         cookie_path = Path(temporary)/"cookies.txt"
                         cookie_path.write_text(cookie_jar(decrypt(session)), encoding="utf-8")
                         options.cookie_file = str(cookie_path)
-                        download_video(url, directory, progress=progress, options=options, stop=self.media_stop)
+                        outputs = download_video(url, directory, **kwargs)
                 else:
-                    download_video(url, directory, progress=progress, options=options, stop=self.media_stop)
-                return directory
+                    outputs = download_video(url, directory, **kwargs)
+                quarantined = any(path.name.endswith(".chuakiemtra") for path in outputs)
+                size = sum(path.stat().st_size for path in outputs)
+                self.store.update(job_id, state="quarantined" if quarantined else "complete", speed=0,
+                    filename=outputs[0].name.removesuffix(".chuakiemtra") if len(outputs) == 1 else f"{len(outputs)} files · {outputs[0].name}",
+                    output=str(outputs[0]), outputs=[str(path) for path in outputs], total=size, downloaded=size,
+                    sha256=sha256_file(outputs[0]),
+                    safety_note="Cách ly" if quarantined else (
+                        "Sơ bộ + Defender" if safety_notes and all(note == "Sơ bộ + Defender" for note in safety_notes)
+                        else "Sơ bộ · Defender chưa quét" if "Sơ bộ · Defender chưa quét" in safety_notes
+                        else "Đã kiểm tra sơ bộ"),
+                    error="Có tệp rủi ro đã được cách ly." if quarantined else "")
+            except (MediaCancelled, TransferCancelled):
+                self.store.update(job_id, state="paused", speed=0)
+            except Exception as exc:  # noqa: BLE001 -- Persist extraction errors in the download list.
+                self.store.update(job_id, state="error", speed=0, error=str(exc))
             finally:
                 self.events.put(reset)
         def reset():
             self.media_busy = False
             self.video_inbox_busy = False
-            for button in self.media_buttons:
-                button.configure(state="normal")
-        self.background(action, lambda folder: self.media_status.set(f"Đã tải xong vào: {folder}"))
+        worker = threading.Thread(target=action, daemon=True)
+        self.background_threads.append(worker)
+        worker.start()
+
+    def resume_media(self, job):
+        self.start_media("", job=job)
 
     def stop_media(self):
         self.media_stop.set()
@@ -738,18 +924,37 @@ class App:
             self.media_status.set("Đã chọn tệp cookie cho lượt video tiếp theo. Không chia sẻ tệp này.")
 
     def inspect_video(self):
-        import json
-
         from .media import MediaOptions, inspect_video
         options = MediaOptions(playlist=self.media_playlist.get(), cookie_file=self.media_cookie.get())
-        url = self.media_url.get()
+        url = self.url.get().strip() or self.media_url.get()
         def show(info):
             dialog = tk.Toplevel(self.root)
-            dialog.title("Thông tin video / danh sách phát")
-            editor = tk.Text(dialog, width=100, height=30, bg=PANEL, fg=TEXT)
-            editor.pack(fill="both", expand=True)
-            editor.insert("1.0", json.dumps(info, ensure_ascii=False, indent=2))
-            editor.configure(state="disabled")
+            dialog.title("HDM · "+self.locale.text("Xem định dạng"))
+            dialog.geometry("760x500")
+            dialog.transient(self.root)
+            frame = ttk.Frame(dialog, padding=20)
+            frame.pack(fill="both", expand=True)
+            ttk.Label(frame, text=info.get("title", ""), wraplength=700).pack(anchor="w", pady=(0, 12))
+            columns = ("id", "ext", "height", "audio", "size")
+            table = ttk.Treeview(frame, columns=columns, show="headings", selectmode="browse")
+            for column in columns:
+                table.heading(column, text=column.upper())
+                table.column(column, width=120)
+            table.pack(fill="both", expand=True)
+            for item in info.get("formats", []):
+                table.insert("", "end", values=(item["format_id"], item["ext"], item.get("height") or "—",
+                    item.get("acodec") or "—", human(item["filesize"]) if item.get("filesize") else "—"))
+            ttk.Label(frame, text="Format ID chọn một luồng cụ thể; chọn Auto để tự ghép video và âm thanh.",
+                      style="Muted.TLabel", wraplength=700).pack(anchor="w", pady=10)
+            def choose():
+                if self.url.get().strip() != url:
+                    dialog.destroy()
+                    return
+                if selected := table.selection():
+                    self.media_format.set(str(table.item(selected[0], "values")[0]))
+                    dialog.destroy()
+            ttk.Button(frame, text="Dùng định dạng này", command=choose).pack(side="right")
+            self.locale.apply(dialog)
         self.background(lambda: inspect_video(url, options), show)
 
     def schedule_dialog(self):
@@ -1019,6 +1224,7 @@ class App:
                 self.events.get_nowait()()
         except queue.Empty:
             pass
+        self.check_clipboard()
         pending = self.store.inbox()
         if pending and pending[0][1]["kind"] == "video" and (self.video_inbox_busy or getattr(self, "media_busy", False)):
             pending = []
@@ -1041,7 +1247,7 @@ class App:
                     self.browser_session_url = item["url"]
                     self.browser_referrer = item.get("referrer", "")
                     self.media_url.set(item["url"])
-                    self.tabs.select(self.media_tab)
+                    self.url.set(item["url"])
                     self.status.set("Đã nhận link video từ trình duyệt; chọn chất lượng rồi tải.")
                     self.store.acknowledge(request_id)
                 else:
@@ -1058,11 +1264,13 @@ class App:
         if jobs:
             self.empty_state.place_forget()
         elif not self.empty_state.winfo_manager():
-            self.empty_state.place(relx=0.5, rely=0.56, anchor="center")
+            self.empty_state.place(x=2, y=44, relwidth=1, width=-22, relheight=1, height=-46)
         chosen = self.table.selection()
         current = next((job for job in jobs if chosen and job["id"] == chosen[0]), None)
         active = bool(current and current["state"] in {"queued", "downloading", "verifying"})
         self.transfer_button.configure(text=self.locale.text("Tạm dừng" if active else "Tiếp tục"))
+        self.transfer_button.configure(state="normal" if current and current["state"] in {
+            "queued", "downloading", "verifying", "paused", "error", "scheduled"} else "disabled")
         self.playback_icon.set_running(active)
         from .power import prevent_sleep
         running = bool(self.manager.active) or getattr(self, "media_busy", False) or any(
@@ -1083,7 +1291,9 @@ class App:
             progress = f"{min(100, job['downloaded']/job['total']*100):.0f}%" if job["total"] else "—"
             values = (job["filename"], self.locale.text(STATES.get(job["state"], job["state"])), progress,
                       f"{human(job['downloaded'])} / {human(job['total']) if job['total'] else '?'}",
-                      f"{human(job['speed'])}/s" if job["speed"] else "—")
+                      f"{human(job['speed'])}/s" if job["speed"] else "—",
+                      "—" if job.get("kind") == "media" else f"{job.get('active_connections', 0)}/{job['connections']}",
+                      self.locale.text(job.get("safety_note", "Chưa kiểm tra")))
             if self.last_jobs.get(job["id"]) != values:
                 if self.table.exists(job["id"]):
                     self.table.item(job["id"], values=values)
@@ -1097,13 +1307,14 @@ class App:
         def action():
             job_id = self.selected()
             if self.store.get(job_id)["state"] in {"queued", "downloading", "verifying"}:
-                self.manager.pause(job_id)
+                self.pause()
             else:
-                self.manager.start(job_id)
+                self.resume()
         self.guarded(action)
 
     def close(self):
         self.root.after_cancel(self.refresh_id)
+        self._closing = True
         if getattr(self, "update_dialog", None):
             self.update_dialog.close()
         self.media_stop.set()

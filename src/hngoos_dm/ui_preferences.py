@@ -5,7 +5,7 @@ from tkinter import ttk
 from weakref import WeakKeyDictionary
 
 TRANSLATIONS = {
-    "Tải xuống": "Downloads", "Video & nhạc": "Video & audio", "An toàn": "Safety",
+    "Tải xuống": "Download", "Video & nhạc": "Video & audio", "An toàn": "Safety",
     "Trình duyệt": "Browser", "Công cụ": "Tools", "Thông tin": "About",
     "Đang chờ": "Queued", "Đang tải": "Downloading", "Tạm dừng": "Pause",
     "Kiểm tra": "Verifying", "Hoàn tất": "Complete", "Cách ly": "Quarantined",
@@ -102,6 +102,53 @@ TRANSLATIONS = {
     "Đã tải và xác minh bản cập nhật.": "Update downloaded and verified.",
     "Đã hủy tải bản cập nhật.": "Update download cancelled.", "Thử lại": "Retry",
     "Mở bộ cài": "Open installer", "Mở thư mục cập nhật": "Open updates folder",
+    "Thiết lập": "Settings", "Định dạng": "Format", "LUỒNG": "CONNECTIONS", "AN TOÀN": "SAFETY",
+    "Tùy chọn tải": "Download preferences",
+    "Kiểm tra cập nhật": "Check for update",
+    "Dùng định dạng này": "Use this format",
+    "Format ID chọn một luồng cụ thể; chọn Auto để tự ghép video và âm thanh.":
+        "Format ID selects a specific stream. Leave it empty to combine video and audio automatically.",
+    "Tự nhận link từ clipboard": "Detect links from clipboard",
+    "Khởi động cùng hệ điều hành": "Start HDM at sign-in",
+    "Chỉ nhận link trên máy; chờ bạn bấm tải trước khi kết nối tới nguồn.":
+        "Link detection stays local. HDM connects to the source only after you click Download.",
+    "Cập nhật bộ tải video…": "Update media downloader…",
+    "Tự quét bằng Windows Defender sau khi tải": "Scan completed downloads with Windows Defender",
+    "Dùng link mới": "Use new link",
+    "Có link mới trong clipboard. Giữ nguyên link bạn đang sửa.":
+        "New clipboard link available. Your current URL has been kept.",
+    "Đã nhận link từ clipboard · chọn định dạng và bấm tải.":
+        "Clipboard link detected · choose a format and click Download.",
+    "Tệp gốc · tối đa 32 kết nối · kiểm tra an toàn sau tải":
+        "Original file · up to 32 connections · safety checks after download",
+    "Đã nhận link video/nhạc · chọn MP4, MP3 hoặc M4A rồi tải":
+        "Video/audio link detected · choose MP4, MP3 or M4A and download",
+    "Đã nhận magnet · chọn tệp cần tải trong bước tiếp theo":
+        "Magnet detected · choose files in the next step",
+    "Nhạc Spotify có DRM: không thể tải trực tiếp thành MP3.":
+        "Spotify music is DRM-protected and cannot be downloaded directly as MP3.",
+    "Chưa kiểm tra": "Not checked", "Chờ kiểm tra": "Pending checks",
+    "Đang kiểm tra": "Checking", "Đã kiểm tra sơ bộ": "Preliminary checks",
+    "Sơ bộ · Defender chưa quét": "Checks · Defender unavailable",
+    "Sơ bộ + Defender": "Checks + Defender",
+    "Link đã thay đổi; bấm tải lại để dùng link mới.": "The URL changed. Click Download again to use the new link.",
+    "Đang nhận diện nguồn tải…": "Detecting download source…",
+    "Đã thêm lượt tải; sẽ kiểm tra trước khi hoàn tất.": "Download added; safety checks run before completion.",
+    "Đang có lượt tải video/nhạc. Hãy chờ hoặc tạm dừng lượt đó.":
+        "A media download is active. Wait for it or pause it first.",
+    "Tải nhanh": "Fast downloads", "Bảo vệ người dùng": "User protection",
+    "Một nơi để tải": "One place to download", "Tiện ích hằng ngày": "Everyday essentials",
+    "Giới hạn nguồn": "Source limitations",
+    "Tối đa 32 kết nối, chia khối cho luồng đang rảnh; tự giảm khi nguồn giới hạn. Tạm dừng, tiếp tục, thử lại và thay link hết hạn.":
+        "Up to 32 connections share queued chunks and back off when a source limits requests. Pause, resume, retry and replace expired links.",
+    "Kiểm tra nội dung, tệp giả dạng, macro, tệp nén và mã băm. Cách ly tệp rủi ro; tích hợp quét Windows Defender khi có sẵn.":
+        "Inspect content, disguised files, macros, archives and checksums. Quarantine risky files and scan with Windows Defender when available.",
+    "Tự nhận link clipboard. Tải tệp trực tiếp, link lưu trữ đám mây, video, MP3/M4A và torrent từ nguồn được hỗ trợ.":
+        "Recognize clipboard links. Download direct files, cloud links, video, MP3/M4A and torrents from supported sources.",
+    "Nhập danh sách, hẹn giờ, đổi nơi lưu, giới hạn băng thông, chạy nền và tùy chọn khởi động cùng hệ điều hành.":
+        "Import lists, schedule downloads, move files, limit bandwidth, run in the background and optionally start at sign-in.",
+    "Số kết nối thực tùy máy chủ. Một số nguồn yêu cầu đăng nhập; nội dung DRM, gồm nhạc Spotify, không tải trực tiếp thành MP3. Kiểm tra sơ bộ không chứng nhận tệp sạch.":
+        "Actual connections depend on the source. Some sites require sign-in; DRM-protected content, including Spotify music, cannot be downloaded directly as MP3. Preliminary checks do not certify a file as safe.",
 }
 
 PALETTES = {

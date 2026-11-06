@@ -2,14 +2,28 @@
 
 [Home](../README.md) · [User guide](USAGE.md) · [Privacy](PRIVACY.md) · [Security](SECURITY_MODEL.md)
 
-This reference describes **HDM v0.1.4**. It separates implemented behavior from conditions that depend on servers, websites, accounts, or hardware. The release does not complete every planned capability. The stable binary release targets Windows; the current source also offers [macOS/Linux desktop previews](PLATFORMS.md), with platform-specific features and optional dependencies listed there.
+This reference describes **HDM v0.1.5**. It separates implemented behavior from conditions that depend on servers, websites, accounts, or hardware. The release does not complete every planned capability. The stable binary release targets Windows; the current source also offers [macOS/Linux desktop previews](PLATFORMS.md), with platform-specific features and optional dependencies listed there.
+
+## One download screen
+
+The main window contains only downloads. The top-right information button opens the feature overview,
+settings, safety tools and browser integration. Clipboard recognition is local and waits for a click;
+it preserves a URL already being edited. Choose Auto, Original, MP4, MP3 or M4A. HTML source pages
+are sent to the media extractor after confirmation rather than silently saved as a supposed video.
+Spotify music is DRM-protected and cannot be downloaded directly as MP3.
+
+Both HTTP and media tasks appear in the same history. Media pause/resume is supported where the
+extractor and retained source allow it; one media task runs at a time. Media sources do not report
+HTTP worker counts as 32: fragment concurrency is capped at 32 and depends on their protocols.
+
+Launch at sign-in is opt-in on Windows, macOS and Linux and does not require administrator access.
 
 ## Downloads and recovery
 
 | Capability | Implemented behavior | Conditions and limits |
 | --- | --- | --- |
-| Parallel HTTP/HTTPS | 1–32 connections, chunk scheduling, and a two-file queue | Parallel assembly requires byte ranges and a strong ETag. Otherwise HDM uses a single response or restarts safely. |
-| Pause and resume | Persisted progress across application restarts | Reusing existing chunks requires unchanged, verifiable content. |
+| Parallel HTTP/HTTPS | 1–32 connections (32 by default), live/peak connection tracking, chunk scheduling, and a two-file queue | Parallel assembly requires byte ranges and a strong ETag. Otherwise HDM uses a single response or restarts safely. |
+| Pause and resume | Persisted progress across application restarts | Completed and partial chunks can be reused only with an unchanged strong ETag and length. |
 | Expired links | Replace a paused job's URL and retain verified chunks | The new source must match the required content validators and size. |
 | Multiple mirrors | Use sources with an independently supplied SHA-256; reject failing or wrong-size mirrors | ETags from different servers are not treated as proof of identical bytes. |
 | Mirror recovery | If the final hash fails, retain primary-source chunks and retry mirror-sourced chunks | HDM does not yet identify the individual corrupt chunk within the mirror group. |

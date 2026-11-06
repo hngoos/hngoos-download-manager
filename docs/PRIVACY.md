@@ -2,7 +2,7 @@
 
 [Home](../README.md) · [User guide](USAGE.md) · [Security](SECURITY_MODEL.md)
 
-Applies to **hngoos-download-manager (HDM) v0.1.4** and its Chromium extension. Last updated: **6 November 2026**.
+Applies to **hngoos-download-manager (HDM) v0.1.5** and its Chromium extension. Last updated: **6 November 2026**.
 
 ## Data stored on your device
 
@@ -11,6 +11,21 @@ HDM stores download history, source URLs, filenames, destinations, progress, and
 The extension stores settings, site exceptions, and hidden-element selectors in local browser storage. Detected media URLs are held temporarily per tab, up to 30 candidates. Entries older than 30 minutes are excluded when the list is read; closing the tab or navigating to a new page clears its list.
 
 HDM has no developer-operated history collection or advertising service. The application and extension do not send usage analytics to an HDM server. Download data is not uploaded to this GitHub repository.
+
+## Clipboard and launch at sign-in
+
+Clipboard link detection is enabled by default and can be disabled in **About → Settings**.
+HDM reads clipboard text once per second while running and accepts a single HTTP/HTTPS or magnet link.
+Recognition stays on your device: no network request or download starts until you click Download.
+An existing URL is preserved; a separate action lets you use a newly copied link.
+Clipboard text that is not a valid link is not stored in the download database. Recognized links are
+kept in memory until confirmed; accepted download URLs are saved as part of local history.
+
+Launch at sign-in is opt-in and affects only your operating-system account. Disable it in the same
+settings. HDM uses the Windows current-user Run entry, a macOS LaunchAgent, or a Linux autostart entry.
+
+Automatic Defender scans are enabled by default on Windows. HDM does not upload files to a developer
+server; Defender's own cloud protection or sample-submission settings remain under Windows control.
 
 ## Connections to other services
 

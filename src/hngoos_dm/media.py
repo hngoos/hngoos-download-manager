@@ -22,6 +22,8 @@ class MediaOptions:
     cookie_file: str = ""
     format_id: str = ""
     referrer: str = ""
+    connections: int = 32
+    filename: str = ""
 
 
 def find_ffmpeg():
@@ -44,7 +46,13 @@ def ydl_options(directory, options=None, ffmpeg=None):
         "writesubtitles": options.subtitles, "writeautomaticsub": options.subtitles,
         "subtitleslangs": list(options.subtitle_languages), "restrictfilenames": False,
         "overwrites": False,
+        "concurrent_fragment_downloads": max(1, min(32, int(options.connections))),
+        "allow_unplayable_formats": False,
     }
+    if options.filename and not options.playlist:
+        from .safety import safe_filename
+        name = safe_filename(Path(options.filename).stem).replace("%", "%%")
+        settings["outtmpl"] = str(Path(directory)/(name+".%(ext)s"))
     if options.cookie_file:
         cookie_file = Path(options.cookie_file).resolve()
         if not cookie_file.is_file():
@@ -92,7 +100,8 @@ def inspect_video(url, options=None):
             "subtitles": list(info.get("subtitles", {}))}
 
 
-def download_video(url, directory, audio=False, progress=None, options=None, stop=None):
+def download_video(url, directory, audio=False, progress=None, options=None, stop=None,
+                   high_security=False, staging_root=None, antivirus=False):
     """Keep incomplete media on the local disk; publish only after all processing succeeds."""
     import hashlib
     import json
@@ -106,7 +115,7 @@ def download_video(url, directory, audio=False, progress=None, options=None, sto
     identity = asdict(options) if options else {"audio": audio}
     identity.pop("cookie_file", None)
     identifier = hashlib.sha256((validate_url(url)+str(directory)+json.dumps(identity, sort_keys=True)).encode()).hexdigest()
-    staging = data_directory()/"media-staging"/identifier
+    staging = (Path(staging_root) if staging_root else data_directory()/"media-staging")/identifier
     staging.mkdir(parents=True, exist_ok=True)
     lock = InstanceLock(staging/"task.lock")
     try:
@@ -117,7 +126,22 @@ def download_video(url, directory, audio=False, progress=None, options=None, sto
                     and path.suffix.lower() not in {".part", ".ytdl", ".temp", ".tmp"}
                     and not path.name.startswith("cookies")):
                 relative = path.relative_to(staging)
-                outputs.append(deliver(path, directory/relative.parent, path.name, stop))
+                from .safety import inspect_download
+                if stop and stop.is_set():
+                    raise MediaCancelled("Đã dừng tác vụ video.")
+                inspection = inspect_download(path, path.name.removesuffix(".chuakiemtra"),
+                                              high_security=high_security, antivirus=antivirus)
+                if progress:
+                    progress({"status": "verifying", "safety_note": inspection["safety_note"]})
+                if stop and stop.is_set():
+                    raise MediaCancelled("Đã dừng tác vụ video.")
+                if not path.name.endswith(".chuakiemtra") and inspection["reasons"]:
+                    name = path.name+".chuakiemtra"
+                else:
+                    name = path.name
+                outputs.append(deliver(path, directory/relative.parent, name, stop))
+        if not outputs:
+            raise ValueError("Không có tệp hoàn chỉnh từ nguồn này. Nội dung có thể cần đăng nhập hoặc không hỗ trợ tải.")
         return outputs
     finally:
         lock.close()
@@ -168,6 +192,9 @@ def external_download(executable, url, settings, stop, progress):
     arguments = [str(executable), "--newline", "--progress", "--no-color", "--windows-filenames", "--no-overwrites",
                  "--no-playlist" if settings["noplaylist"] else "--yes-playlist", "-o", settings["outtmpl"], "-f", settings["format"]]
     arguments += ["--print", "after_move:HNGOOS_FILE:%(filepath)s"]
+    arguments += ["--progress-template",
+                  "download:HDM_PROGRESS:%(progress.downloaded_bytes)s|%(progress.total_bytes)s|%(progress.total_bytes_estimate)s|%(progress.speed)s"]
+    arguments += ["--concurrent-fragments", str(settings.get("concurrent_fragment_downloads", 32))]
     if settings.get("cookiefile"):
         arguments += ["--cookies", settings["cookiefile"]]
     if settings.get("http_headers", {}).get("Referer"):
@@ -190,6 +217,17 @@ def external_download(executable, url, settings, stop, progress):
             lines.append(line.rstrip())
             if line.startswith("HNGOOS_FILE:"):
                 completed_paths.add(Path(line.rstrip().split(":", 1)[1]))
+            if line.startswith("HDM_PROGRESS:") and progress:
+                values = line.strip().split(":", 1)[1].split("|")
+                if len(values) == 4:
+                    data = {"status": "downloading"}
+                    for name, value in zip(("downloaded_bytes", "total_bytes", "total_bytes_estimate", "speed"), values):
+                        try:
+                            data[name] = float(value) if name == "speed" else int(value)
+                        except ValueError:
+                            data[name] = None
+                    progress(data)
+                continue
             if progress:
                 progress({"status": "downloading", "_percent_str": line.strip()[:500]})
     reader = threading.Thread(target=drain, daemon=True)
