@@ -2,7 +2,7 @@
 
 [Home](../README.md) · [User guide](USAGE.md) · [Privacy](PRIVACY.md) · [Security](SECURITY_MODEL.md)
 
-This reference describes **HDM v0.1.7**. It separates implemented behavior from conditions that depend on servers, websites, accounts, or hardware. The release does not complete every planned capability. The stable binary release targets Windows; the current source also offers [macOS/Linux desktop previews](PLATFORMS.md), with platform-specific features and optional dependencies listed there.
+This reference describes **HDM v0.1.8**. It separates implemented behavior from conditions that depend on servers, websites, accounts, or hardware. The release does not complete every planned capability. The stable binary release targets Windows; the current source also offers [macOS/Linux desktop previews](PLATFORMS.md), with platform-specific features and optional dependencies listed there.
 
 ## One download screen
 
@@ -12,8 +12,9 @@ The Info menu also offers import/export, preferences, browser extension installa
 bug reporting, Discord, in-app updates, About and Quit.
 
 Clipboard recognition is local and waits for a click, preserving a URL already being edited.
-Click Download to recognize the source and review a confirmation dialog. Direct files show file
-options; supported media adds format, quality, playlist and subtitles. HTML source pages go to
+Press Enter to recognize the source and reveal details beneath the URL bar. Direct files show
+filename and destination; Advanced options adds checksums/mirrors or media format, quality,
+playlist and subtitles as applicable. Click Download in the details to start. HTML source pages go to
 the media extractor after confirmation rather than being saved as a supposed video.
 Spotify music is DRM-protected and cannot be downloaded directly as MP3.
 
@@ -22,6 +23,11 @@ extractor and retained source allow it; one media task runs at a time. Media sou
 HTTP worker counts as 32: fragment concurrency is capped at 32 and depends on their protocols.
 
 Launch at sign-in is opt-in on Windows, macOS and Linux and does not require administrator access.
+
+Completed files offer **Check Safety** directly on their row: local checks, Windows Defender,
+and optional VirusTotal multi-engine reports with the user's session-only API key. Hash lookups
+do not upload contents. A new cloud scan requires a separate upload action and explicit consent.
+Unknown, pending, unavailable and failed checks are never reported as clean.
 
 ## Downloads and recovery
 
@@ -63,7 +69,7 @@ The batch dialog is intended for up to 500 rows per import. Website capture need
 
 ## Retained processing libraries
 
-The following library APIs remain included for development and compatibility. HDM 0.1.7 keeps the
+The following library APIs remain included for development and compatibility. HDM 0.1.8 keeps the
 main desktop workflow focused on downloads and no longer exposes the separate conversion, PDF
 redaction or website-capture dialogs in its menus.
 

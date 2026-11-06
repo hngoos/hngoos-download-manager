@@ -26,6 +26,21 @@ class RoundedPanel(tk.Canvas):
         self.theme = theme
         self.draw()
 
+    def reveal(self):
+        """A short content reveal; honor the OS reduced-motion preference."""
+        from .widgets import motion_enabled
+        self._reveal_generation = getattr(self, "_reveal_generation", 0)+1
+        generation = self._reveal_generation
+        frames = 10 if motion_enabled() else 0
+        def tick(frame=0):
+            if not self.winfo_exists() or generation != self._reveal_generation:
+                return
+            offset = 12*(1-frame/max(1, frames))**3 if frames else 0
+            self.coords(self.window, self.padding, self.padding+offset)
+            if frame < frames:
+                self.after(16, tick, frame+1)
+        tick()
+
     def draw(self):
         background, panel, *_ = PALETTES[self.theme]
         self.configure(background=background)

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.8 — 2026-11-06
+
+- Use a single URL bar: press Enter to reveal link, filename, destination and source-specific advanced options inline.
+- Read filenames from server headers and media titles when available, without starting a download.
+- Add Check Safety beside each completed file: local checks, Windows Defender and optional VirusTotal multi-engine results.
+- Require explicit consent for new VirusTotal file submissions; keep API keys in session memory and show unknown/pending/error states.
+- Preserve the Info menu, Chromium extension setup and Windows update runtime fix.
+
 ## 0.1.7 — 2026-11-06
 
 - Simplify the main window to a URL bar and rounded download queue, with speed and bandwidth controls below.

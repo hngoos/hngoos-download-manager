@@ -5,6 +5,33 @@ from tkinter import ttk
 from weakref import WeakKeyDictionary
 
 TRANSLATIONS = {
+    "Dán liên kết · nhấn Enter": "Paste a link · press Enter", "Link tệp": "File link",
+    "Link đã thay đổi; nhấn Enter để nhận diện lại.": "Link changed; press Enter to detect it again.",
+    "Chọn thư mục lưu trước khi tải.": "Choose a destination before downloading.",
+    "Xem thông tin và bấm Tải xuống để bắt đầu.": "Review the details and click Download to start.",
+    "Kiểm tra an toàn": "Check Safety", "Bộ quét": "Engine", "Kết quả": "Result", "Phát hiện": "Detection",
+    "Đang kiểm tra trên máy…": "Running local checks…", "Chưa quét bằng VirusTotal.": "Not checked with VirusTotal.",
+    "Nhiều bộ quét · phát hiện mã độc, ransomware và virus": "Multiple engines · malware, ransomware and virus detection",
+    "Kiểm tra VirusTotal": "Check with VirusTotal", "Gửi tệp để quét mới…": "Submit file for a new scan…",
+    "Lấy API key": "Get API key",
+    "Lấy kết quả quét": "Get scan results", "Mở trang VirusTotal": "Open VirusTotal",
+    "Khóa chỉ giữ trong phiên này. Tra mã băm không gửi nội dung tệp.":
+        "The key stays in memory for this session. Hash lookups do not upload file contents.",
+    "Không có bộ quét nào bảo đảm phát hiện mọi mối đe dọa.": "No scanner can guarantee detection of every threat.",
+    "Tệp đã được di chuyển hoặc xóa.": "The file was moved or deleted.",
+    "Tệp thay đổi trong lúc kiểm tra; hãy quét lại.": "The file changed during checks. Scan it again.",
+    "Cần kiểm tra: ": "Needs review: ",
+    "Chưa phát hiện dấu hiệu trong phạm vi kiểm tra.": "No indicators found within the scope of these checks.",
+    "Đang tra kết quả nhiều bộ quét…": "Looking up multi-engine results…",
+    "VirusTotal chưa có báo cáo. Bạn có thể gửi tệp để quét mới.":
+        "VirusTotal has no report yet. You can submit the file for a new scan.",
+    "Gửi toàn bộ tệp này lên VirusTotal?\nTệp có thể được chia sẻ với các đối tác bảo mật. Không gửi tệp riêng tư.":
+        "Upload this entire file to VirusTotal?\nIt may be shared with security partners. Do not submit private files.",
+    "Đang gửi tệp để quét…": "Uploading the file for scanning…",
+    "Đã gửi. Đang chờ các bộ quét trả kết quả…": "Submitted. Waiting for scan engines…",
+    "Đang chờ quét; chưa có kết luận.": "Scan pending; no verdict is available yet.",
+    "Phát hiện mã độc": "Threat detections", "Chưa bộ quét nào phát hiện trong báo cáo này": "No engine detections in this report",
+    "Thời điểm báo cáo: ": "Report time: ", "Báo cáo không có kết quả từ bộ quét.": "No engine results are available in this report.",
     "Tải xuống": "Download", "Video & nhạc": "Video & audio", "An toàn": "Safety",
     "Trình duyệt": "Browser", "Công cụ": "Tools", "Thông tin": "Info",
     "Nhập / Xuất": "Import / Export", "Tiện ích trình duyệt": "Browser extension",

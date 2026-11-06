@@ -13,7 +13,7 @@
 - **Built-in safety checks** — inspect file content, names, macros and archives,
   verify checksums and quarantine risky files. Optional Windows Defender scanning.
 - **One download screen** — detect clipboard links and choose original files,
-  video or MP3/M4A from supported sources before downloading.
+  video or MP3/M4A from supported sources, with details revealed after Enter.
 - **Everyday essentials** — batch imports, scheduling, bandwidth limits,
   background operation, optional launch at sign-in and in-app updates.
 
@@ -38,7 +38,7 @@ curl.exe -fL https://raw.githubusercontent.com/hngoos/hngoos-download-manager/ma
 
 1. Run the downloaded `.exe` and follow the setup wizard, or run the CMD command above.
 2. Open **HDM** from the Start menu.
-3. Paste a link and click **Download** to choose your options.
+3. Paste a link, press **Enter**, review the details, then click **Download**.
 
 For browser integration, open **Info → Browser extension** in HDM to download
 and set up the Chromium extension.

@@ -19,6 +19,23 @@ from hngoos_dm.store import Store
 
 
 class LinkTests(unittest.TestCase):
+    def test_enter_metadata_uses_server_filename_and_full_range_size_without_saving_a_file(self):
+        from email.message import Message
+
+        from hngoos_dm.links import describe_source
+        headers = Message()
+        headers["Content-Type"] = "application/pdf"
+        headers["Content-Disposition"] = 'attachment; filename="Invoice 2026.pdf"'
+        headers["Content-Range"] = "bytes 0-0/4096"
+        headers["Content-Length"] = "1"
+        with patch("hngoos_dm.engine.request") as request:
+            request.return_value.__enter__.return_value = SimpleNamespace(headers=headers)
+            result = describe_source("https://example.com/get?id=private-token")
+            self.assertEqual(result["filename"], "Invoice 2026.pdf")
+            self.assertEqual(result["size"], 4096)
+            self.assertEqual(result["kind"], "file")
+            request.assert_called_once_with("https://example.com/get?id=private-token", {"Range": "bytes=0-0"})
+
     def test_clipboard_accepts_links_without_network_and_rejects_text_and_credentials(self):
         with patch("urllib.request.urlopen", side_effect=AssertionError("Clipboard must stay local")):
             self.assertEqual(clipboard_link(" https://youtu.be/example "), "https://youtu.be/example")

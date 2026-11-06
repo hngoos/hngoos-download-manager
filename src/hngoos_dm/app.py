@@ -303,27 +303,30 @@ class App:
         return content
 
     def _downloads(self, parent):
-        from .rounded import RoundedButton, RoundedPanel
-        self.url_panel = RoundedPanel(parent, height=84)
-        self.url_panel.pack(fill="x", pady=(0, 16))
+        from .rounded import RoundedPanel
+        parent.columnconfigure(0, weight=1)
+        parent.rowconfigure(2, weight=1)
+        self.url_panel = RoundedPanel(parent, height=72)
+        self.url_panel.grid(row=0, column=0, sticky="ew", pady=(0, 12))
         form = self.url_panel.content
-        form.columnconfigure(0, weight=1)
+        form.columnconfigure(1, weight=1)
+        ttk.Label(form, text="Link", background=PANEL,
+                  foreground=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 12))
         self.url_entry = ttk.Entry(form, textvariable=self.url)
-        self.url_entry.grid(row=0, column=0, sticky="ew")
+        self.url_entry.grid(row=0, column=1, sticky="ew")
+        ttk.Label(form, text="Enter", background=PANEL, foreground=MUTED).grid(row=0, column=2, padx=(12, 0))
         self.url_entry.bind("<Return>", lambda _event: self.prepare_download())
-        RoundedButton(form, text="Dán", command=self.paste_url, width=76).grid(row=0, column=1, padx=8)
-        self.download_button = RoundedButton(form, text="Tải xuống", command=self.prepare_download, primary=True)
-        self.download_button.grid(row=0, column=2)
+        self.editor_panel = RoundedPanel(parent, height=240, padding=16)
         self.source_hint = tk.StringVar(value="Tệp gốc · tối đa 32 kết nối · kiểm tra an toàn sau tải")
         self.clipboard_frame = ttk.Frame(form, style="Card.TFrame")
-        self.clipboard_frame.grid(row=1, column=0, columnspan=3, sticky="ew", pady=(10, 0))
+        self.clipboard_frame.grid(row=1, column=0, columnspan=3, sticky="ew", pady=(8, 0))
         ttk.Label(self.clipboard_frame, textvariable=self.clipboard_notice, background=PANEL,
                   foreground=MUTED).pack(side="left")
         self.clipboard_button = ttk.Button(self.clipboard_frame, text="Dùng link mới", command=self.use_clipboard_link)
         self.clipboard_frame.grid_remove()
         self.url.trace_add("write", self.link_changed)
         self.footer = ttk.Frame(parent)
-        self.footer.pack(side="bottom", fill="x", pady=(14, 0))
+        self.footer.grid(row=3, column=0, sticky="ew", pady=(14, 0))
         self.speed = tk.StringVar(value="0 B/s")
         ttk.Label(self.footer, textvariable=self.speed, font=("Segoe UI", 13, "bold")).pack(side="left", padx=(0, 16))
         self.bandwidth_display = tk.StringVar(value=self.bandwidth_mode.get())
@@ -341,16 +344,19 @@ class App:
         ttk.Label(self.footer, textvariable=self.status, style="Muted.TLabel", width=48,
                   wraplength=360).pack(side="left", padx=16)
         self.queue_panel = RoundedPanel(parent, padding=14, dashed=True)
-        self.queue_panel.pack(fill="both", expand=True)
-        columns = ("name", "status", "progress", "size", "speed", "connections", "safety")
+        self.queue_panel.grid(row=2, column=0, sticky="nsew")
+        columns = ("name", "status", "progress", "size", "speed", "connections", "safety", "action")
         table_frame = self.queue_panel.content
         self.table = ttk.Treeview(table_frame, columns=columns, show="headings", selectmode="browse", height=4)
-        for col, label, width in zip(columns, ("TÊN TỆP", "TRẠNG THÁI", "TIẾN ĐỘ", "ĐÃ TẢI / TỔNG", "TỐC ĐỘ", "LUỒNG", "AN TOÀN"),
-                                     (270, 110, 75, 160, 100, 70, 130)):
+        for col, label, width in zip(columns, ("TÊN TỆP", "TRẠNG THÁI", "TIẾN ĐỘ", "ĐÃ TẢI / TỔNG", "TỐC ĐỘ", "LUỒNG", "AN TOÀN", ""),
+                                     (240, 100, 65, 140, 85, 65, 130, 150)):
             self.table.heading(col, text=label)
             self.table.column(col, width=width, minwidth=65, stretch=col == "name")
         scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.table.yview)
-        self.table.configure(yscrollcommand=scrollbar.set)
+        def scrolled(first, last):
+            scrollbar.set(first, last)
+            self.root.after_idle(self.update_safety_buttons)
+        self.table.configure(yscrollcommand=scrolled)
         scrollbar.pack(side="right", fill="y")
         self.table.pack(fill="both", expand=True)
         self.empty_state = ttk.Frame(table_frame, style="Card.TFrame", padding=(16, 12))
@@ -360,6 +366,9 @@ class App:
         ttk.Label(self.empty_state, text="Dán đường dẫn ở trên hoặc nhập danh sách từ bảng tính.",
                   background=PANEL, foreground=MUTED).pack(pady=(8, 0))
         self.empty_state.place(x=2, y=44, relwidth=1, width=-22, relheight=1, height=-46)
+        self.row_safety_buttons = {}
+        self.table.bind("<Configure>", lambda _: self.root.after_idle(self.update_safety_buttons))
+        self.table.bind("<MouseWheel>", lambda _: self.root.after_idle(self.update_safety_buttons), add="+")
         self.table.bind("<<TreeviewSelect>>", self.show_details)
         self.table.bind("<Double-1>", lambda _: self.open_folder())
         self.table.bind("<Button-3>", self.context_menu)
@@ -367,44 +376,56 @@ class App:
 
 
 
+    def dismiss_download(self):
+        editor = getattr(self, "download_editor", None)
+        if editor and editor.winfo_exists():
+            editor.destroy()
+        self.download_editor = None
+        self.editor_panel.grid_remove()
+        self.url_entry.focus_set()
+
     def prepare_download(self):
-        from .download_ui import DownloadDialog
-        from .links import link_kind, resolve_source
-        previous = getattr(self, "download_dialog", None)
+        from .download_ui import DownloadEditor
+        from .links import describe_source, link_kind
+        previous = getattr(self, "download_editor", None)
         if previous and previous.winfo_exists():
-            previous.lift()
-            return
+            if previous.original == self.url.get().strip():
+                previous.focus_set()
+                return
+            self.dismiss_download()
         if getattr(self, "source_busy", False):
             return
         original = self.url.get().strip()
-        def ready(kind, resolved):
+        def ready(description):
+            kind, resolved = description["kind"], description["url"]
             self.source_busy = False
-            self.download_button.configure(state="normal")
             if self.url.get().strip() != original:
                 self.status.set(self.locale.text("Link đã thay đổi; bấm tải lại để dùng link mới."))
                 return
             if kind in {"spotify", "torrent"}:
                 self.add(resolved_source=(kind, resolved))
                 return
-            self.download_dialog = DownloadDialog(self, original, kind, resolved)
+            self.download_editor = DownloadEditor(self, description)
+            self.download_editor.pack(fill="both", expand=True)
+            self.editor_panel.grid(row=1, column=0, sticky="ew", pady=(0, 12))
+            self.editor_panel.reveal()
+            self.status.set(self.locale.text("Xem thông tin và bấm Tải xuống để bắt đầu."))
         def action():
             kind = link_kind(original)
-            if kind != "file":
-                ready(kind, original)
+            if kind in {"spotify", "torrent"}:
+                ready({"original": original, "kind": kind, "url": original})
                 return
             self.source_busy = True
-            self.download_button.configure(state="disabled")
             self.status.set(self.locale.text("Đang nhận diện nguồn tải…"))
             def worker():
                 try:
-                    result = resolve_source(original)
-                    self.events.put(lambda: ready(*result))
+                    result = describe_source(original)
+                    self.events.put(lambda: ready(result))
                 except Exception as error:  # noqa: BLE001 -- Restore controls after source detection.
                     self.events.put(lambda error=str(error): failed(error))
             def failed(error):
                 self.source_busy = False
-                self.download_button.configure(state="normal")
-                messagebox.showerror("HDM", error, parent=self.root)
+                self.status.set(error)
             thread = threading.Thread(target=worker, daemon=True)
             self.background_threads.append(thread)
             thread.start()
@@ -627,7 +648,7 @@ class App:
         elif self.url.get().strip() != link:
             self.clipboard_notice.set(self.locale.text("Có link mới trong clipboard. Giữ nguyên link bạn đang sửa."))
             self.clipboard_frame.grid()
-            self.url_panel.configure(height=120)
+            self.url_panel.configure(height=110)
             self.clipboard_button.pack(side="right")
 
     def use_clipboard_link(self):
@@ -635,7 +656,7 @@ class App:
             self.url.set(self.clipboard_pending)
             self.clipboard_notice.set(self.locale.text("Đã nhận link từ clipboard · bấm tải để xem lựa chọn."))
             self.clipboard_frame.grid()
-            self.url_panel.configure(height=120)
+            self.url_panel.configure(height=110)
             self.clipboard_button.pack_forget()
 
     def choose_directory(self):
@@ -699,6 +720,8 @@ class App:
                 menu.add_command(label="Đổi nơi lưu trong lúc tải…", command=self.relocate)
         if job["state"] in {"paused", "error", "scheduled"} and job.get("kind") != "media":
             menu.add_command(label="Hẹn giờ tải…", command=self.schedule_dialog)
+        if job["state"] in {"complete", "quarantined"} and job.get("output"):
+            menu.add_command(label="Kiểm tra an toàn", command=self.check_selected_safety)
         menu.add_command(label="Mở thư mục", command=self.open_folder)
         if job["sha256"]:
             menu.add_command(label="Chép SHA-256", command=lambda: self.copy(job["sha256"]))
@@ -1085,6 +1108,41 @@ class App:
                 self.status.set(f"Đang bảo vệ tệp mới trong: {folder}")
             self.guarded(action)
 
+    def update_safety_buttons(self):
+        if not hasattr(self, "row_safety_buttons") or getattr(self, "_closing", False):
+            return
+        visible = set()
+        for row in self.table.get_children():
+            box = self.table.bbox(row, "action")
+            if not box:
+                continue
+            job = self.store.get(row)
+            if job["state"] not in {"complete", "quarantined"} or not job.get("output"):
+                continue
+            visible.add(row)
+            button = self.row_safety_buttons.get(row)
+            if button is None:
+                button = ttk.Button(self.table, text=self.locale.text("Kiểm tra an toàn"),
+                    image=self.icons["shield"], compound="left", command=lambda row=row: self.check_selected_safety(row))
+                self.row_safety_buttons[row] = button
+            x, y, width, height = box
+            button.place(x=x+3, y=y+3, width=max(1, width-6), height=max(1, height-6))
+        for row in list(self.row_safety_buttons):
+            if row not in visible:
+                self.row_safety_buttons.pop(row).destroy()
+
+    def check_selected_safety(self, job_id=None):
+        from .safety_ui import SafetyDialog
+        if job_id := job_id or self.selected():
+            self.table.selection_set(job_id)
+            job = self.store.get(job_id)
+            if job["state"] in {"complete", "quarantined"} and job.get("output"):
+                previous = getattr(self, "safety_dialog", None)
+                if previous and previous.winfo_exists():
+                    previous.lift()
+                    return
+                self.safety_dialog = SafetyDialog(self, job)
+
     def check_update(self):
         from .update_ui import UpdateDialog
         if getattr(self, "update_dialog", None) and self.update_dialog.window.winfo_exists():
@@ -1292,13 +1350,14 @@ class App:
                       f"{human(job['downloaded'])} / {human(job['total']) if job['total'] else '?'}",
                       f"{human(job['speed'])}/s" if job["speed"] else "—",
                       "—" if job.get("kind") == "media" else f"{job.get('active_connections', 0)}/{job['connections']}",
-                      self.locale.text(job.get("safety_note", "Chưa kiểm tra")))
+                      self.locale.text(job.get("safety_note", "Chưa kiểm tra")), "")
             if self.last_jobs.get(job["id"]) != values:
                 if self.table.exists(job["id"]):
                     self.table.item(job["id"], values=values)
                 else:
                     self.table.insert("", 0, iid=job["id"], values=values)
                 self.last_jobs[job["id"]] = values
+        self.update_safety_buttons()
         self.show_details()
         self.refresh_id = self.root.after(500, self.refresh)
 

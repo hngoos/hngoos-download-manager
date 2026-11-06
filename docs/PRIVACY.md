@@ -2,7 +2,7 @@
 
 [Home](../README.md) · [User guide](USAGE.md) · [Security](SECURITY_MODEL.md)
 
-Applies to **hngoos-download-manager (HDM) v0.1.7** and its Chromium extension. Last updated: **6 November 2026**.
+Applies to **hngoos-download-manager (HDM) v0.1.8** and its Chromium extension. Last updated: **6 November 2026**.
 
 ## Data stored on your device
 
@@ -14,9 +14,9 @@ HDM has no developer-operated history collection or advertising service. The app
 
 ## Clipboard and launch at sign-in
 
-Clipboard link detection is enabled by default and can be disabled in **About → Settings**.
+Clipboard link detection is enabled by default and can be disabled in **Info → Preferences → General**.
 HDM reads clipboard text once per second while running and accepts a single HTTP/HTTPS or magnet link.
-Recognition stays on your device: no network request or download starts until you click Download.
+Recognition stays on your device: no network request or download starts until you press Enter to inspect a source or confirm a download.
 An existing URL is preserved; a separate action lets you use a newly copied link.
 Clipboard text that is not a valid link is not stored in the download database. Recognized links are
 kept in memory until confirmed; accepted download URLs are saved as part of local history.
@@ -34,11 +34,19 @@ server; Defender's own cloud protection or sample-submission settings remain und
 | File and video downloads | Requests go to the websites and content servers you choose. Those servers receive your IP address and necessary protocol information. Browser-originated video requests may include the source website's origin as Referer, without the page path or query. |
 | Application and downloader updates | Requests go to GitHub for release information and assets. |
 | Optional content filtering | Lists are fetched directly from EasyList, EasyPrivacy, ABPVN, and uBlock badware sources after you grant access. |
-| Hash lookups | VirusTotal, MetaDefender, or Kaspersky opens with the file's SHA-256. HDM does not automatically upload the file's contents. |
+| Hash lookups | The selected reputation service receives SHA-256 when requested. VirusTotal API lookups also use the personal API key entered in the app. |
+| Explicit VirusTotal scan | Only after you select Submit file and confirm, the entire selected file is sent to VirusTotal. Submitted samples may be shared with its security partners under its policies. No upload occurs from clipboard detection, Enter, downloading or local safety checks. |
 | Subtitle lookup | Requests go to OpenSubtitles when you use the feature with the credentials you provide. |
 | Torrents | Connections go to peers and torrent network services. Peers can see your IP address. |
 
 These services have their own privacy policies. Local media conversion and PDF redaction do not require sending the file to an external conversion service.
+
+VirusTotal API keys are masked in the UI and held only in process memory for the
+current app session. They are not written to settings, download history, logs or
+exports. Local safety results, SHA-256 and optional VirusTotal detection counts
+and report timestamps may be saved with the download history. Uploads use a
+generic filename; the service still receives the complete file content, your IP
+address and account credentials needed for the request.
 
 ## Chromium extension permissions
 

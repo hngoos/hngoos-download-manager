@@ -58,3 +58,37 @@ def resolve_source(value, force_file=False):
         if content_type in {"text/html", "application/xhtml+xml"} and not response.headers.get_filename():
             return "media", value
     return "file", direct
+
+
+def describe_source(value):
+    """Fetch metadata only after Enter; never download content into the user folder."""
+    from .cloud import resolve
+    from .engine import request
+    from .safety import filename_from_url, safe_filename
+
+    kind = link_kind(value)
+    result = {"original": value, "kind": kind, "url": value, "filename": "", "size": None}
+    if kind == "file":
+        direct = resolve(value)
+        with request(direct, {"Range": "bytes=0-0"}) as response:
+            headers = response.headers
+            content_type = headers.get_content_type()
+            if content_type in {"text/html", "application/xhtml+xml"} and not headers.get_filename():
+                kind = "media"
+            else:
+                result.update(url=direct, filename=safe_filename(headers.get_filename())
+                              if headers.get_filename() else filename_from_url(direct), content_type=content_type)
+                total = headers.get("Content-Range", "").rsplit("/", 1)[-1]
+                if not total.isdigit():
+                    total = headers.get("Content-Length", "")
+                result["size"] = int(total) if total.isdigit() else None
+    result["kind"] = kind
+    if kind == "media":
+        from .media import describe_media
+        try:
+            metadata = describe_media(value)
+            if metadata.get("title"):
+                result["filename"] = safe_filename(metadata["title"])+".mp4"
+        except Exception:  # noqa: BLE001 -- Logged-in sources can still be configured with cookies below.
+            result["filename"] = ""
+    return result

@@ -107,17 +107,21 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(self.app.bandwidth_display.get(), "Vừa (4 MB/s)")
 
     def test_confirmation_has_source_specific_options_and_cancel_never_downloads(self):
-        from hngoos_dm.download_ui import DownloadDialog
+        from hngoos_dm.download_ui import DownloadEditor
         self.app.url.set("https://example.com/document.pdf")
         with patch.object(self.app.manager, "add") as add:
-            dialog = DownloadDialog(self.app, self.app.url.get(), "file", self.app.url.get())
+            dialog = DownloadEditor(self.app, {"original": self.app.url.get(), "url": self.app.url.get(), "kind": "file"})
             self.assertFalse(hasattr(dialog, "media_controls"))
             self.assertEqual(dialog.connections.get(), "32")
             dialog.destroy()
             self.pump()
             add.assert_not_called()
         self.app.url.set("https://youtu.be/example")
-        dialog = DownloadDialog(self.app, self.app.url.get(), "media", self.app.url.get())
+        dialog = DownloadEditor(self.app, {"original": self.app.url.get(), "url": self.app.url.get(), "kind": "media"})
+        self.app.download_editor = dialog
+        dialog.pack(fill="both", expand=True)
+        self.app.editor_panel.grid(row=1, column=0, sticky="ew")
+        dialog.toggle_advanced()
         self.pump()
         self.assertTrue(dialog.media_controls.winfo_ismapped())
         dialog.format.set("MP3")
@@ -130,13 +134,37 @@ class PresentationTests(unittest.TestCase):
 
     def test_detect_html_before_confirmation_and_do_not_start_download(self):
         self.app.url.set("https://example.com/watch")
-        with patch("hngoos_dm.links.resolve_source", return_value=("media", self.app.url.get())), \
+        with patch("hngoos_dm.links.describe_source", return_value={"kind": "media", "original": self.app.url.get(),
+                      "url": self.app.url.get(), "filename": "Example.mp4"}), \
                 patch.object(self.app.manager, "add") as add:
             self.app.prepare_download()
             self.pump(0.6)
-            dialog = self.app.download_dialog
+            dialog = self.app.download_editor
             self.assertEqual(dialog.kind, "media")
             add.assert_not_called()
+            dialog.destroy()
+
+    def test_completed_row_safety_button_uses_real_file_and_never_uploads_automatically(self):
+        source = Path(self.folder.name)/"invoice.pdf"
+        source.write_bytes(b"document fixture")
+        row = self.app.store.create("https://example.com/invoice.pdf", source.parent, source.name)
+        self.app.store.update(row["id"], state="complete", output=str(source), total=source.stat().st_size,
+                              downloaded=source.stat().st_size)
+        with patch("hngoos_dm.safety_ui.inspect_download", return_value={"reasons": [], "safety_note": "Sơ bộ + Defender"}), \
+                patch("hngoos_dm.virustotal.VirusTotalClient.request") as remote:
+            self.pump(0.6)
+            button = self.app.row_safety_buttons[row["id"]]
+            self.assertTrue(button.winfo_ismapped())
+            button.invoke()
+            self.pump(0.6)
+            dialog = self.app.safety_dialog
+            self.assertEqual(dialog.path.get(), str(source))
+            self.assertEqual(len(dialog.digest), 64)
+            remote.assert_not_called()
+            dialog.show_report({"status": "queued", "stats": {}, "engines": [], "date": None})
+            self.assertIn("chưa có kết luận", dialog.vt_status.get())
+            dialog.show_report({"status": "completed", "stats": {}, "engines": [], "date": None})
+            self.assertIn("không có kết quả", dialog.vt_status.get())
             dialog.destroy()
 
     def test_main_has_no_media_controls_and_panels_resize_in_both_themes(self):
@@ -154,8 +182,9 @@ class PresentationTests(unittest.TestCase):
             self.pump()
             self.assertGreater(self.app.queue_panel.winfo_height(), 300)
             self.assertGreater(self.app.url_entry.winfo_width(), 400)
-            self.assertLess(self.app.download_button.winfo_rootx()+self.app.download_button.winfo_width(),
+            self.assertLess(self.app.url_entry.winfo_rootx()+self.app.url_entry.winfo_width(),
                             self.root.winfo_rootx()+self.root.winfo_width())
+            self.assertFalse(hasattr(self.app, "download_button"))
 
     def test_light_theme_has_readable_selection_and_new_dialogs_after_repeated_toggles(self):
         from tkinter import ttk

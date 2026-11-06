@@ -100,6 +100,17 @@ def inspect_video(url, options=None):
             "subtitles": list(info.get("subtitles", {}))}
 
 
+def describe_media(url):
+    """Bound preview requests; no playlist traversal, processing, or downloaded media."""
+    from yt_dlp import YoutubeDL
+    settings = ydl_options(Path.cwd())
+    settings.update(skip_download=True, extract_flat=True, playlistend=1,
+                    socket_timeout=15, retries=1, extractor_retries=1, ignoreerrors=False)
+    with YoutubeDL(settings) as downloader:
+        info = downloader.extract_info(validate_url(url), download=False)
+        return {"title": info.get("title", "")}
+
+
 def download_video(url, directory, audio=False, progress=None, options=None, stop=None,
                    high_security=False, staging_root=None, antivirus=False):
     """Keep incomplete media on the local disk; publish only after all processing succeeds."""
