@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.7 — 2026-11-06
+
+- Simplify the main window to a URL bar and rounded download queue, with speed and bandwidth controls below.
+- Recognize the source before showing file or media-specific confirmation options.
+- Move language, preferences, import/export, browser setup, support and update actions into the Info menu.
+- Download the Chromium extension inside HDM and verify its publisher signature, size and SHA-256.
+- Present only Windows, macOS, Linux and Mobile in the README download section.
+- Include the Windows update runtime fix from 0.1.6.
+
 ## 0.1.6 — 2026-11-06
 
 - Fix the missing Python DLL error after an in-app Windows update by launching the installer with an independent runtime environment.

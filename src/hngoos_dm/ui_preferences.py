@@ -6,7 +6,17 @@ from weakref import WeakKeyDictionary
 
 TRANSLATIONS = {
     "Tải xuống": "Download", "Video & nhạc": "Video & audio", "An toàn": "Safety",
-    "Trình duyệt": "Browser", "Công cụ": "Tools", "Thông tin": "About",
+    "Trình duyệt": "Browser", "Công cụ": "Tools", "Thông tin": "Info",
+    "Nhập / Xuất": "Import / Export", "Tiện ích trình duyệt": "Browser extension",
+    "Ngôn ngữ": "Language", "Liên hệ hỗ trợ": "Contact support", "Báo lỗi": "Submit a bug report",
+    "Tham gia Discord": "Join Discord", "Giới thiệu": "About", "Thoát": "Quit",
+    "Thư mục tải mặc định": "Default download folder", "Tệp gốc": "Original file",
+    "Video / nhạc": "Video / audio", "Để trống để dùng tiêu đề gốc.": "Leave empty to use the original title.",
+    "Số kết nối tùy nguồn. Tệp tải về được kiểm tra trước khi hoàn tất.":
+        "Connections depend on the source. Downloaded files are checked before completion.",
+    "Tải tiện ích (.zip)": "Download extension (.zip)", "Đang tải tiện ích…": "Downloading extension…",
+    "1. Tải ZIP và giải nén vào thư mục cố định.\n2. Mở chrome://extensions hoặc edge://extensions, bật Developer mode.\n3. Chọn Load unpacked và thư mục có manifest.json.\n4. Sao chép Extension ID, dán bên dưới và đăng ký kết nối.\n5. Mở tiện ích và chọn Test connection.":
+        "1. Download the ZIP and extract it to a permanent folder.\n2. Open chrome://extensions or edge://extensions and enable Developer mode.\n3. Click Load unpacked and choose the folder with manifest.json.\n4. Copy the Extension ID, paste it below and register the connection.\n5. Open the extension and click Test connection.",
     "Đang chờ": "Queued", "Đang tải": "Downloading", "Tạm dừng": "Pause",
     "Kiểm tra": "Verifying", "Hoàn tất": "Complete", "Cách ly": "Quarantined",
     "Lỗi": "Error", "Đã hẹn giờ": "Scheduled", "Tiếp tục": "Resume",
@@ -102,7 +112,7 @@ TRANSLATIONS = {
     "Đã tải và xác minh bản cập nhật.": "Update downloaded and verified.",
     "Đã hủy tải bản cập nhật.": "Update download cancelled.", "Thử lại": "Retry",
     "Mở bộ cài": "Open installer", "Mở thư mục cập nhật": "Open updates folder",
-    "Thiết lập": "Settings", "Định dạng": "Format", "LUỒNG": "CONNECTIONS", "AN TOÀN": "SAFETY",
+    "Chung": "General", "Thiết lập": "Preferences", "Định dạng": "Format", "LUỒNG": "CONNECTIONS", "AN TOÀN": "SAFETY",
     "Tùy chọn tải": "Download preferences",
     "Kiểm tra cập nhật": "Check for update",
     "Dùng định dạng này": "Use this format",
@@ -119,6 +129,8 @@ TRANSLATIONS = {
         "New clipboard link available. Your current URL has been kept.",
     "Đã nhận link từ clipboard · chọn định dạng và bấm tải.":
         "Clipboard link detected · choose a format and click Download.",
+    "Đã nhận link từ clipboard · bấm tải để xem lựa chọn.":
+        "Clipboard link detected · click Download to see options.",
     "Tệp gốc · tối đa 32 kết nối · kiểm tra an toàn sau tải":
         "Original file · up to 32 connections · safety checks after download",
     "Đã nhận link video/nhạc · chọn MP4, MP3 hoặc M4A rồi tải":

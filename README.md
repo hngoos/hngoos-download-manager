@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-Setup-0.1.5.exe"><img src="docs/assets/install-windows.svg" width="20%" alt="Download HDM for Windows 10/11 x64"></a><a href="#macos"><img src="docs/assets/install-macos.svg" width="20%" alt="Download HDM for macOS"></a><a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-Linux-x64.AppImage"><img src="docs/assets/install-linux.svg" width="20%" alt="Download HDM for Linux"></a><a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-Browser-Extension.zip"><img src="docs/assets/install-browser.svg" width="20%" alt="Download the HDM browser extension ZIP"></a><a href="#mobile"><img src="docs/assets/install-mobile.svg" width="20%" alt="Mobile: coming soon"></a>
+  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-Setup-0.1.5.exe"><img src="docs/assets/install-windows.svg" width="25%" alt="Download HDM for Windows 10/11 x64"></a><a href="#macos"><img src="docs/assets/install-macos.svg" width="25%" alt="Download HDM for macOS"></a><a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-Linux-x64.AppImage"><img src="docs/assets/install-linux.svg" width="25%" alt="Download HDM for Linux"></a><a href="#mobile"><img src="docs/assets/install-mobile.svg" width="25%" alt="Mobile: coming soon"></a>
 </p>
 
 ## Features
@@ -38,7 +38,10 @@ curl.exe -fL https://raw.githubusercontent.com/hngoos/hngoos-download-manager/ma
 
 1. Run the downloaded `.exe` and follow the setup wizard, or run the CMD command above.
 2. Open **HDM** from the Start menu.
-3. Paste a link, choose a folder, and start downloading.
+3. Paste a link and click **Download** to choose your options.
+
+For browser integration, open **Info → Browser extension** in HDM to download
+and set up the Chromium extension.
 
 The CMD installer verifies the package before installing it for your account.
 
@@ -103,30 +106,6 @@ chmod +x HDM-0.1.5-Linux-x64.AppImage
 ```
 
 Requires glibc 2.35 or later. [Platform support](docs/PLATFORMS.md#linux).
-
-</details>
-
-<a id="browser-extension"></a>
-
-<details>
-<summary><strong>Browser extension</strong></summary>
-
-### Download
-
-[Chromium browser extension ZIP](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-Browser-Extension.zip)
-
-### Installation
-
-1. Install the HDM desktop app, then extract the ZIP to a permanent folder.
-2. Open your browser's extensions page: `chrome://extensions`, `edge://extensions`,
-   or `brave://extensions`.
-3. Enable **Developer mode**, click **Load unpacked**, and choose the extracted
-   folder containing `manifest.json`.
-4. Copy the extension ID. In HDM, open **Browser (Trình duyệt)**, paste the ID,
-   and register the connection.
-5. Open the extension options and click **Test connection (Kiểm tra kết nối)**.
-
-Keep the extracted folder after installation.
 
 </details>
 

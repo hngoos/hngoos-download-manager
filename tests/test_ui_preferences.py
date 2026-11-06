@@ -68,13 +68,20 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(download.call_args.kwargs["options"].audio, "mp3")
         self.assertFalse(self.app.media_busy)
 
-    def test_information_opens_once_and_keeps_main_screen_download_only(self):
-        self.app.open_information()
-        dialog = self.app.information_dialog
-        self.app.open_information()
+    def test_information_menu_contains_language_and_browser_and_preferences_open_once(self):
+        from hngoos_dm.information_ui import information_menu
+        menu = information_menu(self.app)
+        labels = [menu.entrycget(i, "label") for i in range(menu.index("end")+1)
+                  if menu.type(i) != "separator"]
+        self.assertIn("Ngôn ngữ", labels)
+        self.assertIn("Tiện ích trình duyệt", labels)
+        self.assertEqual(len(self.app.header_controls.winfo_children()), 2)
+        self.assertFalse(hasattr(self.app, "language_switch"))
+        dialog = self.app.open_preferences()
+        self.assertIs(self.app.open_preferences(), dialog)
         self.pump()
-        self.assertIs(self.app.information_dialog, dialog)
         self.assertEqual(len(self.app.tabs.tabs()), 1)
+        menu.destroy()
         dialog.destroy()
 
     def test_switches_preserve_task_inputs_and_persist_settings(self):
@@ -82,7 +89,7 @@ class PresentationTests(unittest.TestCase):
         self.app.filename.set("Tài liệu của tôi.pdf")
         inputs = (self.app.url.get(), self.app.filename.get(), self.app.connections.get())
         self.app.theme_switch.toggle(False)
-        self.app.language_switch.toggle(True)
+        self.app.set_preference("language", "en")
         self.pump()
         self.assertEqual(self.app.store.setting("theme"), "light")
         self.assertEqual(self.app.store.setting("language"), "en")
@@ -94,10 +101,61 @@ class PresentationTests(unittest.TestCase):
         self.pump()
         self.assertEqual(self.app.store.setting("bandwidth_mode"), "medium")
         self.assertEqual(self.app.bandwidth_mode.get(), "Vừa (4 MB/s)")
-        self.app.language_switch.toggle(False)
+        self.app.set_preference("language", "vi")
         self.pump()
         self.assertEqual(self.app.tabs.tab(0, "text"), "Tải xuống")
         self.assertEqual(self.app.bandwidth_display.get(), "Vừa (4 MB/s)")
+
+    def test_confirmation_has_source_specific_options_and_cancel_never_downloads(self):
+        from hngoos_dm.download_ui import DownloadDialog
+        self.app.url.set("https://example.com/document.pdf")
+        with patch.object(self.app.manager, "add") as add:
+            dialog = DownloadDialog(self.app, self.app.url.get(), "file", self.app.url.get())
+            self.assertFalse(hasattr(dialog, "media_controls"))
+            self.assertEqual(dialog.connections.get(), "32")
+            dialog.destroy()
+            self.pump()
+            add.assert_not_called()
+        self.app.url.set("https://youtu.be/example")
+        dialog = DownloadDialog(self.app, self.app.url.get(), "media", self.app.url.get())
+        self.pump()
+        self.assertTrue(dialog.media_controls.winfo_ismapped())
+        dialog.format.set("MP3")
+        dialog.format_changed()
+        self.assertFalse(dialog.quality_selector.winfo_manager())
+        with patch.object(self.app, "add") as add:
+            dialog.confirm()
+            add.assert_called_once_with(resolved_source=("media", "https://youtu.be/example"))
+            self.assertEqual(self.app.download_format.get(), "MP3")
+
+    def test_detect_html_before_confirmation_and_do_not_start_download(self):
+        self.app.url.set("https://example.com/watch")
+        with patch("hngoos_dm.links.resolve_source", return_value=("media", self.app.url.get())), \
+                patch.object(self.app.manager, "add") as add:
+            self.app.prepare_download()
+            self.pump(0.6)
+            dialog = self.app.download_dialog
+            self.assertEqual(dialog.kind, "media")
+            add.assert_not_called()
+            dialog.destroy()
+
+    def test_main_has_no_media_controls_and_panels_resize_in_both_themes(self):
+        from tkinter import ttk
+        def widgets(parent):
+            for child in parent.winfo_children():
+                yield child
+                yield from widgets(child)
+        labels = [child.cget("text") for child in widgets(self.root) if isinstance(child, ttk.Label)]
+        self.assertNotIn("Định dạng", labels)
+        self.assertNotIn("Độ cao tối đa", labels)
+        for theme, geometry in (("light", "1120x720"), ("dark", "1440x900")):
+            self.app.set_preference("theme", theme)
+            self.root.geometry(geometry)
+            self.pump()
+            self.assertGreater(self.app.queue_panel.winfo_height(), 300)
+            self.assertGreater(self.app.url_entry.winfo_width(), 400)
+            self.assertLess(self.app.download_button.winfo_rootx()+self.app.download_button.winfo_width(),
+                            self.root.winfo_rootx()+self.root.winfo_width())
 
     def test_light_theme_has_readable_selection_and_new_dialogs_after_repeated_toggles(self):
         from tkinter import ttk

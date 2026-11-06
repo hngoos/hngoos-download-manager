@@ -53,7 +53,7 @@ class App:
         self.events = queue.Queue()
         self.background_threads = []
         self.last_jobs = {}
-        self.directory = tk.StringVar(value=str(Path.home() / "Downloads"))
+        self.directory = tk.StringVar(value=self.store.setting("download_directory", str(Path.home() / "Downloads")))
         self.url = tk.StringVar()
         self.filename = tk.StringVar()
         self.connections = tk.StringVar(value="32")
@@ -159,27 +159,21 @@ class App:
         self.root.option_add("*selectForeground", TEXT)
 
     def _layout(self):
+        from .rounded import RoundedButton
         from .ui_preferences import SlideSwitch
-        shell = ttk.Frame(self.root, padding=(24, 18, 24, 18))
+        shell = ttk.Frame(self.root, padding=(24, 12, 24, 18))
         shell.pack(fill="both", expand=True)
         header = ttk.Frame(shell)
-        header.pack(fill="x", pady=(0, 8))
-        ttk.Label(header, image=self.brand_icons[2]).pack(side="left")
-        controls = ttk.Frame(header)
+        header.pack(fill="x", pady=(0, 14))
+        self.brand_label = ttk.Label(header, image=self.brand_icons[0])
+        self.brand_label.pack(side="left")
+        controls = self.header_controls = ttk.Frame(header)
         controls.pack(side="right")
         self.theme_switch = SlideSwitch(controls, ("☀", "☾"), self.theme == "dark",
             lambda dark: self.set_preference("theme", "dark" if dark else "light"), "Light / Dark")
-        self.theme_switch.pack(side="left", padx=(0, 10))
-        self.language_switch = SlideSwitch(controls, ("VI", "EN"), self.locale.language == "en",
-            lambda english: self.set_preference("language", "en" if english else "vi"), "Vietnamese / English")
-        self.language_switch.pack(side="left", padx=(0, 10))
-        self.info_button = ttk.Button(controls, text="Thông tin", image=self.icons["info"],
-                                     compound="left", command=self.open_information)
+        self.theme_switch.pack(side="left", padx=(0, 12))
+        self.info_button = RoundedButton(controls, text="Thông tin", command=self.open_information, width=120)
         self.info_button.pack(side="left")
-        self.page_title = tk.StringVar(value="Tải xuống")
-        ttk.Label(shell, textvariable=self.page_title, style="Title.TLabel").pack(anchor="w", pady=(0, 8))
-        ttk.Label(shell, textvariable=self.status, style="Muted.TLabel", wraplength=1100).pack(
-            side="bottom", fill="x", pady=(12, 0))
         self.tabs = ttk.Notebook(shell, style="HDM.TNotebook")
         self.tabs.pack(fill="both", expand=True)
         downloads = ttk.Frame(self.tabs)
@@ -189,24 +183,25 @@ class App:
         self.shutdown_after = tk.BooleanVar()
 
     def open_information(self):
-        if getattr(self, "information_dialog", None) and self.information_dialog.winfo_exists():
-            self.information_dialog.lift()
-            return
-        dialog = self.information_dialog = tk.Toplevel(self.root)
-        dialog.title("HDM · "+self.locale.text("Thông tin"))
-        dialog.geometry("960x680")
-        dialog.transient(self.root)
-        frame = ttk.Frame(dialog, padding=20)
-        frame.pack(fill="both", expand=True)
-        tabs = ttk.Notebook(frame)
-        tabs.pack(fill="both", expand=True)
-        for title, build in (("Thông tin", self._about), ("Thiết lập", self._download_settings),
-                             ("An toàn", self._safety), ("Trình duyệt", self._browser),
-                             ("Công cụ", self._tools)):
-            tab = ttk.Frame(tabs, padding=12)
-            tabs.add(tab, text=self.locale.text(title))
-            build(self.scrollable(tab))
-        self.apply_preferences()
+        from .information_ui import information_menu
+        previous = getattr(self, "information_menu", None)
+        if previous:
+            previous.destroy()
+        self.information_menu = information_menu(self)
+        try:
+            self.information_menu.tk_popup(self.info_button.winfo_rootx(),
+                                            self.info_button.winfo_rooty()+self.info_button.winfo_height()+4)
+        finally:
+            self.information_menu.grab_release()
+
+    def open_preferences(self):
+        from .information_ui import content_dialog
+        return content_dialog(self, "preferences_dialog", "Thiết lập", [
+            ("Chung", self._download_settings), ("An toàn", self._safety), ("Công cụ", self._tools)])
+
+    def open_about(self):
+        from .information_ui import content_dialog
+        return content_dialog(self, "about_dialog", "Giới thiệu", [("", self._about)])
 
     def _download_settings(self, parent):
         ttk.Checkbutton(parent, text="Tự nhận link từ clipboard", variable=self.clipboard_enabled,
@@ -214,6 +209,11 @@ class App:
                             anchor="w", pady=10)
         ttk.Label(parent, text="Chỉ nhận link trên máy; chờ bạn bấm tải trước khi kết nối tới nguồn.",
                   style="Muted.TLabel", wraplength=800).pack(anchor="w")
+        ttk.Label(parent, text="Thư mục tải mặc định", font=("Segoe UI", 11, "bold")).pack(anchor="w", pady=(20, 8))
+        destination = ttk.Frame(parent)
+        destination.pack(fill="x")
+        ttk.Entry(destination, textvariable=self.directory).pack(side="left", fill="x", expand=True)
+        ttk.Button(destination, text="Chọn thư mục", command=self.choose_directory).pack(side="left", padx=8)
         startup = tk.BooleanVar(value=self.store.setting("startup_enabled", False))
         def toggle_startup():
             from .startup import set_enabled
@@ -273,14 +273,17 @@ class App:
             replace_images(self.root)
             self.playback_icon.set_theme(self.theme == "light")
             self._icon_theme = self.theme
-        self.theme_switch.theme = self.language_switch.theme = self.theme
+        self.theme_switch.theme = self.theme
         self.theme_switch.value = self.theme == "dark"
-        self.language_switch.value = self.locale.language == "en"
         self.theme_switch.draw()
-        self.language_switch.draw()
         self.locale.apply()
-        self.page_title.set(self.locale.text("Tải xuống"))
-        self.overview.set_presentation(self.theme, self.locale.text)
+        from .rounded import RoundedButton, RoundedPanel
+        def present(parent):
+            for widget in parent.winfo_children():
+                if isinstance(widget, (RoundedPanel, RoundedButton)):
+                    widget.set_presentation(self.theme, self.locale.text)
+                present(widget)
+        present(self.root)
         bandwidth_labels = ("Tối đa", "Vừa (4 MB/s)", "Nhẹ (512 KB/s)")
         self.bandwidth_selector.configure(values=tuple(self.locale.text(value) for value in bandwidth_labels))
         self.bandwidth_display.set(self.locale.text(self.bandwidth_mode.get()))
@@ -300,96 +303,47 @@ class App:
         return content
 
     def _downloads(self, parent):
-        from .widgets import QueueOverview
-        self.overview = QueueOverview(parent)
-        self.overview.pack(fill="x", pady=(0, 12))
-        form = ttk.Frame(parent)
-        form.pack(fill="x")
-        form.columnconfigure(1, weight=1)
-        ttk.Label(form, text="Đường dẫn").grid(row=0, column=0, sticky="w", padx=(0, 12))
-        url_entry = ttk.Entry(form, textvariable=self.url)
-        url_entry.grid(row=0, column=1, columnspan=3, sticky="ew")
-        url_entry.bind("<Return>", lambda _event: self.add())
-        ttk.Button(form, text="Dán", command=self.paste_url).grid(row=0, column=4, padx=(8, 0))
-        ttk.Label(form, text="Tên tệp").grid(row=1, column=0, sticky="w", pady=8)
-        ttk.Entry(form, textvariable=self.filename).grid(row=1, column=1, sticky="ew", pady=8)
-        ttk.Label(form, text="Luồng").grid(row=1, column=2, padx=10)
-        ttk.Combobox(form, textvariable=self.connections, values=(1, 2, 4, 8, 16, 32),
-                     width=5, state="readonly").grid(row=1, column=3)
-        ttk.Button(form, text="Thêm lượt tải", style="Primary.TButton", command=self.add).grid(
-            row=1, column=4, padx=(8, 0))
-        ttk.Label(form, text="Lưu tại").grid(row=2, column=0, sticky="w")
-        ttk.Entry(form, textvariable=self.directory).grid(row=2, column=1, columnspan=3, sticky="ew")
-        ttk.Button(form, text="Chọn thư mục", command=self.choose_directory).grid(row=2, column=4, padx=(8, 0))
-        source_options = ttk.Frame(form)
-        source_options.grid(row=3, column=0, columnspan=5, sticky="ew", pady=(10, 0))
-        ttk.Label(source_options, text="Định dạng").pack(side="left")
-        ttk.Combobox(source_options, textvariable=self.download_format,
-                     values=("Auto", "Original", "MP4", "MP3", "M4A"), state="readonly", width=10).pack(
-                         side="left", padx=(10, 20))
-        self.media_options_frame = ttk.Frame(source_options)
-        media_options = self.media_options_frame
-        ttk.Label(media_options, text="Độ cao tối đa").pack(side="left")
-        ttk.Combobox(media_options, textvariable=self.media_quality,
-                     values=(360, 480, 720, 1080, 1440, 2160), state="readonly", width=7).pack(side="left", padx=8)
-        ttk.Checkbutton(media_options, text="Cả danh sách phát", variable=self.media_playlist).pack(side="left", padx=8)
-        ttk.Checkbutton(media_options, text="Phụ đề vi/en", variable=self.media_subtitles).pack(side="left", padx=8)
+        from .rounded import RoundedButton, RoundedPanel
+        self.url_panel = RoundedPanel(parent, height=84)
+        self.url_panel.pack(fill="x", pady=(0, 16))
+        form = self.url_panel.content
+        form.columnconfigure(0, weight=1)
+        self.url_entry = ttk.Entry(form, textvariable=self.url)
+        self.url_entry.grid(row=0, column=0, sticky="ew")
+        self.url_entry.bind("<Return>", lambda _event: self.prepare_download())
+        RoundedButton(form, text="Dán", command=self.paste_url, width=76).grid(row=0, column=1, padx=8)
+        self.download_button = RoundedButton(form, text="Tải xuống", command=self.prepare_download, primary=True)
+        self.download_button.grid(row=0, column=2)
         self.source_hint = tk.StringVar(value="Tệp gốc · tối đa 32 kết nối · kiểm tra an toàn sau tải")
-        ttk.Label(form, textvariable=self.source_hint, style="Muted.TLabel", wraplength=1050).grid(
-            row=4, column=0, columnspan=5, sticky="w", pady=(8, 0))
+        self.clipboard_frame = ttk.Frame(form, style="Card.TFrame")
+        self.clipboard_frame.grid(row=1, column=0, columnspan=3, sticky="ew", pady=(10, 0))
+        ttk.Label(self.clipboard_frame, textvariable=self.clipboard_notice, background=PANEL,
+                  foreground=MUTED).pack(side="left")
+        self.clipboard_button = ttk.Button(self.clipboard_frame, text="Dùng link mới", command=self.use_clipboard_link)
+        self.clipboard_frame.grid_remove()
         self.url.trace_add("write", self.link_changed)
-        self.download_format.trace_add("write", self.link_changed)
-        clipboard = ttk.Frame(form)
-        clipboard.grid(row=5, column=0, columnspan=5, sticky="ew", pady=(4, 0))
-        ttk.Label(clipboard, textvariable=self.clipboard_notice, style="Muted.TLabel", wraplength=780).pack(side="left")
-        self.clipboard_button = ttk.Button(clipboard, text="Dùng link mới", command=self.use_clipboard_link)
-        self.clipboard_frame = clipboard
-        clipboard.grid_remove()
-        self.advanced_options = ttk.Frame(form)
-        advanced = self.advanced_options
-        advanced.columnconfigure(1, weight=1)
-        ttk.Label(advanced, text="Mã băm", width=10).grid(row=0, column=0, sticky="w", pady=8)
-        ttk.Entry(advanced, textvariable=self.expected_hash).grid(row=0, column=1, sticky="ew", pady=8)
-        ttk.Combobox(advanced, textvariable=self.hash_algorithm, values=("SHA-256", "MD5", "SHA-1", "SHA-512"),
-                     width=11, state="readonly").grid(row=0, column=2, padx=(8, 0))
-        ttk.Label(advanced, text="Mirror").grid(row=1, column=0, sticky="w", pady=4)
-        ttk.Entry(advanced, textvariable=self.mirrors).grid(row=1, column=1, sticky="ew")
-        ttk.Label(advanced, text="Link cách bởi dấu |", style="Muted.TLabel").grid(row=1, column=2, padx=8)
-        ttk.Button(advanced, text="Chọn cookie do bạn xuất…", command=self.choose_cookie).grid(
-            row=2, column=0, columnspan=2, sticky="w", pady=8)
-        ttk.Label(advanced, text="Format ID").grid(row=3, column=0, sticky="w")
-        ttk.Entry(advanced, textvariable=self.media_format).grid(row=3, column=1, sticky="ew")
-        ttk.Button(advanced, text="Xem định dạng", command=self.inspect_video).grid(row=3, column=2, padx=8)
-        def toggle_advanced():
-            visible = bool(advanced.winfo_manager())
-            if visible:
-                advanced.grid_remove()
-            else:
-                advanced.grid(row=7, column=0, columnspan=5, sticky="ew")
-            advanced_button.configure(text=self.locale.text("Tùy chọn nâng cao  ▸" if visible else "Thu gọn tùy chọn  ▾"))
-        advanced_button = ttk.Button(form, text="Tùy chọn nâng cao  ▸", command=toggle_advanced)
-        advanced_button.grid(row=6, column=0, columnspan=5, sticky="w", pady=(8, 0))
-        actions = ttk.Frame(parent)
-        actions.pack(fill="x", pady=(12, 12))
-        self.transfer_button = ttk.Button(actions, text="Tiếp tục", command=self.toggle_transfer)
-        self.transfer_button.pack(side="left", padx=(0, 8))
-        for label, command in (("Nhập danh sách…", self.batch_dialog), ("Mở thư mục", self.open_folder)):
-            ttk.Button(actions, text=label, command=command).pack(side="left", padx=(0, 8))
-        ttk.Button(actions, text="Check for update", command=self.check_update).pack(side="left")
+        self.footer = ttk.Frame(parent)
+        self.footer.pack(side="bottom", fill="x", pady=(14, 0))
+        self.speed = tk.StringVar(value="0 B/s")
+        ttk.Label(self.footer, textvariable=self.speed, font=("Segoe UI", 13, "bold")).pack(side="left", padx=(0, 16))
         self.bandwidth_display = tk.StringVar(value=self.bandwidth_mode.get())
-        bandwidth = ttk.Combobox(actions, textvariable=self.bandwidth_display, state="readonly", width=18,
-                                 values=("Tối đa", "Vừa (4 MB/s)", "Nhẹ (512 KB/s)"))
-        self.bandwidth_selector = bandwidth
-        bandwidth.pack(side="right")
+        self.bandwidth_selector = ttk.Combobox(self.footer, textvariable=self.bandwidth_display,
+            state="readonly", width=18, values=("Tối đa", "Vừa (4 MB/s)", "Nhẹ (512 KB/s)"))
+        self.bandwidth_selector.pack(side="left")
         def set_bandwidth(_event):
             label = self.bandwidth_display.get()
             self.bandwidth_mode.set(self.locale.reverse.get(label, label))
             self.manager.set_bandwidth(
                 {"Tối đa": "maximum", "Vừa (4 MB/s)": "medium", "Nhẹ (512 KB/s)": "light"}[self.bandwidth_mode.get()])
-        bandwidth.bind("<<ComboboxSelected>>", set_bandwidth)
+        self.bandwidth_selector.bind("<<ComboboxSelected>>", set_bandwidth)
+        self.transfer_button = ttk.Button(self.footer, text="Tiếp tục", command=self.toggle_transfer)
+        self.transfer_button.pack(side="right")
+        ttk.Label(self.footer, textvariable=self.status, style="Muted.TLabel", width=48,
+                  wraplength=360).pack(side="left", padx=16)
+        self.queue_panel = RoundedPanel(parent, padding=14, dashed=True)
+        self.queue_panel.pack(fill="both", expand=True)
         columns = ("name", "status", "progress", "size", "speed", "connections", "safety")
-        table_frame = ttk.Frame(parent)
-        table_frame.pack(fill="both", expand=True)
+        table_frame = self.queue_panel.content
         self.table = ttk.Treeview(table_frame, columns=columns, show="headings", selectmode="browse", height=4)
         for col, label, width in zip(columns, ("TÊN TỆP", "TRẠNG THÁI", "TIẾN ĐỘ", "ĐÃ TẢI / TỔNG", "TỐC ĐỘ", "LUỒNG", "AN TOÀN"),
                                      (270, 110, 75, 160, 100, 70, 130)):
@@ -410,8 +364,51 @@ class App:
         self.table.bind("<Double-1>", lambda _: self.open_folder())
         self.table.bind("<Button-3>", self.context_menu)
         self.detail = tk.StringVar(value="Chọn một lượt tải để xem chi tiết. Bấm chuột phải để đổi link hoặc nơi lưu.")
-        ttk.Label(parent, textvariable=self.detail, style="Muted.TLabel", wraplength=1000).pack(
-            anchor="w", pady=(12, 0))
+
+
+
+    def prepare_download(self):
+        from .download_ui import DownloadDialog
+        from .links import link_kind, resolve_source
+        previous = getattr(self, "download_dialog", None)
+        if previous and previous.winfo_exists():
+            previous.lift()
+            return
+        if getattr(self, "source_busy", False):
+            return
+        original = self.url.get().strip()
+        def ready(kind, resolved):
+            self.source_busy = False
+            self.download_button.configure(state="normal")
+            if self.url.get().strip() != original:
+                self.status.set(self.locale.text("Link đã thay đổi; bấm tải lại để dùng link mới."))
+                return
+            if kind in {"spotify", "torrent"}:
+                self.add(resolved_source=(kind, resolved))
+                return
+            self.download_dialog = DownloadDialog(self, original, kind, resolved)
+        def action():
+            kind = link_kind(original)
+            if kind != "file":
+                ready(kind, original)
+                return
+            self.source_busy = True
+            self.download_button.configure(state="disabled")
+            self.status.set(self.locale.text("Đang nhận diện nguồn tải…"))
+            def worker():
+                try:
+                    result = resolve_source(original)
+                    self.events.put(lambda: ready(*result))
+                except Exception as error:  # noqa: BLE001 -- Restore controls after source detection.
+                    self.events.put(lambda error=str(error): failed(error))
+            def failed(error):
+                self.source_busy = False
+                self.download_button.configure(state="normal")
+                messagebox.showerror("HDM", error, parent=self.root)
+            thread = threading.Thread(target=worker, daemon=True)
+            self.background_threads.append(thread)
+            thread.start()
+        self.guarded(action)
 
     def _safety(self, parent):
         ttk.Label(parent, text="Kiểm tra trước khi mở tệp", font=("Segoe UI", 18, "bold")).pack(anchor="w", pady=(8, 12))
@@ -530,7 +527,7 @@ class App:
         folder.mkdir(parents=True, exist_ok=True)
         self.guarded(lambda: open_path(folder))
 
-    def add(self):
+    def add(self, resolved_source=None):
         from .links import link_kind, resolve_source
         url = self.url.get().strip()
         if getattr(self, "source_busy", False):
@@ -541,7 +538,8 @@ class App:
                 self.status.set(self.locale.text("Link đã thay đổi; bấm tải lại để dùng link mới."))
                 return
             if kind == "spotify":
-                self.source_hint.set("Nhạc Spotify có DRM: không thể tải trực tiếp thành MP3.")
+                messagebox.showinfo("HDM", self.locale.text("Nhạc Spotify có DRM: không thể tải trực tiếp thành MP3."),
+                                    parent=self.root)
                 return
             if kind == "torrent":
                 from .dialogs import torrent_dialog
@@ -566,6 +564,9 @@ class App:
                 connections, digest if algorithm == "sha256" else "",
                 expected_hashes={algorithm: digest} if digest else {}, mirrors=mirrors), accepted)
         def action():
+            if resolved_source is not None:
+                choose(*resolved_source)
+                return
             kind = link_kind(url)
             if kind != "file":
                 choose(kind, url)
@@ -601,10 +602,6 @@ class App:
         if self.url.get().strip() != self.browser_session_url:
             self.video_inbox_busy = False
             self.browser_session = self.browser_session_url = ""
-        if kind == "media" or self.download_format.get() in {"MP4", "MP3", "M4A"}:
-            self.media_options_frame.pack(side="left")
-        else:
-            self.media_options_frame.pack_forget()
         self.media_format.set("")
 
     def check_clipboard(self):
@@ -630,19 +627,22 @@ class App:
         elif self.url.get().strip() != link:
             self.clipboard_notice.set(self.locale.text("Có link mới trong clipboard. Giữ nguyên link bạn đang sửa."))
             self.clipboard_frame.grid()
+            self.url_panel.configure(height=120)
             self.clipboard_button.pack(side="right")
 
     def use_clipboard_link(self):
         if self.clipboard_pending:
             self.url.set(self.clipboard_pending)
-            self.clipboard_notice.set(self.locale.text("Đã nhận link từ clipboard · chọn định dạng và bấm tải."))
+            self.clipboard_notice.set(self.locale.text("Đã nhận link từ clipboard · bấm tải để xem lựa chọn."))
             self.clipboard_frame.grid()
+            self.url_panel.configure(height=120)
             self.clipboard_button.pack_forget()
 
     def choose_directory(self):
         folder = filedialog.askdirectory(initialdir=self.directory.get())
         if folder:
             self.directory.set(folder)
+            self.store.set_setting("download_directory", folder)
 
     def paste_url(self):
         def paste():
@@ -1259,8 +1259,7 @@ class App:
             finally:
                 self.inbox_dialog = False
         jobs = self.store.all()
-        self.overview.update_values(sum(job["state"] == "downloading" for job in jobs),
-            sum(job["state"] == "complete" for job in jobs), human(sum(job.get("speed", 0) for job in jobs))+"/s")
+        self.speed.set(human(sum(job.get("speed", 0) for job in jobs))+"/s")
         if jobs:
             self.empty_state.place_forget()
         elif not self.empty_state.winfo_manager():
