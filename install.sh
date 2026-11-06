@@ -27,9 +27,14 @@ esac
 "$hdm_root/bin/python" - "$hdm_root" <<'PY'
 import os
 import shlex
+import shutil
 import sys
+from importlib.resources import files
 from pathlib import Path
 
+from hngoos_dm import __version__
+
+branding = files('hngoos_dm')/'assets'/'branding'
 runtime = Path(sys.argv[1]).resolve()
 binary = Path.home()/'.local/bin'
 binary.mkdir(parents=True, exist_ok=True)
@@ -45,20 +50,28 @@ if sys.platform == 'darwin':
     launcher = bundle/'MacOS/HDM'
     launcher.write_text('#!/bin/sh\nexec '+shlex.quote(str(runtime/'bin/hdm'))+' "$@"\n')
     launcher.chmod(0o755)
+    (bundle/'Resources').mkdir(exist_ok=True)
+    with (branding/'hdm.icns').open('rb') as source, (bundle/'Resources/hdm.icns').open('wb') as output:
+        shutil.copyfileobj(source, output)
     import plistlib
     (bundle/'Info.plist').write_bytes(plistlib.dumps({
         'CFBundleName': 'HDM', 'CFBundleIdentifier': 'com.hngoos.hdm',
         'CFBundleExecutable': 'HDM', 'CFBundlePackageType': 'APPL',
-        'CFBundleShortVersionString': '0.1.2',
+        'CFBundleShortVersionString': __version__, 'CFBundleIconFile': 'hdm.icns',
     }))
 else:
-    directory = Path(os.environ.get('XDG_DATA_HOME') or Path.home()/'.local/share')/'applications'
+    data = Path(os.environ.get('XDG_DATA_HOME') or Path.home()/'.local/share')
+    directory = data/'applications'
     directory.mkdir(parents=True, exist_ok=True)
+    icons = data/'icons/hicolor/512x512/apps'
+    icons.mkdir(parents=True, exist_ok=True)
+    with (branding/'hdm.png').open('rb') as source, (icons/'hdm.png').open('wb') as output:
+        shutil.copyfileobj(source, output)
     # Desktop entry quoting differs from shell quoting, including literal percent signs.
     command = str(runtime/'bin/hdm').replace('\\', '\\\\').replace('"', '\\"').replace('`', '\\`').replace('$', '\\$').replace('%', '%%')
     (directory/'com.hngoos.hdm.desktop').write_text(
         '[Desktop Entry]\nType=Application\nName=HDM\nComment=Download, organize and process files\n'
-        f'Exec="{command}"\nTerminal=false\nCategories=Network;FileTransfer;\n')
+        f'Exec="{command}"\nIcon=hdm\nTerminal=false\nCategories=Network;FileTransfer;\n')
 print(f'HDM installed. Open HDM from your applications menu, or run {binary/"hdm"}.')
 print('For terminal access, add ~/.local/bin to PATH if it is not already included.')
 PY
