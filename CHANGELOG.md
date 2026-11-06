@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 — 2026-11-06
+
+- Apply the approved monochrome HDM logo to desktop windows, dialogs, the sidebar,
+  system tray, Windows installers, macOS/Linux packages and Chromium extension.
+- Generate platform icons from one shared SVG source, preserving the supplied H.
+
 ## 0.1.1 — 2026-11-06
 
 - Add macOS DMGs for Apple Silicon and Intel, plus Linux x64 DEB and AppImage installers.

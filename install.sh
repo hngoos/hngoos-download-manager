@@ -49,7 +49,7 @@ if sys.platform == 'darwin':
     (bundle/'Info.plist').write_bytes(plistlib.dumps({
         'CFBundleName': 'HDM', 'CFBundleIdentifier': 'com.hngoos.hdm',
         'CFBundleExecutable': 'HDM', 'CFBundlePackageType': 'APPL',
-        'CFBundleShortVersionString': '0.1.1',
+        'CFBundleShortVersionString': '0.1.2',
     }))
 else:
     directory = Path(os.environ.get('XDG_DATA_HOME') or Path.home()/'.local/share')/'applications'
