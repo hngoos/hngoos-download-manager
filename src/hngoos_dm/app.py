@@ -41,6 +41,11 @@ class App:
         data_dir = data_dir or data_directory()
         self.store = Store(data_dir / "downloads.sqlite3")
         self.data_dir = data_dir
+        from .ui_preferences import PALETTES, Localizer
+        self.theme = self.store.setting("theme", "dark")
+        if self.theme not in PALETTES:
+            self.theme = "dark"
+        self.locale = Localizer(root, self.store.setting("language", "vi"))
         self.manager = DownloadManager(self.store)
         self.events = queue.Queue()
         self.background_threads = []
@@ -70,8 +75,10 @@ class App:
         self.playback_icon = MorphPlayback(self.transfer_button)
         for index, icon in enumerate(("download", "video", "shield", "globe", "settings", "info")):
             self.tabs.tab(index, image=self.icons[icon], compound="left")
+        self.apply_preferences()
+        self.root.bind_all("<Map>", self._presentation_mapped, add="+")
         self.root.protocol("WM_DELETE_WINDOW", self.request_close)
-        self.root.after(200, self.refresh)
+        self.refresh_id = self.root.after(200, self.refresh)
 
     def _styles(self):
         style = ttk.Style()
@@ -111,6 +118,7 @@ class App:
         self.root.option_add("*TCombobox*Listbox.foreground", TEXT)
 
     def _layout(self):
+        from .ui_preferences import SlideSwitch
         sidebar = ttk.Frame(self.root, padding=(16, 22), width=190)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
@@ -124,7 +132,14 @@ class App:
         header.pack(fill="x", pady=(0, 12))
         self.page_title = tk.StringVar(value="Tải xuống")
         ttk.Label(header, textvariable=self.page_title, style="Title.TLabel").pack(side="left")
-        ttk.Label(header, text=f"HDM {__version__}  ·  {platform_label()}", style="Muted.TLabel").pack(side="right")
+        controls = ttk.Frame(header)
+        controls.pack(side="right")
+        self.theme_switch = SlideSwitch(controls, ("☀", "☾"), self.theme == "dark",
+            lambda dark: self.set_preference("theme", "dark" if dark else "light"), "Light / Dark")
+        self.theme_switch.pack(side="left", padx=(0, 10))
+        self.language_switch = SlideSwitch(controls, ("VI", "EN"), self.locale.language == "en",
+            lambda english: self.set_preference("language", "en" if english else "vi"), "Vietnamese / English")
+        self.language_switch.pack(side="left")
         ttk.Label(shell, textvariable=self.status, style="Muted.TLabel", wraplength=1100).pack(side="bottom", fill="x", pady=(12, 0))
         tabs = ttk.Notebook(shell, style="HDM.TNotebook")
         tabs.pack(fill="both", expand=True)
@@ -140,7 +155,8 @@ class App:
                 style="ActiveNav.TButton" if index == 0 else "Nav.TButton", command=lambda i=index: tabs.select(i))
             button.pack(fill="x", pady=4)
             nav_buttons.append(button)
-        ttk.Label(sidebar, text="Tải. Sắp xếp. Hoàn tất.", style="Muted.TLabel", wraplength=150).pack(side="bottom", pady=12)
+        ttk.Label(sidebar, text=f"HDM {__version__}\n{platform_label()}", style="Muted.TLabel").pack(side="bottom", pady=12)
+        ttk.Button(sidebar, text="Check for update", command=self.check_update).pack(side="bottom", fill="x", pady=8)
         def select_page(_event):
             selected = tabs.index(tabs.select())
             self.page_title.set(tabs.tab(selected, "text"))
@@ -153,6 +169,63 @@ class App:
         self._browser(self.scrollable(browser))
         self._tools(tools)
         self._about(self.scrollable(about))
+
+    def set_preference(self, key, value):
+        self.store.set_setting(key, value)
+        if key == "theme":
+            self.theme = value
+        else:
+            self.locale.language = value
+        self.apply_preferences()
+
+    def _presentation_mapped(self, _event):
+        if not getattr(self, "_presentation_pending", False):
+            self._presentation_pending = True
+            self.root.after_idle(self.apply_preferences)
+
+    def apply_preferences(self):
+        from .ui_preferences import DARK_COLORS, PALETTES, recolor
+        global BG, PANEL, TEXT, MUTED, BLUE
+        BG, PANEL, TEXT, MUTED, BLUE = PALETTES[self.theme]
+        self._styles()
+        colors = DARK_COLORS if self.theme == "light" else {value: key for key, value in DARK_COLORS.items()}
+        style = ttk.Style(self.root)
+        for name in (".", "TFrame", "Card.TFrame", "TLabel", "Muted.TLabel", "Title.TLabel", "TButton",
+                     "Primary.TButton", "Nav.TButton", "ActiveNav.TButton", "TEntry", "TCombobox", "Treeview",
+                     "Treeview.Heading", "TNotebook", "HDM.TNotebook", "Vertical.TScrollbar", "TNotebook.Tab"):
+            for key, value in (style.configure(name) or {}).items():
+                if str(value).lower() in colors:
+                    style.configure(name, **{key: colors[str(value).lower()]})
+            for key, values in (style.map(name) or {}).items():
+                style.map(name, **{key: [(*entry[:-1], colors.get(str(entry[-1]).lower(), entry[-1])) for entry in values]})
+        recolor(self.root, colors)
+        if getattr(self, "_icon_theme", "dark") != self.theme:
+            from .icons import load_icons
+            old_icons = self.icons
+            self.icons = load_icons(self.root, light=self.theme == "light")
+            replacements = {str(old_icons[name]): image for name, image in self.icons.items()}
+
+            def replace_images(parent):
+                for widget in parent.winfo_children():
+                    if "image" in set(widget.keys()):
+                        image = widget.cget("image")
+                        key = str(image[0]) if isinstance(image, tuple) and image else str(image)
+                        if key in replacements:
+                            widget.configure(image=replacements[key])
+                    replace_images(widget)
+            replace_images(self.root)
+            self.playback_icon.set_theme(self.theme == "light")
+            self._icon_theme = self.theme
+        self.theme_switch.theme = self.language_switch.theme = self.theme
+        self.theme_switch.draw()
+        self.language_switch.draw()
+        self.locale.apply()
+        self.overview.set_presentation(self.theme, self.locale.text)
+        bandwidth_labels = ("Tối đa", "Vừa (4 MB/s)", "Nhẹ (512 KB/s)")
+        self.bandwidth_selector.configure(values=tuple(self.locale.text(value) for value in bandwidth_labels))
+        self.bandwidth_display.set(self.locale.text(self.bandwidth_mode.get()))
+        self.last_jobs.clear()
+        self._presentation_pending = False
 
     def scrollable(self, parent):
         canvas = tk.Canvas(parent, bg=BG, highlightthickness=0, height=1, width=1)
@@ -204,7 +277,7 @@ class App:
                 advanced.grid_remove()
             else:
                 advanced.grid(row=4, column=0, columnspan=5, sticky="ew")
-            advanced_button.configure(text="Tùy chọn nâng cao  ▸" if visible else "Thu gọn tùy chọn  ▾")
+            advanced_button.configure(text=self.locale.text("Tùy chọn nâng cao  ▸" if visible else "Thu gọn tùy chọn  ▾"))
         advanced_button = ttk.Button(form, text="Tùy chọn nâng cao  ▸", command=toggle_advanced)
         advanced_button.grid(row=3, column=0, columnspan=5, sticky="w", pady=(10, 0))
         actions = ttk.Frame(parent)
@@ -213,11 +286,17 @@ class App:
         self.transfer_button.pack(side="left", padx=(0, 8))
         for label, command in (("Nhập danh sách…", self.batch_dialog), ("Mở thư mục", self.open_folder)):
             ttk.Button(actions, text=label, command=command).pack(side="left", padx=(0, 8))
-        bandwidth = ttk.Combobox(actions, textvariable=self.bandwidth_mode, state="readonly", width=18,
+        self.bandwidth_display = tk.StringVar(value=self.bandwidth_mode.get())
+        bandwidth = ttk.Combobox(actions, textvariable=self.bandwidth_display, state="readonly", width=18,
                                  values=("Tối đa", "Vừa (4 MB/s)", "Nhẹ (512 KB/s)"))
+        self.bandwidth_selector = bandwidth
         bandwidth.pack(side="right")
-        bandwidth.bind("<<ComboboxSelected>>", lambda _: self.manager.set_bandwidth(
-            {"Tối đa": "maximum", "Vừa (4 MB/s)": "medium", "Nhẹ (512 KB/s)": "light"}[self.bandwidth_mode.get()]))
+        def set_bandwidth(_event):
+            label = self.bandwidth_display.get()
+            self.bandwidth_mode.set(self.locale.reverse.get(label, label))
+            self.manager.set_bandwidth(
+                {"Tối đa": "maximum", "Vừa (4 MB/s)": "medium", "Nhẹ (512 KB/s)": "light"}[self.bandwidth_mode.get()])
+        bandwidth.bind("<<ComboboxSelected>>", set_bandwidth)
         columns = ("name", "status", "progress", "size", "speed")
         table_frame = ttk.Frame(parent)
         table_frame.pack(fill="both", expand=True)
@@ -477,6 +556,8 @@ class App:
         if job["output"] and Path(job["filename"]).suffix.lower() in {".mp4", ".mkv", ".webm", ".mov", ".mp3", ".m4a", ".wav", ".flac"}:
             menu.add_command(label="Cắt / ghép / nén…", command=lambda: self.media_tools(job["output"]))
         menu.add_command(label="Nhật ký lượt tải…", command=self.job_log)
+        for index in range((menu.index("end") or 0)+1):
+            menu.entryconfigure(index, label=self.locale.text(menu.entrycget(index, "label")))
         menu.tk_popup(event.x_root, event.y_root)
 
     def copy(self, value):
@@ -776,18 +857,11 @@ class App:
             self.guarded(action)
 
     def check_update(self):
-        if os.name != "nt":
-            messagebox.showinfo("Cập nhật HDM", "Bản preview macOS/Linux được cập nhật bằng cách chạy lại install.sh. Bộ cập nhật trong ứng dụng hiện dành cho Windows.", parent=self.root)
+        from .update_ui import UpdateDialog
+        if getattr(self, "update_dialog", None) and self.update_dialog.window.winfo_exists():
+            self.update_dialog.window.lift()
             return
-        from .updater import check_update, download_installer
-        def found(payload):
-            if not payload:
-                messagebox.showinfo("Cập nhật", "Bạn đang dùng phiên bản mới nhất.", parent=self.root)
-                return
-            if messagebox.askyesno("Cập nhật ký số", f"Có bản {payload['version']} với chữ ký hợp lệ. Tải bộ cài?", parent=self.root):
-                self.background(lambda: download_installer(payload, self.data_dir/"updates"),
-                                lambda path: messagebox.showinfo("Đã xác minh bộ cài", f"Bộ cài đã được kiểm chữ ký manifest và mã băm:\n{path}\nMở bộ cài từ thư mục khi bạn sẵn sàng.", parent=self.root))
-        self.background(check_update, found)
+        self.update_dialog = UpdateDialog(self)
 
     def update_ytdlp(self):
         from .toolchain import update_ytdlp
@@ -964,7 +1038,7 @@ class App:
         chosen = self.table.selection()
         current = next((job for job in jobs if chosen and job["id"] == chosen[0]), None)
         active = bool(current and current["state"] in {"queued", "downloading", "verifying"})
-        self.transfer_button.configure(text="Tạm dừng" if active else "Tiếp tục")
+        self.transfer_button.configure(text=self.locale.text("Tạm dừng" if active else "Tiếp tục"))
         self.playback_icon.set_running(active)
         from .power import prevent_sleep
         running = bool(self.manager.active) or getattr(self, "media_busy", False) or any(
@@ -983,7 +1057,7 @@ class App:
                 self.status.set("Đã hẹn tắt máy sau 60 giây. Bấm Hủy trong Công cụ để hủy.")
         for job in jobs:
             progress = f"{min(100, job['downloaded']/job['total']*100):.0f}%" if job["total"] else "—"
-            values = (job["filename"], STATES.get(job["state"], job["state"]), progress,
+            values = (job["filename"], self.locale.text(STATES.get(job["state"], job["state"])), progress,
                       f"{human(job['downloaded'])} / {human(job['total']) if job['total'] else '?'}",
                       f"{human(job['speed'])}/s" if job["speed"] else "—")
             if self.last_jobs.get(job["id"]) != values:
@@ -993,7 +1067,7 @@ class App:
                     self.table.insert("", 0, iid=job["id"], values=values)
                 self.last_jobs[job["id"]] = values
         self.show_details()
-        self.root.after(500, self.refresh)
+        self.refresh_id = self.root.after(500, self.refresh)
 
     def toggle_transfer(self):
         def action():
@@ -1005,6 +1079,9 @@ class App:
         self.guarded(action)
 
     def close(self):
+        self.root.after_cancel(self.refresh_id)
+        if getattr(self, "update_dialog", None):
+            self.update_dialog.close()
         self.media_stop.set()
         for stop in getattr(self, "processing_stops", []):
             stop.set()

@@ -15,11 +15,24 @@ def load_brand_icons(master):
     return icons
 
 
-def load_icons(master):
+def load_image(master, path, light=False):
+    if light:
+        try:
+            from PIL import Image, ImageTk
+            with Image.open(path) as source:
+                image = Image.new("RGBA", source.size, "#536078")
+                image.putalpha(source.convert("RGBA").getchannel("A"))
+            return ImageTk.PhotoImage(image, master=master)
+        except ImportError:
+            pass
+    return PhotoImage(master=master, file=str(path))
+
+
+def load_icons(master, light=False):
     root = files("hngoos_dm")/"assets"/"icons"
     names = ("download", "play", "pause", "check", "shield", "settings", "folder", "list", "video",
              "file", "search", "plus", "globe", "info", "scissors", "close")
-    return {name: PhotoImage(master=master, file=str(root/(name+".png"))) for name in names}
+    return {name: load_image(master, root/(name+".png"), light) for name in names}
 
 
 def decorate_buttons(parent, icons):
@@ -46,6 +59,12 @@ class MorphPlayback:
         self.running = False
         self.generation = 0
         button.configure(image=self.frames[0], compound="left")
+
+    def set_theme(self, light):
+        self.generation += 1
+        root = files("hngoos_dm")/"assets"/"icons"
+        self.frames = [load_image(self.button, root/f"play-pause-{i}.png", light) for i in range(13)]
+        self.button.configure(image=self.frames[-1 if self.running else 0])
 
     def set_running(self, running):
         if running == self.running:

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 — 2026-11-06
+
+- Add persistent light/dark and VI/EN switches at the top right of the desktop app.
+- Add a visible in-app update check, cancellable package download, and verified installer handoff.
+- Pin Linux packaging tools to fixed upstream releases with verified SHA-256 hashes.
+- Simplify release notes and organize each download section into download and installation steps.
+
 ## 0.1.2 — 2026-11-06
 
 - Apply the approved monochrome HDM logo to desktop windows, dialogs, the sidebar,

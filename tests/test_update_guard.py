@@ -47,11 +47,73 @@ class UpdateTests(unittest.TestCase):
                     "sha256": hashlib.sha256(content).hexdigest()}]}
         with tempfile.TemporaryDirectory() as folder, patch("hngoos_dm.updater.urllib.request.urlopen",
                 return_value=io.BytesIO(content)) as request:
-            output = download_installer(payload, folder)
+            output = download_installer(payload, folder, asset=payload["assets"][0])
             self.assertEqual(output.name, "HDM-Setup-0.1.0.exe")
             self.assertEqual(output.read_bytes(), content)
             self.assertEqual(request.call_args.args[0].full_url,
                 "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe")
+
+    def test_selects_exact_native_package_and_rejects_missing_or_ambiguous_assets(self):
+        from hngoos_dm.updater import select_installer
+        names = ["HDM-Setup-0.1.3.exe", "HDM-0.1.3-macOS-arm64.dmg", "HDM-0.1.3-macOS-x64.dmg",
+                 "HDM-0.1.3-Linux-x64.deb", "HDM-0.1.3-Linux-x64.AppImage", "HDM-Browser-Extension.zip"]
+        payload = {"version": "0.1.3", "assets": [{"name": name} for name in names]}
+        cases = [("Windows", "AMD64", None, names[0]), ("Darwin", "arm64", None, names[1]),
+                 ("Darwin", "x86_64", None, names[2]), ("Linux", "x86_64", True, names[3]),
+                 ("Linux", "x86_64", False, names[4])]
+        for system, machine, debian, expected in cases:
+            with self.subTest(system=system, machine=machine, debian=debian):
+                self.assertEqual(select_installer(payload, system, machine, debian)["name"], expected)
+        with self.assertRaises(ValueError):
+            select_installer(payload, "Linux", "aarch64")
+        payload["assets"].append({"name": names[0]})
+        with self.assertRaises(ValueError):
+            select_installer(payload, "Windows", "AMD64")
+
+    def test_download_cancellation_and_corruption_never_publish_partial_packages(self):
+        import hashlib
+        import io
+        import threading
+
+        from hngoos_dm.updater import DownloadCancelled, download_installer
+        content = b"verified update package"
+        asset = {"name": "HDM-Setup-0.1.3.exe", "size": len(content),
+                 "sha256": hashlib.sha256(content).hexdigest()}
+        payload = {"version": "0.1.3", "assets": [asset]}
+        for data in (content[:-1], content+b"extra", b"X"*len(content)):
+            with self.subTest(data=data), tempfile.TemporaryDirectory() as folder:
+                with (patch("hngoos_dm.updater.urllib.request.urlopen", return_value=io.BytesIO(data)),
+                      self.assertRaises(ValueError)):
+                    download_installer(payload, folder, asset=asset)
+                self.assertEqual(list(Path(folder).iterdir()), [])
+        cancel = threading.Event()
+        with tempfile.TemporaryDirectory() as folder, patch("hngoos_dm.updater.urllib.request.urlopen",
+                                                           return_value=io.BytesIO(content)):
+            def progress(done, total):
+                self.assertEqual((done, total), (len(content), len(content)))
+                cancel.set()
+            with self.assertRaises(DownloadCancelled):
+                download_installer(payload, folder, progress=progress, cancel=cancel, asset=asset)
+            self.assertEqual(list(Path(folder).iterdir()), [])
+        with tempfile.TemporaryDirectory() as folder, patch("hngoos_dm.updater.urllib.request.urlopen") as request:
+            with self.assertRaises(DownloadCancelled):
+                download_installer(payload, folder, cancel=cancel, asset=asset)
+            request.assert_not_called()
+            self.assertEqual(list(Path(folder).iterdir()), [])
+
+    def test_install_handoff_rechecks_modified_package(self):
+        import hashlib
+
+        from hngoos_dm.updater import verify_package
+        content = b"verified package"
+        asset = {"size": len(content), "sha256": hashlib.sha256(content).hexdigest()}
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder)/"HDM.exe"
+            path.write_bytes(content)
+            self.assertEqual(verify_package(path, asset), path)
+            path.write_bytes(b"X"*len(content))
+            with self.assertRaises(ValueError):
+                verify_package(path, asset)
 
     def test_rejects_unsigned_tampered_and_untrusted_manifests(self):
         try:

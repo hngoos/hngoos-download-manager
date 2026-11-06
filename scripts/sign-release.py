@@ -23,8 +23,8 @@ payload = {"version": __version__, "assets": assets}
 envelope = {"payload": payload, "signature": base64.b64encode(key.sign(canonical(payload))).decode("ascii")}
 (folder/"update-manifest.json").write_text(json.dumps(envelope, ensure_ascii=False, indent=2), encoding="utf-8")
 notes = Path(f"docs/releases/v{__version__}.md").read_text(encoding="utf-8")
-notes += "\n\n### Verify SHA-256\n\n| Package | SHA-256 |\n| --- | --- |\n"
+notes += "\n\n<details>\n<summary>Verify SHA-256</summary>\n\n| Package | SHA-256 |\n| --- | --- |\n"
 notes += "".join(f"| {item['name']} | `{item['sha256']}` |\n" for item in assets)
-notes += "\n\n"+MANIFEST_START+json.dumps(envelope, ensure_ascii=False)+MANIFEST_END+"\n"
+notes += "\n</details>\n\n"+MANIFEST_START+json.dumps(envelope, ensure_ascii=False)+MANIFEST_END+"\n"
 (folder/"release-notes.md").write_text(notes, encoding="utf-8")
 print("Signed release manifest for", __version__)

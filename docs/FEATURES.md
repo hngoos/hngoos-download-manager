@@ -101,7 +101,9 @@ Known-domain popup/overlay handling, an explicit element picker, and per-site re
 
 ## Updates and local data
 
-Application updates require an Ed25519-signed manifest verified against the publisher key pinned in HDM, followed by installer size and SHA-256 checks. HDM does not automatically execute the installer. This manifest signature is separate from Authenticode; the current installer does not have an Authenticode certificate.
+Use **Check for update** in the sidebar to check and download a new release inside HDM. Updates require an Ed25519-signed manifest, verified against the pinned publisher key, followed by package size and SHA-256 checks. Choose **Install update** to open the verified local package with your operating system; Windows exits HDM for setup, while macOS/Linux use their system installer or AppImage folder. Active transfers must be paused or finished first. This manifest signature is separate from Authenticode; the current Windows installer does not have an Authenticode certificate.
+
+The top-right switches change light/dark appearance and the main interface language (VI/EN) immediately. HDM remembers both choices. Tool-specific dialogs and diagnostics may retain their original language.
 
 New installations use `%LOCALAPPDATA%\HDM`; existing installations may retain the legacy `%LOCALAPPDATA%\HngoosDM` location. Download history can contain signed URLs or private tokens. HTTP and media staging can require substantial temporary space. Cookie files are removed on normal task completion; a forced termination may leave temporary data behind.
 

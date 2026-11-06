@@ -126,7 +126,7 @@ files saved elsewhere. Back up history before deleting the data directory.
 | Chromium native messaging | Available | User-level manifests for Chrome, Edge, Brave and Chromium |
 | Browser session cookie transfer | DPAPI encryption | Unavailable; manually selected cookie files remain supported |
 | Defender / Authenticode / shutdown countdown | Available | Unavailable |
-| In-app signed binary installer update | Windows installer | Install a newer package from Releases |
+| In-app signed package update | Download and launch Windows setup | Download the matching DMG, DEB or AppImage; finish with the OS installer |
 | Torrent, tray and website capture | Included | Dependencies bundled in native packages; browser runtime and desktop tray support still required |
 
 For the optional source edition only, install additional extras into its

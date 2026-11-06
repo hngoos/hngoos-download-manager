@@ -3,7 +3,10 @@
 import base64
 import hashlib
 import json
+import platform
 import re
+import shutil
+import tempfile
 import urllib.request
 from pathlib import Path
 
@@ -82,27 +85,75 @@ def check_update():
     return payload
 
 
-def download_installer(payload, directory):
-    asset = next((asset for asset in payload["assets"] if asset["name"].startswith("HDM-Setup-") and asset["name"].endswith(".exe")), None)
-    if not asset:
-        raise ValueError("Manifest chưa có bộ cài Windows.")
+class DownloadCancelled(Exception):
+    """The user cancelled an update download; no partial file is installed."""
+
+
+def select_installer(payload, system=None, machine=None, debian=None):
+    """Choose only the exact package name for this release and native platform."""
     version = payload["version"].lstrip("v")
+    version_tuple(version)
+    system = system or platform.system()
+    machine = (machine or platform.machine()).lower()
+    if system == "Windows" and machine in {"amd64", "x86_64"}:
+        name = f"HDM-Setup-{version}.exe"
+    elif system == "Darwin" and machine in {"arm64", "aarch64", "amd64", "x86_64"}:
+        arch = "arm64" if machine in {"arm64", "aarch64"} else "x64"
+        name = f"HDM-{version}-macOS-{arch}.dmg"
+    elif system == "Linux" and machine in {"amd64", "x86_64"}:
+        debian = shutil.which("dpkg") is not None if debian is None else debian
+        name = f"HDM-{version}-Linux-x64.{'deb' if debian else 'AppImage'}"
+    else:
+        raise ValueError("No update package is available for this platform.")
+    matches = [asset for asset in payload["assets"] if asset["name"] == name]
+    if len(matches) != 1:
+        raise ValueError("The signed release does not contain a unique package for this platform.")
+    return matches[0]
+
+
+def verify_package(path, asset):
+    """Recheck downloaded bytes immediately before handing off to the OS."""
+    path = Path(path)
+    with path.open("rb") as stream:
+        if (path.stat().st_size != asset["size"]
+                or hashlib.file_digest(stream, "sha256").hexdigest() != asset["sha256"]):
+            raise ValueError("The update package no longer matches the signed release.")
+    return path
+
+
+def download_installer(payload, directory, progress=None, cancel=None, *, asset=None):
+    asset = asset or select_installer(payload)
+    if asset not in payload["assets"]:
+        raise ValueError("The package is not part of the signed release.")
+    version = payload["version"].lstrip("v")
+    version_tuple(version)
+    if not re.fullmatch(r"[A-Za-z0-9._-]+", asset["name"]):
+        raise ValueError("Invalid update filename.")
     url = f"https://github.com/hngoos/hngoos-download-manager/releases/download/v{version}/{asset['name']}"
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
-    staged = directory / (asset["name"]+".download")
+    with tempfile.NamedTemporaryFile(dir=directory, prefix="hdm-update-", suffix=".download", delete=False) as temp:
+        staged = Path(temp.name)
     digest = hashlib.sha256()
     count = 0
     try:
+        if cancel and cancel.is_set():
+            raise DownloadCancelled()
         with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "HDM-Update"}), timeout=30) as response, staged.open("wb") as output:
             for block in iter(lambda: response.read(1024*1024), b""):
+                if cancel and cancel.is_set():
+                    raise DownloadCancelled()
                 count += len(block)
                 if count > asset["size"]:
                     raise ValueError("Bộ cài lớn hơn manifest đã ký.")
                 digest.update(block)
                 output.write(block)
+                if progress:
+                    progress(count, asset["size"])
         if count != asset["size"] or digest.hexdigest() != asset["sha256"]:
             raise ValueError("Mã băm/kích thước bộ cài không khớp manifest đã ký.")
+        if cancel and cancel.is_set():
+            raise DownloadCancelled()
         from .files import publish
         return publish(staged, directory, asset["name"])
     finally:
