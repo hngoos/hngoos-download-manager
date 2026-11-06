@@ -56,7 +56,7 @@ class RoundedPanel(tk.Canvas):
         width, height = self.winfo_width(), self.winfo_height()
         self.delete("surface")
         rounded_rectangle(self, 1, 1, max(2, width-1), max(2, height-1), self.radius,
-                          fill=panel, outline="#c5cede" if self.theme == "light" else "#30364b",
+                          fill=panel, outline="#d0d0d0" if self.theme == "light" else "#3a3a3a",
                           dash=(8, 5) if self.dashed else (), tags="surface")
         self.tag_lower("surface")
         self.itemconfigure(self.window, width=max(1, width-2*self.padding), height=max(1, height-2*self.padding))
@@ -110,9 +110,9 @@ class RoundedButton(tk.Canvas):
         super().configure(background=background)
         self.delete("all")
         light = self.theme == "light"
-        fill = ("#6d28d9" if light else "#7c3aed") if self.primary else ("#e8ecf3" if light else "#242b3e")
+        fill = ("#6d28d9" if light else "#7c3aed") if self.primary else ("#ececec" if light else "#272727")
         if self.hover and not self.primary:
-            fill = "#dce3ee" if light else "#30394f"
+            fill = "#e4e4e4" if light else "#333333"
         color = "white" if self.primary else text
         if self.cget("state") == "disabled":
             color = muted

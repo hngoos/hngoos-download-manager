@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.13 — 2026-11-06
+
+- Use neutral black/gray surfaces in dark mode and white/gray surfaces in light mode.
+- Match the Windows title bar to the selected theme when the operating system supports it.
+- Bundle neutral Morphicons assets and preserve rounded controls, category filtering and live transfer rates.
+
 ## 0.1.12 — 2026-11-06
 
 - Include the rounded toolbar, Info menu, category filters and live speed/bandwidth controls.

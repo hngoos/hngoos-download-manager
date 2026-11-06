@@ -183,6 +183,10 @@ class PresentationTests(unittest.TestCase):
             self.app.set_preference("theme", theme)
             self.root.geometry(geometry)
             self.pump()
+            styles = ttk.Style(self.root)
+            for name in ("TFrame", "Card.TFrame", "TEntry", "TCombobox", "Treeview", "TButton"):
+                red, green, blue = self.root.winfo_rgb(str(styles.lookup(name, "background")))
+                self.assertEqual((red, green), (green, blue), (theme, name))
             self.assertGreater(self.app.queue_panel.winfo_height(), 300)
             self.assertGreater(self.app.url_entry.winfo_width(), 400)
             self.assertLess(self.app.url_entry.winfo_rootx()+self.app.url_entry.winfo_width(),
@@ -206,9 +210,9 @@ class PresentationTests(unittest.TestCase):
             self.app.set_preference("theme", "light" if light else "dark")
             self.pump()
             if not light:
-                self.assertEqual(str(style.lookup("TFrame", "background")), "#0f121c")
+                self.assertEqual(str(style.lookup("TFrame", "background")), "#121212")
                 continue
-            self.assertEqual(self.root.cget("background"), "#f5f6fa")
+            self.assertEqual(self.root.cget("background"), "#f6f6f6")
             for name, background, states in (("TButton", "background", ()),
                     ("Primary.TButton", "background", ()), ("Treeview", "background", ("selected",)),
                     ("TCombobox", "fieldbackground", ("readonly",)), ("TCheckbutton", "background", ()),
@@ -221,8 +225,8 @@ class PresentationTests(unittest.TestCase):
             button = ttk.Button(dialog, text="Theme check")
             button.pack()
             self.pump()
-            self.assertEqual(dialog.cget("background"), "#f5f6fa")
-            self.assertEqual(str(style.lookup("TButton", "foreground")), "#202434")
+            self.assertEqual(dialog.cget("background"), "#f6f6f6")
+            self.assertEqual(str(style.lookup("TButton", "foreground")), "#222222")
             dialog.destroy()
 
     def test_filters_keep_history_and_restore_completed_safety_actions(self):

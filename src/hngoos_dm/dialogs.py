@@ -14,7 +14,7 @@ def media_tools(app, initial=None):
     ttk.Label(frame, text="Xử lý video và âm thanh", font=("Segoe UI", 18, "bold")).pack(anchor="w", pady=10)
     mode = tk.StringVar(value="Cắt nhanh")
     ttk.Combobox(frame, textvariable=mode, state="readonly", values=("Cắt nhanh", "Cắt chính xác", "Ghép", "Nén MP4", "Đổi MP4", "Tách MP3", "Tách M4A")).pack(fill="x", pady=8)
-    listing = tk.Listbox(frame, bg="#182438", fg="#e6edf8", height=7, selectmode="browse")
+    listing = tk.Listbox(frame, bg="#181818", fg="#eeeeee", height=7, selectmode="browse")
     listing.pack(fill="both", expand=True, pady=8)
     if initial:
         listing.insert("end", str(initial))
@@ -198,7 +198,7 @@ def torrent_dialog(app, source=None, folder=None):
     frame = ttk.Frame(dialog, padding=20)
     frame.pack(fill="both", expand=True)
     ttk.Label(frame, text="Chọn tệp bằng Ctrl/Shift. Tệp có đuôi thực thi không được chọn mặc định; hãy kiểm tra trước khi tải.", wraplength=800).pack(anchor="w", pady=10)
-    listing = tk.Listbox(frame, selectmode="extended", exportselection=False, bg="#182438", fg="#e6edf8")
+    listing = tk.Listbox(frame, selectmode="extended", exportselection=False, bg="#181818", fg="#eeeeee")
     listing.pack(fill="both", expand=True)
     status = tk.StringVar(value="Đang chờ metadata…")
     ttk.Label(frame, textvariable=status, wraplength=800).pack(anchor="w", pady=12)

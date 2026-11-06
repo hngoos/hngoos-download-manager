@@ -16,7 +16,7 @@ def motion_enabled():
 
 class QueueOverview(tk.Canvas):
     def __init__(self, parent):
-        super().__init__(parent, height=96, background="#0f121c", highlightthickness=0)
+        super().__init__(parent, height=96, background="#121212", highlightthickness=0)
         self.values = ("0", "0", "0 B/s")
         self.theme = "dark"
         self.translate = str
@@ -45,7 +45,7 @@ class QueueOverview(tk.Canvas):
             x, right = index*(card_width+12), index*(card_width+12)+card_width
             self.create_polygon(x+12, 0, right-12, 0, right, 0, right, 12, right, 76,
                 right, 88, right-12, 88, x+12, 88, x, 88, x, 76, x, 12, x, 0,
-                smooth=True, fill=panel, outline="#d4dbe8" if self.theme == "light" else "#282d40")
+                smooth=True, fill=panel, outline="#dddddd" if self.theme == "light" else "#343434")
             self.create_line(x+19, 21, x+19, 66, fill=color, width=3)
             self.create_text(x+33, 24, text=self.translate(label), anchor="w", fill=muted, font=("Segoe UI", 9))
             self.create_text(x+33, 56, text=value, anchor="w", fill=text, font=("Segoe UI", 22, "bold"))

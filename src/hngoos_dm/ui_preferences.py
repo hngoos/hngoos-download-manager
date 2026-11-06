@@ -4,6 +4,25 @@ import tkinter as tk
 from tkinter import ttk
 from weakref import WeakKeyDictionary
 
+
+def apply_window_theme(window, theme):
+    """Match the Windows title bar to the selected application theme when supported."""
+    import os
+    if os.name != "nt":
+        return
+    import ctypes
+    from ctypes import wintypes
+    user32, dwm = ctypes.windll.user32, ctypes.windll.dwmapi
+    user32.GetAncestor.argtypes = [wintypes.HWND, wintypes.UINT]
+    user32.GetAncestor.restype = wintypes.HWND
+    dwm.DwmSetWindowAttribute.argtypes = [wintypes.HWND, wintypes.DWORD, ctypes.c_void_p, wintypes.DWORD]
+    handle = user32.GetAncestor(window.winfo_id(), 2)
+    dark = ctypes.c_int(theme == "dark")
+    for attribute in (20, 19):
+        if dwm.DwmSetWindowAttribute(handle, attribute, ctypes.byref(dark), ctypes.sizeof(dark)) == 0:
+            break
+
+
 TRANSLATIONS = {
     "Giao diện": "Appearance", "Sáng": "Light", "Tối": "Dark",
     "Chưa có tệp trong mục này": "No downloads in this category",
@@ -193,16 +212,15 @@ TRANSLATIONS = {
 }
 
 PALETTES = {
-    "dark": ("#0f121c", "#181d2b", "#e6edf8", "#9cabc3", "#a78bfa"),
-    "light": ("#f5f6fa", "#ffffff", "#202434", "#626779", "#6d28d9"),
+    "dark": ("#121212", "#181818", "#eeeeee", "#a6a6a6", "#a78bfa"),
+    "light": ("#f6f6f6", "#ffffff", "#222222", "#626262", "#6d28d9"),
 }
 DARK_COLORS = {
-    "#0f121c": "#f5f6fa", "#181d2b": "#ffffff", "#e6edf8": "#202434",
-    "#9cabc3": "#626779", "#a78bfa": "#6d28d9", "#242b3e": "#edf0f6",
-    "#344e73": "#d3dced", "#2e2249": "#e9e0fc", "#d9c8ff": "#5828a0",
-    "#30364b": "#c5cede", "#3c2c61": "#d6c7f5", "#263d5c": "#e1e9f8",
-    "#282d40": "#d4dbe8", "#6ee7b7": "#187a57", "#93c5fd": "#245caa",
-    "#182438": "#ffffff",
+    '#121212': '#f6f6f6', '#181818': '#ffffff', '#eeeeee': '#222222',
+    '#a6a6a6': '#626262', '#a78bfa': '#6d28d9', '#272727': '#ececec',
+    '#333333': '#e4e4e4', '#303030': '#e2e2e2', '#d9c8ff': '#5828a0',
+    '#3a3a3a': '#d0d0d0', '#383838': '#e0e0e0', '#343434': '#dddddd',
+    '#6ee7b7': '#187a57', '#93c5fd': '#245caa',
 }
 
 

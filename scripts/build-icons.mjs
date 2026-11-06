@@ -11,7 +11,7 @@ await build({entryPoints: ['browser-extension/icon-entry.js'], bundle: true, for
   outfile: 'browser-extension/icons.js', minify: true, legalComments: 'eof'});
 mkdirSync('src/hngoos_dm/assets/icons', {recursive: true});
 mkdirSync('browser-extension/licenses', {recursive: true});
-const svg = d => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="${d}" fill="none" stroke="#e6edf8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const svg = d => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="${d}" fill="none" stroke="#eeeeee" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 for (const [name, exported] of Object.entries(names)) {
   writeFileSync(`src/hngoos_dm/assets/icons/${name}.svg`, svg(canonicalD(lucide[exported])));
 }

@@ -20,7 +20,7 @@ def load_image(master, path, light=False):
         try:
             from PIL import Image, ImageTk
             with Image.open(path) as source:
-                image = Image.new("RGBA", source.size, "#536078")
+                image = Image.new("RGBA", source.size, "#555555")
                 image.putalpha(source.convert("RGBA").getchannel("A"))
             return ImageTk.PhotoImage(image, master=master)
         except ImportError:

@@ -19,7 +19,7 @@ from .rounded import RoundedEntry
 from .safety import filename_from_url, scan_defender, sha256_file
 from .store import Store
 
-BG, PANEL, TEXT, MUTED, BLUE = "#0f121c", "#181d2b", "#e6edf8", "#9cabc3", "#a78bfa"
+BG, PANEL, TEXT, MUTED, BLUE = "#121212", "#181818", "#eeeeee", "#a6a6a6", "#a78bfa"
 STATES = {"queued": "Đang chờ", "downloading": "Đang tải", "paused": "Tạm dừng",
           "verifying": "Kiểm tra", "complete": "Hoàn tất", "quarantined": "Cách ly", "error": "Lỗi",
           "scheduled": "Đã hẹn giờ"}
@@ -101,10 +101,10 @@ class App:
         style = ttk.Style(self.root)
         style.theme_use("clam")
         light = self.theme == "light"
-        control = "#edf0f6" if light else "#242b3e"
-        hover = "#e4e8f0" if light else "#344e73"
-        border = "#b4bfd1" if light else "#30364b"
-        selected = "#d6c7f5" if light else "#3c2c61"
+        control = "#ececec" if light else "#272727"
+        hover = "#e4e4e4" if light else "#333333"
+        border = "#d0d0d0" if light else "#3a3a3a"
+        selected = "#e0e0e0" if light else "#383838"
         primary = "#6d28d9" if light else "#7c3aed"
         style.configure(".", background=BG, foreground=TEXT, font=("Segoe UI", 10))
         style.configure("TFrame", background=BG)
@@ -118,12 +118,12 @@ class App:
         style.map("TButton", background=[("active", hover)], foreground=[("disabled", MUTED)])
         style.configure("Primary.TButton", background=primary, foreground="white")
         style.map("Primary.TButton", background=[("active", "#5820b8" if light else "#8b5cf6")],
-                  foreground=[("disabled", "#d6c7f5"), ("!disabled", "white")])
+                  foreground=[("disabled", "#e0e0e0"), ("!disabled", "white")])
         style.configure("Nav.TButton", background=BG, foreground=MUTED, anchor="w", padding=(12, 14))
         style.map("Nav.TButton", background=[("active", control)], foreground=[("active", TEXT)])
-        style.configure("ActiveNav.TButton", background="#e9e0fc" if light else "#2e2249",
+        style.configure("ActiveNav.TButton", background="#e2e2e2" if light else "#303030",
                         foreground=BLUE if light else "#d9c8ff", anchor="w", padding=(12, 14))
-        style.map("ActiveNav.TButton", background=[("active", "#e9e0fc" if light else "#2e2249")],
+        style.map("ActiveNav.TButton", background=[("active", "#e2e2e2" if light else "#303030")],
                   foreground=[("active", BLUE if light else "#d9c8ff")])
         style.configure("Rounded.TEntry", borderwidth=0, padding=0, background=PANEL, fieldbackground=PANEL,
                         foreground=TEXT, insertcolor=TEXT, bordercolor=PANEL, lightcolor=PANEL, darkcolor=PANEL)
@@ -153,10 +153,10 @@ class App:
         style.configure("TNotebook", borderwidth=0)
         style.layout("HDM.TNotebook.Tab", [])
         style.configure("HDM.TNotebook", borderwidth=0, tabmargins=0, bordercolor=BG, lightcolor=BG, darkcolor=BG)
-        style.configure("Vertical.TScrollbar", background="#30364b", troughcolor=PANEL,
+        style.configure("Vertical.TScrollbar", background="#3a3a3a", troughcolor=PANEL,
                         arrowcolor=MUTED, bordercolor=PANEL, lightcolor=PANEL, darkcolor=PANEL)
         style.configure("TNotebook.Tab", background=PANEL, foreground=MUTED, padding=(20, 12))
-        style.map("TNotebook.Tab", background=[("selected", "#e1e9f8" if light else "#263d5c")],
+        style.map("TNotebook.Tab", background=[("selected", "#e2e2e2" if light else "#303030")],
                   foreground=[("selected", TEXT)])
         self.root.option_add("*TCombobox*Listbox.background", PANEL)
         self.root.option_add("*TCombobox*Listbox.foreground", TEXT)
@@ -256,7 +256,7 @@ class App:
             self.root.after_idle(self.apply_preferences)
 
     def apply_preferences(self):
-        from .ui_preferences import DARK_COLORS, PALETTES, recolor
+        from .ui_preferences import DARK_COLORS, PALETTES, apply_window_theme, recolor
         global BG, PANEL, TEXT, MUTED, BLUE
         BG, PANEL, TEXT, MUTED, BLUE = PALETTES[self.theme]
         self._styles()
@@ -267,6 +267,7 @@ class App:
                 if str(value).lower() in colors:
                     style.configure(name, **{key: colors[str(value).lower()]})
         recolor(self.root, colors)
+        apply_window_theme(self.root, self.theme)
         if getattr(self, "_icon_theme", "dark") != self.theme:
             from .icons import load_icons
             old_icons = self.icons
@@ -294,6 +295,8 @@ class App:
         from .rounded import RoundedButton, RoundedField, RoundedPanel
         def present(parent):
             for widget in parent.winfo_children():
+                if isinstance(widget, tk.Toplevel):
+                    apply_window_theme(widget, self.theme)
                 if isinstance(widget, (RoundedPanel, RoundedButton, RoundedField)):
                     widget.set_presentation(self.theme, self.locale.text)
                 present(widget)
