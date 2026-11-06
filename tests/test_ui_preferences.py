@@ -55,6 +55,37 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(self.app.tabs.tab(0, "text"), "Tải xuống")
         self.assertEqual(self.app.bandwidth_display.get(), "Vừa (4 MB/s)")
 
+    def test_light_theme_has_readable_selection_and_new_dialogs_after_repeated_toggles(self):
+        from tkinter import ttk
+
+        def luminance(color):
+            values = [value/65535 for value in self.root.winfo_rgb(color)]
+            linear = [value/12.92 if value <= 0.04045 else ((value+0.055)/1.055)**2.4 for value in values]
+            return sum(value*weight for value, weight in zip(linear, (0.2126, 0.7152, 0.0722), strict=True))
+
+        style = ttk.Style(self.root)
+        for light in (True, False, True):
+            self.app.theme_switch.toggle(not light)
+            self.pump()
+            if not light:
+                self.assertEqual(str(style.lookup("TFrame", "background")), "#0f121c")
+                continue
+            self.assertEqual(self.root.cget("background"), "#f5f6fa")
+            for name, background, states in (("TButton", "background", ()),
+                    ("Primary.TButton", "background", ()), ("Treeview", "background", ("selected",)),
+                    ("TCombobox", "fieldbackground", ("readonly",)), ("TCheckbutton", "background", ())):
+                with self.subTest(style=name):
+                    fg = luminance(style.lookup(name, "foreground", states))
+                    bg = luminance(style.lookup(name, background, states))
+                    self.assertGreaterEqual((max(fg, bg)+0.05)/(min(fg, bg)+0.05), 4.5)
+            dialog = tk.Toplevel(self.root)
+            button = ttk.Button(dialog, text="Theme check")
+            button.pack()
+            self.pump()
+            self.assertEqual(dialog.cget("background"), "#f5f6fa")
+            self.assertEqual(str(style.lookup("TButton", "foreground")), "#202434")
+            dialog.destroy()
+
     @patch("hngoos_dm.update_ui.check_update", return_value=None)
     def test_update_check_uses_single_dialog_and_stays_inside_app(self, check):
         with patch("hngoos_dm.app.webbrowser.open") as browser:

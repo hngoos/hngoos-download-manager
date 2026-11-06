@@ -106,14 +106,15 @@ TRANSLATIONS = {
 
 PALETTES = {
     "dark": ("#0f121c", "#181d2b", "#e6edf8", "#9cabc3", "#a78bfa"),
-    "light": ("#f5f6fa", "#ffffff", "#202738", "#536078", "#6d28d9"),
+    "light": ("#f5f6fa", "#ffffff", "#202434", "#626779", "#6d28d9"),
 }
 DARK_COLORS = {
-    "#0f121c": "#f5f6fa", "#181d2b": "#ffffff", "#e6edf8": "#202738",
-    "#9cabc3": "#536078", "#a78bfa": "#6d28d9", "#242b3e": "#e5e9f2",
+    "#0f121c": "#f5f6fa", "#181d2b": "#ffffff", "#e6edf8": "#202434",
+    "#9cabc3": "#626779", "#a78bfa": "#6d28d9", "#242b3e": "#edf0f6",
     "#344e73": "#d3dced", "#2e2249": "#e9e0fc", "#d9c8ff": "#5828a0",
     "#30364b": "#c5cede", "#3c2c61": "#d6c7f5", "#263d5c": "#e1e9f8",
     "#282d40": "#d4dbe8", "#6ee7b7": "#187a57", "#93c5fd": "#245caa",
+    "#182438": "#ffffff",
 }
 
 
@@ -153,7 +154,8 @@ class SlideSwitch(tk.Canvas):
                             smooth=True, fill=accent, outline="", width=0)
         for index, label in enumerate(self.labels):
             self.create_text(25+44*index, 16, text=label, font=("Segoe UI", 9, "bold"),
-                             fill="white" if index == int(self.value) else muted)
+                             fill=("white" if self.theme == "light" else "#151020")
+                             if index == int(self.value) else muted)
 
 
 class Localizer:

@@ -70,6 +70,7 @@ class App:
         from .icons import MorphPlayback, decorate_buttons, load_brand_icons, load_icons
         self.brand_icons = load_brand_icons(root)
         self.icons = load_icons(root)
+        self.primary_icons = self.icons
         self._layout()
         decorate_buttons(root, self.icons)
         self.playback_icon = MorphPlayback(self.transfer_button)
@@ -81,32 +82,51 @@ class App:
         self.refresh_id = self.root.after(200, self.refresh)
 
     def _styles(self):
-        style = ttk.Style()
+        style = ttk.Style(self.root)
         style.theme_use("clam")
+        light = self.theme == "light"
+        control = "#edf0f6" if light else "#242b3e"
+        hover = "#e4e8f0" if light else "#344e73"
+        border = "#b4bfd1" if light else "#30364b"
+        selected = "#d6c7f5" if light else "#3c2c61"
+        primary = "#6d28d9" if light else "#7c3aed"
         style.configure(".", background=BG, foreground=TEXT, font=("Segoe UI", 10))
         style.configure("TFrame", background=BG)
         style.configure("Card.TFrame", background=PANEL)
         style.configure("TLabel", background=BG, foreground=TEXT)
         style.configure("Muted.TLabel", foreground=MUTED)
         style.configure("Title.TLabel", font=("Segoe UI", 26, "bold"))
-        style.configure("TButton", padding=(12, 8), background="#242b3e", foreground=TEXT,
+        style.configure("TButton", padding=(12, 8), background=control, foreground=TEXT,
                         borderwidth=0, bordercolor=BG, lightcolor=BG, darkcolor=BG)
-        style.map("TButton", background=[("active", "#344e73")])
-        style.configure("Primary.TButton", background="#7c3aed", foreground="white")
-        style.map("Primary.TButton", background=[("active", "#8b5cf6")])
+        style.map("TButton", background=[("active", hover)], foreground=[("disabled", MUTED)])
+        style.configure("Primary.TButton", background=primary, foreground="white")
+        style.map("Primary.TButton", background=[("active", "#5820b8" if light else "#8b5cf6")],
+                  foreground=[("disabled", "#d6c7f5"), ("!disabled", "white")])
         style.configure("Nav.TButton", background=BG, foreground=MUTED, anchor="w", padding=(12, 14))
-        style.map("Nav.TButton", background=[("active", "#242b3e")])
-        style.configure("ActiveNav.TButton", background="#2e2249", foreground="#d9c8ff", anchor="w", padding=(12, 14))
+        style.map("Nav.TButton", background=[("active", control)], foreground=[("active", TEXT)])
+        style.configure("ActiveNav.TButton", background="#e9e0fc" if light else "#2e2249",
+                        foreground=BLUE if light else "#d9c8ff", anchor="w", padding=(12, 14))
+        style.map("ActiveNav.TButton", background=[("active", "#e9e0fc" if light else "#2e2249")],
+                  foreground=[("active", BLUE if light else "#d9c8ff")])
         style.configure("TEntry", fieldbackground=PANEL, foreground=TEXT, insertcolor=TEXT,
-                        padding=8, bordercolor="#30364b", lightcolor="#30364b", darkcolor="#30364b")
+                        padding=8, bordercolor=border, lightcolor=border, darkcolor=border)
+        style.map("TEntry", selectbackground=[("!disabled", selected)], selectforeground=[("!disabled", TEXT)])
         style.configure("TCombobox", fieldbackground=PANEL, foreground=TEXT, padding=8,
-                        background="#242b3e", arrowcolor=MUTED, bordercolor="#30364b", lightcolor="#30364b", darkcolor="#30364b")
+                        background=control, arrowcolor=MUTED, bordercolor=border, lightcolor=border, darkcolor=border)
         style.map("TCombobox", fieldbackground=[("readonly", PANEL)], foreground=[("readonly", TEXT)])
         style.configure("Treeview", background=PANEL, fieldbackground=PANEL, foreground=TEXT,
                         rowheight=38, borderwidth=0, bordercolor=PANEL, lightcolor=PANEL, darkcolor=PANEL)
-        style.configure("Treeview.Heading", background="#242b3e", foreground=MUTED, padding=10,
+        style.configure("Treeview.Heading", background=control, foreground=MUTED, padding=10,
                         bordercolor=PANEL, lightcolor=PANEL, darkcolor=PANEL, relief="flat")
-        style.map("Treeview", background=[("selected", "#3c2c61")])
+        style.map("Treeview", background=[("selected", selected)], foreground=[("selected", TEXT)])
+        style.configure("TCheckbutton", background=BG, foreground=TEXT, indicatorbackground=PANEL)
+        style.map("TCheckbutton", background=[("active", BG)],
+                  foreground=[("disabled", MUTED), ("active", TEXT)],
+                  indicatorbackground=[("selected", primary), ("!selected", PANEL)])
+        style.configure("TRadiobutton", background=BG, foreground=TEXT)
+        style.map("TRadiobutton", background=[("active", BG)], foreground=[("active", TEXT)])
+        style.configure("Horizontal.TProgressbar", troughcolor=control, background=BLUE,
+                        bordercolor=control, lightcolor=BLUE, darkcolor=BLUE)
         style.configure("TNotebook", borderwidth=0)
         style.layout("HDM.TNotebook.Tab", [])
         style.configure("HDM.TNotebook", borderwidth=0, tabmargins=0, bordercolor=BG, lightcolor=BG, darkcolor=BG)
@@ -116,6 +136,12 @@ class App:
         style.map("TNotebook.Tab", background=[("selected", "#263d5c")], foreground=[("selected", TEXT)])
         self.root.option_add("*TCombobox*Listbox.background", PANEL)
         self.root.option_add("*TCombobox*Listbox.foreground", TEXT)
+        self.root.option_add("*TCombobox*Listbox.selectBackground", selected)
+        self.root.option_add("*TCombobox*Listbox.selectForeground", TEXT)
+        self.root.option_add("*Background", BG)
+        self.root.option_add("*Foreground", TEXT)
+        self.root.option_add("*selectBackground", selected)
+        self.root.option_add("*selectForeground", TEXT)
 
     def _layout(self):
         from .ui_preferences import SlideSwitch
@@ -188,16 +214,12 @@ class App:
         global BG, PANEL, TEXT, MUTED, BLUE
         BG, PANEL, TEXT, MUTED, BLUE = PALETTES[self.theme]
         self._styles()
-        colors = DARK_COLORS if self.theme == "light" else {value: key for key, value in DARK_COLORS.items()}
+        colors = DARK_COLORS if self.theme == "light" else {value: key for key, value in reversed(DARK_COLORS.items())}
         style = ttk.Style(self.root)
-        for name in (".", "TFrame", "Card.TFrame", "TLabel", "Muted.TLabel", "Title.TLabel", "TButton",
-                     "Primary.TButton", "Nav.TButton", "ActiveNav.TButton", "TEntry", "TCombobox", "Treeview",
-                     "Treeview.Heading", "TNotebook", "HDM.TNotebook", "Vertical.TScrollbar", "TNotebook.Tab"):
+        for name in ("Vertical.TScrollbar", "TNotebook.Tab"):
             for key, value in (style.configure(name) or {}).items():
                 if str(value).lower() in colors:
                     style.configure(name, **{key: colors[str(value).lower()]})
-            for key, values in (style.map(name) or {}).items():
-                style.map(name, **{key: [(*entry[:-1], colors.get(str(entry[-1]).lower(), entry[-1])) for entry in values]})
         recolor(self.root, colors)
         if getattr(self, "_icon_theme", "dark") != self.theme:
             from .icons import load_icons
@@ -211,7 +233,9 @@ class App:
                         image = widget.cget("image")
                         key = str(image[0]) if isinstance(image, tuple) and image else str(image)
                         if key in replacements:
-                            widget.configure(image=replacements[key])
+                            match = next(name for name, old in old_icons.items() if str(old) == key)
+                            widget.configure(image=self.primary_icons[match] if self.theme == "light"
+                                and str(widget.cget("style")) == "Primary.TButton" else replacements[key])
                     replace_images(widget)
             replace_images(self.root)
             self.playback_icon.set_theme(self.theme == "light")

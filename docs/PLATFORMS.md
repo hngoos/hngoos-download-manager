@@ -3,7 +3,7 @@
 ## Windows
 
 The stable desktop installer supports Windows 10/11 x64. Run the EXE or use
-the command in the README. `install.ps1` downloads version 0.1.3, checks its
+the command in the README. `install.ps1` downloads version 0.1.4, checks its
 published size and pinned SHA-256, and runs the per-user installer silently.
 Administrator privileges are not required.
 
@@ -28,8 +28,8 @@ Browser tab.
 
 Choose the DMG matching your processor from [Releases](https://github.com/hngoos/hngoos-download-manager/releases/latest):
 
-- `HDM-0.1.3-macOS-arm64.dmg`: Apple Silicon (M-series).
-- `HDM-0.1.3-macOS-x64.dmg`: Intel.
+- `HDM-0.1.4-macOS-arm64.dmg`: Apple Silicon (M-series).
+- `HDM-0.1.4-macOS-x64.dmg`: Intel.
 
 Open the image and drag HDM into Applications. Open the copied application,
 then register the browser extension from its Browser tab. The native messaging
@@ -47,10 +47,10 @@ Python and the application runtime are bundled.
 
 ### Ubuntu and Debian
 
-Download `HDM-0.1.3-Linux-x64.deb` from Releases:
+Download `HDM-0.1.4-Linux-x64.deb` from Releases:
 
 ```sh
-sudo apt install ./HDM-0.1.3-Linux-x64.deb
+sudo apt install ./HDM-0.1.4-Linux-x64.deb
 ```
 
 Open HDM from the application menu, or run `hdm`. The package installs into
@@ -58,17 +58,17 @@ Open HDM from the application menu, or run `hdm`. The package installs into
 
 ### AppImage
 
-Download `HDM-0.1.3-Linux-x64.AppImage` into a permanent location:
+Download `HDM-0.1.4-Linux-x64.AppImage` into a permanent location:
 
 ```sh
-chmod +x HDM-0.1.3-Linux-x64.AppImage
-./HDM-0.1.3-Linux-x64.AppImage
+chmod +x HDM-0.1.4-Linux-x64.AppImage
+./HDM-0.1.4-Linux-x64.AppImage
 ```
 
 If FUSE is unavailable, use the runtime's extraction mode:
 
 ```sh
-APPIMAGE_EXTRACT_AND_RUN=1 ./HDM-0.1.3-Linux-x64.AppImage
+APPIMAGE_EXTRACT_AND_RUN=1 ./HDM-0.1.4-Linux-x64.AppImage
 ```
 
 The browser's native host launcher points to the original AppImage file rather

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4 — 2026-11-06
+
+- Improve light-theme text, buttons, selected rows, icons and dialog backgrounds.
+- Keep readable colors when switching themes or opening tools after a theme change.
+
 ## 0.1.3 — 2026-11-06
 
 - Add persistent light/dark and VI/EN switches at the top right of the desktop app.
