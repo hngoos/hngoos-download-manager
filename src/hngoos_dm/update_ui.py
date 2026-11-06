@@ -7,7 +7,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from . import __version__
-from .platforms import open_path
+from .platforms import launch_installer, open_path
 from .updater import DownloadCancelled, check_update, download_installer, select_installer, verify_package
 
 
@@ -142,7 +142,10 @@ class UpdateDialog:
                 self.status.set(self.bilingual("Bản mới đã sẵn sàng trong thư mục cập nhật. Đóng HDM rồi chạy tệp AppImage.",
                                                "The update is ready in this folder. Close HDM, then run the AppImage."))
             else:
-                open_path(path)
+                if platform.system() == "Windows":
+                    launch_installer(path)
+                else:
+                    open_path(path)
                 self.status.set(self.bilingual("Hoàn tất cài đặt trong cửa sổ hệ thống, sau đó mở lại HDM.",
                                                "Finish installation in the system window, then restart HDM."))
                 if platform.system() == "Windows":

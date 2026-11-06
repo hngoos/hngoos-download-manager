@@ -1,4 +1,4 @@
-#define AppVersion "0.1.5"
+#define AppVersion "0.1.6"
 [Setup]
 AppId={{E82104D8-7840-4C75-9E28-3229D109FD13}
 AppName=Hngoos Download Manager
@@ -34,4 +34,16 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: "HDM"; Flags: uninsdeletevalue dontcreatekey
 [Run]
-Filename: "{app}\HDM.exe"; Description: "Open HDM"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\HDM.exe"; Description: "Open HDM"; Flags: nowait postinstall skipifsilent runascurrentuser
+
+[Code]
+function SetEnvironmentVariable(Name, Value: String): Boolean;
+  external 'SetEnvironmentVariableW@kernel32.dll stdcall';
+
+function InitializeSetup(): Boolean;
+begin
+  { Also protect upgrades started by older HDM versions that inherit _PYI_* state. }
+  Result := SetEnvironmentVariable('PYINSTALLER_RESET_ENVIRONMENT', '1');
+  if not Result then
+    MsgBox('Unable to prepare the application runtime. Close HDM and run this installer again.', mbError, MB_OK);
+end;

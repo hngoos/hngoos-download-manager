@@ -156,9 +156,23 @@ class PresentationTests(unittest.TestCase):
         content = b"trusted fixture"
         dialog.asset = {"name": "HDM.exe", "size": len(content), "sha256": hashlib.sha256(content).hexdigest()}
         dialog.path.write_bytes(b"X"*len(content))
-        with patch("hngoos_dm.update_ui.open_path") as launch:
+        with patch("hngoos_dm.update_ui.launch_installer") as launch:
             dialog.install()
             self.pump()
             self.assertIn("signed release", dialog.status.get())
             launch.assert_not_called()
+        dialog.close()
+
+    def test_windows_update_uses_independent_installer_before_closing_app(self):
+        with patch("hngoos_dm.update_ui.check_update", return_value=None):
+            self.app.check_update()
+            self.pump()
+        dialog = self.app.update_dialog
+        path = Path(self.folder.name)/"HDM-Setup.exe"
+        path.touch()
+        with patch("hngoos_dm.update_ui.platform.system", return_value="Windows"), \
+                patch("hngoos_dm.update_ui.launch_installer") as launch, patch.object(self.app, "close") as close:
+            dialog.launch(path)
+            launch.assert_called_once_with(path)
+            close.assert_called_once_with()
         dialog.close()

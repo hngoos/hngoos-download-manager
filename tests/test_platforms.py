@@ -11,6 +11,41 @@ from hngoos_dm.safety import inspect_file
 
 
 class PlatformTests(unittest.TestCase):
+    def test_update_installer_does_not_inherit_onefile_runtime_state(self):
+        from hngoos_dm.platforms import launch_installer
+        inherited = {"_PYI_ARCHIVE_FILE": "old/HDM.exe", "_PYI_APPLICATION_HOME_DIR": "deleted/_MEI123",
+                     "_PYI_PARENT_PROCESS_LEVEL": "1", "_MEIPASS2": "old/runtime", "HDM_KEEP": "unchanged"}
+        with patch.dict(os.environ, inherited), patch("hngoos_dm.platforms.subprocess.Popen") as spawn:
+            launch_installer("HDM-Setup.exe")
+            environment = spawn.call_args.kwargs["env"]
+            self.assertEqual(environment["PYINSTALLER_RESET_ENVIRONMENT"], "1")
+            self.assertFalse(any(name.startswith("_PYI_") for name in environment))
+            self.assertNotIn("_MEIPASS2", environment)
+            self.assertEqual(environment["HDM_KEEP"], "unchanged")
+            self.assertEqual(os.environ["_PYI_APPLICATION_HOME_DIR"], "deleted/_MEI123")
+
+    @unittest.skipUnless(os.name == "nt", "Windows DLL search path")
+    def test_external_launch_restores_private_dll_search_path_even_on_error(self):
+        import ctypes
+
+        from hngoos_dm.platforms import system_dll_search
+        kernel = ctypes.windll.kernel32
+        buffer = ctypes.create_unicode_buffer(32768)
+        kernel.GetDllDirectoryW(len(buffer), buffer)
+        original = buffer.value or None
+        with tempfile.TemporaryDirectory() as directory:
+            try:
+                kernel.SetDllDirectoryW(directory)
+                with patch.object(sys, "frozen", True, create=True), \
+                        self.assertRaisesRegex(RuntimeError, "fixture"), system_dll_search():
+                    kernel.GetDllDirectoryW(len(buffer), buffer)
+                    self.assertEqual(buffer.value, "")
+                    raise RuntimeError("fixture")
+                kernel.GetDllDirectoryW(len(buffer), buffer)
+                self.assertEqual(buffer.value, directory)
+            finally:
+                kernel.SetDllDirectoryW(original)
+
     def test_standard_locations_preserve_legacy_databases(self):
         with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ, {}, clear=True), \
                 patch('pathlib.Path.home', return_value=Path(folder)):

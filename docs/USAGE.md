@@ -2,7 +2,7 @@
 
 [Home](../README.md) · [Features](FEATURES.md) · [Privacy](PRIVACY.md)
 
-HDM v0.1.5 focuses on one **Download** screen. Use the top-right switches for
+HDM v0.1.6 focuses on one **Download** screen. Use the top-right switches for
 light/dark appearance and VI/EN; both choices are saved. The information button
 opens **About**, settings, safety tools and browser integration.
 

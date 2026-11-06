@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.6 — 2026-11-06
+
+- Fix the missing Python DLL error after an in-app Windows update by launching the installer with an independent runtime environment.
+- Make setup reset inherited PyInstaller state before opening HDM, including updates started from older versions.
+- Verify the old failure and both repaired handoff paths using real onefile executables and an isolated Inno Setup harness.
+
 ## 0.1.5 — 2026-11-06
 
 - Focus the main window on downloading, with an icon-only brand and top-right information/settings.
