@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-Setup-0.1.5.exe"><img src="docs/assets/install-windows.svg" width="25%" alt="Download HDM for Windows 10/11 x64"></a><a href="#macos"><img src="docs/assets/install-macos.svg" width="25%" alt="Download HDM for macOS"></a><a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-Linux-x64.AppImage"><img src="docs/assets/install-linux.svg" width="25%" alt="Download HDM for Linux"></a><a href="#mobile"><img src="docs/assets/install-mobile.svg" width="25%" alt="Mobile: coming soon"></a>
+  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-Setup-0.1.13.exe"><img src="docs/assets/install-windows.svg" width="25%" alt="Download HDM for Windows 10/11 x64"></a><a href="#macos"><img src="docs/assets/install-macos.svg" width="25%" alt="Download HDM for macOS"></a><a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-Linux-x64.AppImage"><img src="docs/assets/install-linux.svg" width="25%" alt="Download HDM for Linux"></a><a href="#mobile"><img src="docs/assets/install-mobile.svg" width="25%" alt="Mobile: coming soon"></a>
 </p>
 
 ## Features
@@ -26,7 +26,7 @@
 
 ### Download
 
-[Windows 10/11 x64 installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-Setup-0.1.5.exe)
+[Windows 10/11 x64 installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-Setup-0.1.13.exe)
 
 Or install from **Command Prompt (CMD)**:
 
@@ -54,14 +54,14 @@ The CMD installer verifies the package before installing it for your account.
 
 ### Download
 
-- [Apple Silicon (M-series)](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-macOS-arm64.dmg)
-- [Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-macOS-x64.dmg)
+- [Apple Silicon (M-series)](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-macOS-arm64.dmg)
+- [Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-macOS-x64.dmg)
 
 Or download from **Terminal** (automatically selects Apple Silicon or Intel):
 
 ```sh
 arch=$(uname -m); [ "$arch" = "x86_64" ] && arch=x64
-curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-macOS-$arch.dmg" -o HDM.dmg
+curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-macOS-$arch.dmg" -o HDM.dmg
 ```
 
 ### Installation
@@ -81,13 +81,13 @@ Requires macOS 15. See [platform support](docs/PLATFORMS.md#macos) for signing r
 
 ### Download
 
-[DEB — Ubuntu/Debian x64](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-Linux-x64.deb) ·
-[AppImage — Linux x64](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-Linux-x64.AppImage)
+[DEB — Ubuntu/Debian x64](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-Linux-x64.deb) ·
+[AppImage — Linux x64](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-Linux-x64.AppImage)
 
 Or download the DEB from **Terminal**:
 
 ```sh
-curl -fLO https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-Linux-x64.deb
+curl -fLO https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-Linux-x64.deb
 ```
 
 ### Installation
@@ -95,14 +95,14 @@ curl -fLO https://github.com/hngoos/hngoos-download-manager/releases/download/v0
 For Ubuntu/Debian, install the downloaded DEB and launch **HDM** from your applications:
 
 ```sh
-sudo apt install ./HDM-0.1.5-Linux-x64.deb
+sudo apt install ./HDM-0.1.13-Linux-x64.deb
 ```
 
 For AppImage, make the downloaded file executable and run it:
 
 ```sh
-chmod +x HDM-0.1.5-Linux-x64.AppImage
-./HDM-0.1.5-Linux-x64.AppImage
+chmod +x HDM-0.1.13-Linux-x64.AppImage
+./HDM-0.1.13-Linux-x64.AppImage
 ```
 
 Requires glibc 2.35 or later. [Platform support](docs/PLATFORMS.md#linux).
