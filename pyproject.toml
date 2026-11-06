@@ -33,7 +33,7 @@ hngoos-dm = "hngoos_dm.app:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-hngoos_dm = ["assets/icons/*.png", "assets/icons/*.svg"]
+hngoos_dm = ["assets/icons/*.png", "assets/icons/*.svg", "assets/branding/*"]
 
 [tool.ruff]
 line-length = 110

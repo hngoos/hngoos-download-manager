@@ -3,15 +3,14 @@
 
 class Tray:
     def __init__(self, app):
+        from importlib.resources import files
+
         import pystray
-        from PIL import Image, ImageDraw
+        from PIL import Image
         self.app = app
-        image = Image.new("RGB", (64, 64), "#101827")
-        draw = ImageDraw.Draw(image)
-        draw.rectangle((26, 9, 38, 37), fill="#459fff")
-        draw.polygon(((13, 30), (51, 30), (32, 49)), fill="#459fff")
-        draw.rectangle((13, 52, 51, 57), fill="#e6edf8")
-        self.icon = pystray.Icon("HDM", image, "hngoos-download-manager (HDM)", menu=pystray.Menu(
+        with (files("hngoos_dm") / "assets/branding/hdm.png").open("rb") as source, Image.open(source) as image:
+            image = image.convert("RGBA")
+        self.icon = pystray.Icon("HDM", image, "Hngoos Download Manager (HDM)", menu=pystray.Menu(
             pystray.MenuItem("Mở HDM", self.show, default=True),
             pystray.MenuItem("Thoát", self.exit)))
         self.icon.run_detached()

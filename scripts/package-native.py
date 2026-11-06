@@ -16,7 +16,7 @@ from pathlib import Path
 from hngoos_dm import __version__
 
 ROOT = Path(__file__).resolve().parents[1]
-ICON = ROOT/'browser-extension/assets/icons/hdm-128.png'
+ICON = ROOT/'src/hngoos_dm/assets/branding/hdm.png'
 TOOLS = {
     'appimagetool-x86_64.AppImage': (
         'https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage',
@@ -62,7 +62,7 @@ def package_linux():
     (package/'usr/bin/hdm').symlink_to('/opt/hdm/HDM')
     (package/'usr/share/applications').mkdir(parents=True)
     (package/'usr/share/applications/com.hngoos.hdm.desktop').write_text(desktop_entry('/opt/hdm/HDM'))
-    icons = package/'usr/share/icons/hicolor/128x128/apps'
+    icons = package/'usr/share/icons/hicolor/512x512/apps'
     icons.mkdir(parents=True)
     shutil.copy2(ICON, icons/'hdm.png')
     control = package/'DEBIAN'

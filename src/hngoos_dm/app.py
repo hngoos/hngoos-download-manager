@@ -34,7 +34,7 @@ def human(size):
 class App:
     def __init__(self, root, data_dir=None):
         self.root = root
-        self.root.title(f"hngoos-download-manager · HDM {__version__}")
+        self.root.title(f"Hngoos Download Manager · HDM {__version__}")
         self.root.geometry("1280x800")
         self.root.minsize(1120, 720)
         self.root.configure(bg=BG)
@@ -62,7 +62,8 @@ class App:
         self.sleep_prevented = False
         self.status = tk.StringVar(value="Sẵn sàng · dữ liệu tải được lưu trên máy của bạn")
         self._styles()
-        from .icons import MorphPlayback, decorate_buttons, load_icons
+        from .icons import MorphPlayback, decorate_buttons, load_brand_icons, load_icons
+        self.brand_icons = load_brand_icons(root)
         self.icons = load_icons(root)
         self._layout()
         decorate_buttons(root, self.icons)
@@ -113,8 +114,9 @@ class App:
         sidebar = ttk.Frame(self.root, padding=(16, 22), width=190)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
-        ttk.Label(sidebar, text="HDM", foreground=BLUE, font=("Segoe UI", 28, "bold")).pack(anchor="w", padx=10)
-        ttk.Label(sidebar, text="hngoos-download-\nmanager", style="Muted.TLabel", wraplength=150,
+        ttk.Label(sidebar, text=" HDM", image=self.brand_icons[1], compound="left",
+                  foreground=TEXT, font=("Segoe UI", 24, "bold")).pack(anchor="w")
+        ttk.Label(sidebar, text="Hngoos Download\nManager", style="Muted.TLabel", wraplength=150,
                   font=("Segoe UI", 9)).pack(anchor="w", padx=10, pady=(3, 28))
         shell = ttk.Frame(self.root, padding=(6, 22, 22, 18))
         shell.pack(side="left", fill="both", expand=True)
@@ -1047,6 +1049,7 @@ def main():
     if os.name == "nt":
         import ctypes
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("hngoos.HDM")
     root = tk.Tk()
     data_dir = args.data_dir or data_directory()
     try:

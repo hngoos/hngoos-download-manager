@@ -1,6 +1,18 @@
 """Morphicons/Lucide assets rendered ahead of time; Tk needs no JavaScript runtime."""
+import sys
 from importlib.resources import files
 from tkinter import PhotoImage, ttk
+
+
+def load_brand_icons(master):
+    """Set the default icon for this window and its dialogs; retain Tk images."""
+    folder = files("hngoos_dm") / "assets" / "branding"
+    source = PhotoImage(master=master, file=str(folder / "hdm.png"))
+    icons = tuple(source.subsample(factor) for factor in (4, 8, 16, 32))
+    master.iconphoto(True, *icons)
+    if sys.platform == "win32":
+        master.iconbitmap(default=str(folder / "hdm.ico"))
+    return icons
 
 
 def load_icons(master):

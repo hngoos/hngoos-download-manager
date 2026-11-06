@@ -25,11 +25,7 @@ options = ['--noconfirm', '--clean', '--paths', 'src', '--collect-data', 'hngoos
            '--copy-metadata', 'pypdfium2', '--copy-metadata', 'libtorrent']
 mac_options = []
 if sys.platform == 'darwin':
-    from PIL import Image
-    icon = root/'build/HDM.icns'
-    icon.parent.mkdir(parents=True, exist_ok=True)
-    with Image.open(root/'browser-extension/assets/icons/hdm-128.png') as image:
-        image.resize((1024, 1024)).save(icon)
+    icon = root/'src/hngoos_dm/assets/branding/hdm.icns'
     mac_options = ['--osx-bundle-identifier', 'com.hngoos.hdm', '--icon', str(icon)]
 run('-m', 'PyInstaller', *options, *mac_options, '--onedir', '--windowed', '--name', 'HDM', 'src/hngoos_dm/launcher.py')
 run('-m', 'PyInstaller', '--noconfirm', '--clean', '--onefile', '--console', '--name', 'HDMBridge',

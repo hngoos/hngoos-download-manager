@@ -1,7 +1,7 @@
 #define AppVersion "0.1.1"
 [Setup]
 AppId={{E82104D8-7840-4C75-9E28-3229D109FD13}
-AppName=hngoos-download-manager
+AppName=Hngoos Download Manager
 AppVersion={#AppVersion}
 AppPublisher=hngoos
 AppPublisherURL=https://github.com/hngoos/hngoos-download-manager
@@ -16,6 +16,7 @@ OutputBaseFilename=HDM-Setup-{#AppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=..\src\hngoos_dm\assets\branding\hdm.ico
 UninstallDisplayIcon={app}\HDM.exe
 [Files]
 Source: "..\dist\HDM.exe"; DestDir: "{app}"; Flags: ignoreversion

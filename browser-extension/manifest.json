@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "hngoos-download-manager",
+  "name": "Hngoos Download Manager",
   "version": "0.1.1",
   "description": "Gửi link/video tới HDM, nút tải ngoài khung video và chặn quảng cáo tùy chọn.",
   "minimum_chrome_version": "120",
@@ -10,6 +10,6 @@
   "optional_host_permissions": ["<all_urls>"],
   "optional_permissions": ["cookies", "downloads"],
   "background": {"service_worker": "background.js", "type": "module"},
-  "action": {"default_popup": "popup.html", "default_title": "hngoos-download-manager"},
+  "action": {"default_popup": "popup.html", "default_title": "Hngoos Download Manager", "default_icon": {"16":"assets/icons/hdm-16.png","32":"assets/icons/hdm-32.png","48":"assets/icons/hdm-48.png","128":"assets/icons/hdm-128.png"}},
   "options_page": "options.html"
 }

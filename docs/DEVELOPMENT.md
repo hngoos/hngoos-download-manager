@@ -136,6 +136,13 @@ previous setting. Run one copy at a time.
 
 ## Build a package
 
+App, installer, tray and browser icons come from
+[`docs/assets/hdm-logo-square.svg`](assets/hdm-logo-square.svg). After changing
+the logo, run `python -m playwright install chromium`, then
+`python scripts/build-branding.py` in the development environment. Commit the
+generated assets under `src/hngoos_dm/assets/branding/` and
+`browser-extension/assets/icons/`. Normal builds use those assets directly.
+
 <details>
 <summary><strong>Windows installer and extension ZIP</strong></summary>
 
