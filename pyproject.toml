@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hngoos-download-manager"
-version = "0.1.8"
+version = "0.1.9"
 description = "Desktop download manager with resumable parallel downloads and local media tools"
 readme = "README.md"
 requires-python = ">=3.11"

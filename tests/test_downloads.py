@@ -23,6 +23,7 @@ class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
     seen: ClassVar[list] = []
     dropped = False
+    dropped_ranges: ClassVar[list] = []
     throttled = False
 
     def log_message(self, *_args):
@@ -73,6 +74,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         if self.path == "/drop" and end > 0 and not type(self).dropped:
             type(self).dropped = True
+            type(self).dropped_ranges.append((start, end))
             self.wfile.write(data[start:start + 1024])
             self.wfile.flush()
             self.close_connection = True
@@ -152,10 +154,12 @@ class DownloadsTest(unittest.TestCase):
 
     def test_retry_after_truncated_response(self):
         Handler.dropped = False
+        Handler.dropped_ranges = []
         Handler.seen = []
         self.assert_payload(self.wait(self.add("/drop")))
         self.assertTrue(Handler.dropped)
-        self.assertTrue(any(value and value.startswith("bytes=1024-") for path, value in Handler.seen if path == "/drop"))
+        for start, end in Handler.dropped_ranges:
+            self.assertIn(("/drop", f"bytes={start+1024}-{end}"), Handler.seen)
 
     def test_retry_rate_limit(self):
         Handler.throttled = False

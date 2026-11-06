@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.9 — 2026-11-06
+
+- Include the single-bar Enter workflow, inline details and per-file Check Safety from 0.1.8.
+- Verify interrupted parallel downloads independently of worker scheduling order on macOS.
+
 ## 0.1.8 — 2026-11-06
 
 - Use a single URL bar: press Enter to reveal link, filename, destination and source-specific advanced options inline.

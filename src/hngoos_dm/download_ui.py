@@ -3,6 +3,7 @@
 import tkinter as tk
 from tkinter import filedialog, ttk
 
+from .rounded import RoundedButton
 from .safety import filename_from_url
 
 
@@ -14,8 +15,8 @@ class DownloadEditor(ttk.Frame):
         kind, resolved = self.kind, self.resolved
         actions = ttk.Frame(self, style="Card.TFrame")
         actions.pack(side="bottom", fill="x", pady=(8, 0))
-        ttk.Button(actions, text="Hủy", command=app.dismiss_download).pack(side="right", padx=8)
-        self.confirm_button = ttk.Button(actions, text="Tải xuống", style="Primary.TButton", command=self.confirm)
+        RoundedButton(actions, text="Hủy", command=app.dismiss_download, width=90).pack(side="right", padx=8)
+        self.confirm_button = RoundedButton(actions, text="Tải xuống", primary=True, command=self.confirm)
         self.confirm_button.pack(side="right")
         self.error = tk.StringVar()
         ttk.Label(actions, textvariable=self.error, style="Muted.TLabel", wraplength=600).pack(side="left")
@@ -37,7 +38,8 @@ class DownloadEditor(ttk.Frame):
         ttk.Entry(frame, textvariable=self.filename).grid(row=1, column=1, columnspan=2, sticky="ew", pady=6)
         ttk.Label(frame, text="Lưu tại").grid(row=3, column=0, sticky="w")
         ttk.Entry(frame, textvariable=self.directory).grid(row=3, column=1, sticky="ew", pady=8)
-        ttk.Button(frame, text="Chọn thư mục", command=self.choose_directory).grid(row=3, column=2, padx=(8, 0))
+        RoundedButton(frame, text="Chọn thư mục", command=self.choose_directory, width=145).grid(
+            row=3, column=2, padx=(8, 0))
         advanced = self.advanced = ttk.Frame(frame)
         advanced.columnconfigure(1, weight=1)
         ttk.Label(advanced, text="Luồng").grid(row=0, column=0, sticky="w")
@@ -66,7 +68,7 @@ class DownloadEditor(ttk.Frame):
             else:
                 advanced.grid(row=7, column=0, columnspan=3, sticky="ew", pady=8)
         self.toggle_advanced = toggle
-        ttk.Button(actions, text="Tùy chọn nâng cao  ▸", command=toggle).pack(side="left")
+        RoundedButton(actions, text="Tùy chọn nâng cao  ▸", command=toggle, width=200).pack(side="left")
         if kind == "media":
             ttk.Button(advanced, text="Chọn cookie do bạn xuất…", command=self.choose_cookie).grid(
                 row=2, column=0, columnspan=2, sticky="w")
