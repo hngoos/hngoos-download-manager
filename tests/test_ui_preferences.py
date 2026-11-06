@@ -262,6 +262,10 @@ class PresentationTests(unittest.TestCase):
         self.app.set_filter("video")
         self.pump()
         self.assertEqual(self.app.table.get_children(), (row["id"],))
+        self.app.store.update(row["id"], state="complete", filename="Audio-only source.m4a")
+        self.app.set_filter("music")
+        self.pump()
+        self.assertEqual(self.app.table.get_children(), (row["id"],))
 
     def test_speed_meter_ignores_stale_rates_and_includes_torrent_upload(self):
         from types import SimpleNamespace

@@ -12,14 +12,18 @@ APPLICATIONS = {".exe", ".msi", ".msix", ".msixbundle", ".appx", ".appxbundle", 
 
 
 def job_category(job):
-    if job.get("kind") == "media":
-        # Extractors report a title without an extension while downloading.
-        # Classify by the selected output so active audio/video stays visible.
-        return "music" if job.get("media_options", {}).get("audio") else "video"
+    media = job.get("kind") == "media"
+    media_group = "music" if (job.get("media_options") or {}).get("audio") else "video"
+    if media and job.get("state") not in {"complete", "quarantined"}:
+        return media_group
     name = job["filename"].removesuffix(".chuakiemtra")
     suffix = Path(name).suffix.lower()
     if suffix in APPLICATIONS:
         return "app"
     group = category(name)
+    if group == "Other" and media:
+        # Extractors report titles without extensions during active transfers.
+        # The actual filename takes precedence once an output is available.
+        return media_group
     return {"Video": "video", "Music": "music", "Images": "image", "Documents": "file",
             "Archives": "archive"}.get(group, "other")

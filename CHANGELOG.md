@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.12 — 2026-11-06
+
+- Include the rounded toolbar, Info menu, category filters and live speed/bandwidth controls.
+- Classify active media by selected output and completed media by its actual file type, including audio-only sources.
+
 ## 0.1.11 — 2026-11-06
 
 - Include the rounded category toolbar, icon-only Info and live transfer meter from 0.1.10.
