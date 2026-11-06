@@ -56,7 +56,13 @@ Website support follows extractor availability and the permissions of the curren
 
 The batch dialog is intended for up to 500 rows per import. Website capture needs a compatible installed browser/runtime and does not automatically reuse your normal browser's signed-in profile.
 
-## Local media processing
+## Retained processing libraries
+
+The following library APIs remain included for development and compatibility. HDM 0.1.5 keeps the
+main desktop workflow focused on downloads and no longer exposes the separate conversion, PDF
+redaction or website-capture dialogs in its menus.
+
+### Local media processing
 
 | Tool | Behavior |
 | --- | --- |
@@ -68,7 +74,7 @@ The batch dialog is intended for up to 500 rows per import. Website capture need
 
 Originals are preserved and failed outputs are removed. Hardware acceleration depends on the installed GPU and driver; broad hardware acceptance and DVD menu handling remain outside the verified scope.
 
-## File inspection and PDF redaction
+## File inspection and PDF library
 
 **Preliminary inspection** covers disguised Windows executables, risky or double extensions, bidirectional filename characters, Office macros, risky shortcuts, and suspicious archive paths or entries.
 
@@ -115,7 +121,7 @@ Known-domain popup/overlay handling, an explicit element picker, and per-site re
 
 ## Updates and local data
 
-Use **Check for update** in the sidebar to check and download a new release inside HDM. Updates require an Ed25519-signed manifest, verified against the pinned publisher key, followed by package size and SHA-256 checks. Choose **Install update** to open the verified local package with your operating system; Windows exits HDM for setup, while macOS/Linux use their system installer or AppImage folder. Active transfers must be paused or finished first. This manifest signature is separate from Authenticode; the current Windows installer does not have an Authenticode certificate.
+Use **Check for update** on the Download screen or in About to check and download a new release inside HDM. Updates require an Ed25519-signed manifest, verified against the pinned publisher key, followed by package size and SHA-256 checks. Choose **Install update** to open the verified local package with your operating system; Windows exits HDM for setup, while macOS/Linux use their system installer or AppImage folder. Active transfers must be paused or finished first. This manifest signature is separate from Authenticode; the current Windows installer does not have an Authenticode certificate.
 
 The top-right switches change light/dark appearance and the main interface language (VI/EN) immediately. HDM remembers both choices. Tool-specific dialogs and diagnostics may retain their original language.
 

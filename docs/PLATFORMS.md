@@ -122,7 +122,7 @@ files saved elsewhere. Back up history before deleting the data directory.
 | Capability | Windows | macOS / Linux preview |
 | --- | --- | --- |
 | HTTP download, pause/resume, mirrors and batch imports | Available | Available |
-| Local video/audio tools, spreadsheets and PDF redaction | Included | Included in native packages |
+| Media/spreadsheet/PDF libraries | Included; HDM 0.1.5 exposes download-related controls | Included in native packages |
 | Chromium native messaging | Available | User-level manifests for Chrome, Edge, Brave and Chromium |
 | Browser session cookie transfer | DPAPI encryption | Unavailable; manually selected cookie files remain supported |
 | Defender / Authenticode / shutdown countdown | Available | Unavailable |
