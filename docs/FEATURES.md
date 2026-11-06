@@ -2,7 +2,7 @@
 
 [Home](../README.md) · [User guide](USAGE.md) · [Privacy](PRIVACY.md) · [Security](SECURITY_MODEL.md)
 
-This reference describes **HDM v0.1.2**. It separates implemented behavior from conditions that depend on servers, websites, accounts, or hardware. The release does not complete every planned capability. The stable binary release targets Windows; the current source also offers [macOS/Linux desktop previews](PLATFORMS.md), with platform-specific features and optional dependencies listed there.
+This reference describes **HDM v0.1.3**. It separates implemented behavior from conditions that depend on servers, websites, accounts, or hardware. The release does not complete every planned capability. The stable binary release targets Windows; the current source also offers [macOS/Linux desktop previews](PLATFORMS.md), with platform-specific features and optional dependencies listed there.
 
 ## Downloads and recovery
 

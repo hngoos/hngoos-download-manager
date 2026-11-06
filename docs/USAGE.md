@@ -2,13 +2,13 @@
 
 [Home](../README.md) · [Feature reference](FEATURES.md) · [Privacy](PRIVACY.md) · [Security](SECURITY_MODEL.md)
 
-This guide covers **HDM v0.1.2** on Windows 10/11 x64, with macOS and Linux desktop previews. The current application and extension interface is in Vietnamese; menu labels below include the wording you will see on screen.
+This guide covers **HDM v0.1.3** on Windows 10/11 x64, with macOS and Linux desktop previews. Use the top-right switches for light/dark appearance and the main interface language (VI/EN). Both preferences are saved. The guide includes Vietnamese menu labels for tools that retain their original wording.
 
 ## Install HDM
 
 For macOS DMGs and Linux DEB/AppImage installation, see [platform installation](PLATFORMS.md). The steps below describe the Windows EXE.
 
-1. Download [HDM-Setup-0.1.2.exe](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.2/HDM-Setup-0.1.2.exe).
+1. Download [HDM-Setup-0.1.3.exe](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.3/HDM-Setup-0.1.3.exe).
 2. Run the installer. By default it installs for the current account at `%LOCALAPPDATA%\Programs\HDM`.
 3. Open **HDM**. The runtime, browser bridge, media dependencies, and component notices are included; Python and Node.js are not required.
 
@@ -16,13 +16,20 @@ The extension is optional and installed separately. The current installer is not
 
 ## Verify a package
 
-Compare this command's result with the SHA-256 for the same filename in the [release notes](https://github.com/hngoos/hngoos-download-manager/releases/tag/v0.1.2):
+Compare this command's result with the SHA-256 for the same filename in the [release notes](https://github.com/hngoos/hngoos-download-manager/releases/tag/v0.1.3):
 
 ```powershell
-Get-FileHash .\HDM-Setup-0.1.2.exe -Algorithm SHA256
+Get-FileHash .\HDM-Setup-0.1.3.exe -Algorithm SHA256
 ```
 
 The in-app updater additionally checks Ed25519-signed metadata against its pinned publisher key before checking the installer bytes. A matching checksum alone is not a publisher signature.
+
+## Update HDM
+
+Select **Check for update** in the sidebar. If a newer signed release is available,
+select **Download update**. After verification, pause or finish active tasks and
+select **Install update**. HDM opens the local system installer; the update check
+and download stay inside the app. Closing the download dialog cancels the transfer.
 
 ## Download a file
 

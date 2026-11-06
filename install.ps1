@@ -12,9 +12,9 @@ if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
 }
 if (-not [Environment]::Is64BitOperatingSystem) { throw 'HDM requires 64-bit Windows 10 or later.' }
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-$hdmVersion = '0.1.2'
-$hdmHash = '01ae7386136890f051a4ca2a9321a8d895b2f26b54bd23589629fc0c4392d29d'
-$hdmSize = 137137495
+$hdmVersion = '0.1.3'
+$hdmHash = '049ba030cbfa91662cbe9f025eceb5f32a5a784e97be07ab10b6be962a1066ac'
+$hdmSize = 137159626
 $hdmUrl = "https://github.com/hngoos/hngoos-download-manager/releases/download/v$hdmVersion/HDM-Setup-$hdmVersion.exe"
 if (-not $InstallerPath) {
     $hdmFolder = Join-Path ([IO.Path]::GetTempPath()) ('HDM-install-' + [guid]::NewGuid().ToString('N'))
