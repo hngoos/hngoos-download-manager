@@ -3,7 +3,7 @@
 Tài liệu dành cho người duy trì; không phân phối cùng gói tiện ích. Chỉ hỗ trợ Chromium MV3, tối thiểu 120.
 
 - Gói nộp: `dist/HDM-Browser-Extension.zip`; manifest nằm ở gốc, không gồm source ứng dụng, tests, npm metadata hay công cụ phát triển.
-- Tên: Hngoos Download Manager. Viết tắt: HDM. Phiên bản: 0.1.9.
+- Tên: Hngoos Download Manager. Viết tắt: HDM. Phiên bản: 0.1.10.
 - Mục đích chính: kết nối thao tác tải tệp/video trên trình duyệt với ứng dụng HDM trên Windows. Các công cụ lọc nội dung và lưu phiếu là tùy chọn.
 - Mô tả ngắn: Gửi link và video tới HDM trên Windows, tiếp quản lượt tải tùy chọn và phát hiện luồng HLS/DASH.
 - Trang chủ: https://github.com/hngoos/hngoos-download-manager

@@ -3,7 +3,7 @@
 import tkinter as tk
 from tkinter import filedialog, ttk
 
-from .rounded import RoundedButton
+from .rounded import RoundedButton, RoundedCombobox, RoundedEntry
 from .safety import filename_from_url
 
 
@@ -32,29 +32,29 @@ class DownloadEditor(ttk.Frame):
         frame.columnconfigure(1, weight=1)
         ttk.Label(frame, text="Link tệp").grid(row=0, column=0, sticky="w", padx=(0, 12))
         self.source_url = tk.StringVar(value=self.original)
-        ttk.Entry(frame, textvariable=self.source_url, state="readonly").grid(
+        RoundedEntry(frame, textvariable=self.source_url, state="readonly").grid(
             row=0, column=1, columnspan=2, sticky="ew", pady=(0, 6))
         ttk.Label(frame, text="Tên tệp").grid(row=1, column=0, sticky="w", padx=(0, 12))
-        ttk.Entry(frame, textvariable=self.filename).grid(row=1, column=1, columnspan=2, sticky="ew", pady=6)
+        RoundedEntry(frame, textvariable=self.filename).grid(row=1, column=1, columnspan=2, sticky="ew", pady=6)
         ttk.Label(frame, text="Lưu tại").grid(row=3, column=0, sticky="w")
-        ttk.Entry(frame, textvariable=self.directory).grid(row=3, column=1, sticky="ew", pady=8)
+        RoundedEntry(frame, textvariable=self.directory).grid(row=3, column=1, sticky="ew", pady=8)
         RoundedButton(frame, text="Chọn thư mục", command=self.choose_directory, width=145).grid(
             row=3, column=2, padx=(8, 0))
         advanced = self.advanced = ttk.Frame(frame)
         advanced.columnconfigure(1, weight=1)
         ttk.Label(advanced, text="Luồng").grid(row=0, column=0, sticky="w")
-        ttk.Combobox(advanced, textvariable=self.connections, values=(1, 2, 4, 8, 16, 32),
+        RoundedCombobox(advanced, textvariable=self.connections, values=(1, 2, 4, 8, 16, 32),
                      width=6, state="readonly").grid(row=0, column=1, sticky="w", pady=8)
         if kind == "media":
             self.media_controls = ttk.Frame(advanced)
             self.media_controls.grid(row=1, column=0, columnspan=3, sticky="ew", pady=12)
             ttk.Label(self.media_controls, text="Định dạng").grid(row=0, column=0, sticky="w", padx=(0, 16))
-            formats = ttk.Combobox(self.media_controls, textvariable=self.format,
+            formats = RoundedCombobox(self.media_controls, textvariable=self.format,
                                   values=("MP4", "MP3", "M4A"), width=10, state="readonly")
             formats.grid(row=0, column=1, sticky="w", pady=6)
             self.quality_label = ttk.Label(self.media_controls, text="Độ cao tối đa")
             self.quality_label.grid(row=1, column=0, sticky="w")
-            self.quality_selector = ttk.Combobox(self.media_controls, textvariable=self.quality,
+            self.quality_selector = RoundedCombobox(self.media_controls, textvariable=self.quality,
                 values=(360, 480, 720, 1080, 1440, 2160), width=10, state="readonly")
             self.quality_selector.grid(row=1, column=1, sticky="w", pady=6)
             ttk.Checkbutton(self.media_controls, text="Cả danh sách phát", variable=self.playlist).grid(
@@ -73,14 +73,14 @@ class DownloadEditor(ttk.Frame):
             ttk.Button(advanced, text="Chọn cookie do bạn xuất…", command=self.choose_cookie).grid(
                 row=2, column=0, columnspan=2, sticky="w")
             ttk.Label(advanced, text="Format ID").grid(row=3, column=0, sticky="w", padx=(0, 10))
-            ttk.Entry(advanced, textvariable=self.format_id).grid(row=3, column=1, sticky="ew", pady=8)
+            RoundedEntry(advanced, textvariable=self.format_id).grid(row=3, column=1, sticky="ew", pady=8)
         else:
             ttk.Label(advanced, text="Mã băm").grid(row=2, column=0, sticky="w", padx=(0, 10))
-            ttk.Entry(advanced, textvariable=self.digest).grid(row=2, column=1, sticky="ew")
-            ttk.Combobox(advanced, textvariable=self.algorithm, values=("SHA-256", "MD5", "SHA-1", "SHA-512"),
+            RoundedEntry(advanced, textvariable=self.digest).grid(row=2, column=1, sticky="ew")
+            RoundedCombobox(advanced, textvariable=self.algorithm, values=("SHA-256", "MD5", "SHA-1", "SHA-512"),
                          width=10, state="readonly").grid(row=2, column=2, padx=8)
             ttk.Label(advanced, text="Mirror").grid(row=3, column=0, sticky="w")
-            ttk.Entry(advanced, textvariable=self.mirrors).grid(row=3, column=1, columnspan=2, sticky="ew", pady=8)
+            RoundedEntry(advanced, textvariable=self.mirrors).grid(row=3, column=1, columnspan=2, sticky="ew", pady=8)
             ttk.Label(advanced, text="Link cách bởi dấu |", style="Muted.TLabel").grid(row=4, column=1, sticky="w")
         app.apply_preferences()
 

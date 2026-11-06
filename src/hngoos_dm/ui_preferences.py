@@ -5,6 +5,8 @@ from tkinter import ttk
 from weakref import WeakKeyDictionary
 
 TRANSLATIONS = {
+    "Giao diện": "Appearance", "Sáng": "Light", "Tối": "Dark",
+    "Chưa có tệp trong mục này": "No downloads in this category",
     "Dán liên kết · nhấn Enter": "Paste a link · press Enter", "Link tệp": "File link",
     "Link đã thay đổi; nhấn Enter để nhận diện lại.": "Link changed; press Enter to detect it again.",
     "Chọn thư mục lưu trước khi tải.": "Choose a destination before downloading.",

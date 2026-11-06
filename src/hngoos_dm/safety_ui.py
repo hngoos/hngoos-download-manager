@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import messagebox, ttk
 
+from .rounded import RoundedEntry
 from .safety import inspect_download, sha256_file
 from .virustotal import VirusTotalClient
 
@@ -44,7 +45,7 @@ class SafetyDialog(tk.Toplevel):
         credentials = ttk.Frame(frame)
         credentials.pack(fill="x", pady=12)
         ttk.Label(credentials, text="API key").pack(side="left", padx=(0, 12))
-        ttk.Entry(credentials, textvariable=self.key, show="•").pack(side="left", fill="x", expand=True)
+        RoundedEntry(credentials, textvariable=self.key, show="•").pack(side="left", fill="x", expand=True)
         self.lookup_button = ttk.Button(credentials, text="Kiểm tra VirusTotal", command=self.lookup)
         self.lookup_button.pack(side="left", padx=(12, 0))
         ttk.Label(frame, text="Khóa chỉ giữ trong phiên này. Tra mã băm không gửi nội dung tệp.",

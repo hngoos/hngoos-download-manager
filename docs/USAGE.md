@@ -3,8 +3,10 @@
 [Home](../README.md) · [Features](FEATURES.md) · [Privacy](PRIVACY.md)
 
 HDM focuses on one **Download** screen: a URL bar above your download list.
-Switch light/dark appearance at the top right. **Info → Language** selects VI/EN;
-both choices are saved. **Info** also contains preferences, import/export,
+Use the circular **Info → Appearance** menu for light/dark mode. **Info → Language** selects VI/EN;
+both choices are saved. Filter the list using **All · File · App · Video · Music · Image · Archive · Other**.
+The bottom-left meter shows live download/upload rates; click **HIGH / MEDIUM / LOW** to change
+the shared HTTP bandwidth limit. **Info** also contains preferences, import/export,
 browser integration, support, updates and About.
 
 ## Install and update

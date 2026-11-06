@@ -4,7 +4,9 @@ import {createMorph, canonicalD} from '../browser-extension/node_modules/morphic
 import * as lucide from '../browser-extension/node_modules/lucide/dist/cjs/lucide.js';
 const names = {download: 'Download', play: 'Play', pause: 'Pause', check: 'Check', shield: 'ShieldCheck',
   settings: 'Settings', folder: 'FolderOpen', list: 'List', video: 'Video', file: 'FileText', search: 'Search',
-  plus: 'Plus', globe: 'Globe', info: 'Info', scissors: 'Scissors', close: 'X'};
+  plus: 'Plus', globe: 'Globe', info: 'Info', scissors: 'Scissors', close: 'X', app: 'AppWindow',
+  music: 'Music', image: 'Image', archive: 'Archive', 'arrow-down': 'ArrowDown', 'arrow-up': 'ArrowUp',
+  activity: 'ChartNoAxesCombined', sun: 'Sun', moon: 'Moon'};
 await build({entryPoints: ['browser-extension/icon-entry.js'], bundle: true, format: 'esm',
   outfile: 'browser-extension/icons.js', minify: true, legalComments: 'eof'});
 mkdirSync('src/hngoos_dm/assets/icons', {recursive: true});

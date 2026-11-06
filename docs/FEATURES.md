@@ -2,12 +2,13 @@
 
 [Home](../README.md) · [User guide](USAGE.md) · [Privacy](PRIVACY.md) · [Security](SECURITY_MODEL.md)
 
-This reference describes **HDM v0.1.9**. It separates implemented behavior from conditions that depend on servers, websites, accounts, or hardware. The release does not complete every planned capability. The stable binary release targets Windows; the current source also offers [macOS/Linux desktop previews](PLATFORMS.md), with platform-specific features and optional dependencies listed there.
+This reference describes **HDM v0.1.10**. It separates implemented behavior from conditions that depend on servers, websites, accounts, or hardware. The release does not complete every planned capability. The stable binary release targets Windows; the current source also offers [macOS/Linux desktop previews](PLATFORMS.md), with platform-specific features and optional dependencies listed there.
 
 ## One download screen
 
 The main window contains a URL bar above the download list, with current speed and bandwidth
-presets at the bottom left. The top-right controls are appearance and Info; Language is under Info.
+presets at the bottom left. Category filters sit beside an icon-only Info button at the top right.
+Appearance and Language are inside Info. Filters change the visible list without deleting history.
 The Info menu also offers import/export, preferences, browser extension installation, support,
 bug reporting, Discord, in-app updates, About and Quit.
 
@@ -69,7 +70,7 @@ The batch dialog is intended for up to 500 rows per import. Website capture need
 
 ## Retained processing libraries
 
-The following library APIs remain included for development and compatibility. HDM 0.1.9 keeps the
+The following library APIs remain included for development and compatibility. HDM 0.1.10 keeps the
 main desktop workflow focused on downloads and no longer exposes the separate conversion, PDF
 redaction or website-capture dialogs in its menus.
 

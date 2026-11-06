@@ -21,6 +21,13 @@ def information_menu(app):
     menu.add_cascade(label=translate("Nhập / Xuất"), menu=transfer)
     menu.add_command(label=translate("Tiện ích trình duyệt"), command=lambda: browser_dialog(app))
     menu.add_command(label=translate("Thiết lập"), command=app.open_preferences)
+    appearance = tk.Menu(menu, **options)
+    app.menu_theme = tk.StringVar(value=app.theme)
+    for label, value, icon in (("Sáng", "light", "sun"), ("Tối", "dark", "moon")):
+        appearance.add_radiobutton(label=translate(label), image=app.icons[icon], compound="left",
+                                   variable=app.menu_theme, value=value,
+                                   command=lambda value=value: app.set_preference("theme", value))
+    menu.add_cascade(label=translate("Giao diện"), menu=appearance)
     languages = tk.Menu(menu, **options)
     app.menu_language = tk.StringVar(value=app.locale.language)
     for label, value in (("Tiếng Việt", "vi"), ("English", "en")):

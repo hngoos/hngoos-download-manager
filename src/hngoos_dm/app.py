@@ -15,6 +15,7 @@ from .engine import DownloadManager
 from .instance import InstanceLock
 from .paths import data_directory
 from .platforms import open_path
+from .rounded import RoundedEntry
 from .safety import filename_from_url, scan_defender, sha256_file
 from .store import Store
 
@@ -53,6 +54,7 @@ class App:
         self.events = queue.Queue()
         self.background_threads = []
         self.last_jobs = {}
+        self.category_filter = "all"
         self.directory = tk.StringVar(value=self.store.setting("download_directory", str(Path.home() / "Downloads")))
         self.url = tk.StringVar()
         self.filename = tk.StringVar()
@@ -109,6 +111,7 @@ class App:
         style.configure("Card.TFrame", background=PANEL)
         style.configure("TLabel", background=BG, foreground=TEXT)
         style.configure("Muted.TLabel", foreground=MUTED)
+        style.configure("Card.TLabel", background=PANEL, foreground=TEXT)
         style.configure("Title.TLabel", font=("Segoe UI", 26, "bold"))
         style.configure("TButton", padding=(12, 8), background=control, foreground=TEXT,
                         borderwidth=0, bordercolor=BG, lightcolor=BG, darkcolor=BG)
@@ -122,6 +125,12 @@ class App:
                         foreground=BLUE if light else "#d9c8ff", anchor="w", padding=(12, 14))
         style.map("ActiveNav.TButton", background=[("active", "#e9e0fc" if light else "#2e2249")],
                   foreground=[("active", BLUE if light else "#d9c8ff")])
+        style.configure("Rounded.TEntry", borderwidth=0, padding=0, background=PANEL, fieldbackground=PANEL,
+                        foreground=TEXT, insertcolor=TEXT, bordercolor=PANEL, lightcolor=PANEL, darkcolor=PANEL)
+        style.layout("Rounded.TEntry", [("Entry.padding", {"sticky": "nswe", "children": [
+            ("Entry.textarea", {"sticky": "nswe"})]})])
+        style.configure("Rounded.TCombobox", borderwidth=0, padding=0, bordercolor=PANEL, lightcolor=PANEL, darkcolor=PANEL)
+        style.map("Rounded.TCombobox", fieldbackground=[("readonly", PANEL)], foreground=[("readonly", TEXT)])
         style.configure("TEntry", fieldbackground=PANEL, foreground=TEXT, insertcolor=TEXT,
                         padding=8, bordercolor=border, lightcolor=border, darkcolor=border)
         style.map("TEntry", selectbackground=[("!disabled", selected)], selectforeground=[("!disabled", TEXT)])
@@ -160,7 +169,7 @@ class App:
 
     def _layout(self):
         from .rounded import RoundedButton
-        from .ui_preferences import SlideSwitch
+        from .toolbar import CategoryBar
         shell = ttk.Frame(self.root, padding=(24, 12, 24, 18))
         shell.pack(fill="both", expand=True)
         header = ttk.Frame(shell)
@@ -169,11 +178,15 @@ class App:
         self.brand_label.pack(side="left")
         controls = self.header_controls = ttk.Frame(header)
         controls.pack(side="right")
-        self.theme_switch = SlideSwitch(controls, ("☀", "☾"), self.theme == "dark",
-            lambda dark: self.set_preference("theme", "dark" if dark else "light"), "Light / Dark")
-        self.theme_switch.pack(side="left", padx=(0, 12))
-        self.info_button = RoundedButton(controls, text="Thông tin", command=self.open_information, width=120)
+        self.categories = CategoryBar(self, controls)
+        self.categories.pack(side="left", padx=(0, 12))
+        self.info_button = RoundedButton(controls, text="", image=self.icons["info"],
+                                         command=self.open_information, width=44, height=44)
+        self.info_button.description = "Info"
         self.info_button.pack(side="left")
+        from .toolbar import Tooltip
+        self.info_tooltip = Tooltip(self.info_button, lambda: self.locale.text("Thông tin"))
+        self.root.bind("<F1>", lambda _: self.open_information())
         self.tabs = ttk.Notebook(shell, style="HDM.TNotebook")
         self.tabs.pack(fill="both", expand=True)
         downloads = ttk.Frame(self.tabs)
@@ -212,7 +225,7 @@ class App:
         ttk.Label(parent, text="Thư mục tải mặc định", font=("Segoe UI", 11, "bold")).pack(anchor="w", pady=(20, 8))
         destination = ttk.Frame(parent)
         destination.pack(fill="x")
-        ttk.Entry(destination, textvariable=self.directory).pack(side="left", fill="x", expand=True)
+        RoundedEntry(destination, textvariable=self.directory).pack(side="left", fill="x", expand=True)
         ttk.Button(destination, text="Chọn thư mục", command=self.choose_directory).pack(side="left", padx=8)
         startup = tk.BooleanVar(value=self.store.setting("startup_enabled", False))
         def toggle_startup():
@@ -273,20 +286,19 @@ class App:
             replace_images(self.root)
             self.playback_icon.set_theme(self.theme == "light")
             self._icon_theme = self.theme
-        self.theme_switch.theme = self.theme
-        self.theme_switch.value = self.theme == "dark"
-        self.theme_switch.draw()
         self.locale.apply()
-        from .rounded import RoundedButton, RoundedPanel
+        self.info_button.image = self.icons["info"]
+        for button in self.row_safety_buttons.values():
+            button.image = self.icons["shield"]
+        self.categories.set_presentation(self.theme, self.locale.text)
+        from .rounded import RoundedButton, RoundedField, RoundedPanel
         def present(parent):
             for widget in parent.winfo_children():
-                if isinstance(widget, (RoundedPanel, RoundedButton)):
+                if isinstance(widget, (RoundedPanel, RoundedButton, RoundedField)):
                     widget.set_presentation(self.theme, self.locale.text)
                 present(widget)
         present(self.root)
-        bandwidth_labels = ("Tối đa", "Vừa (4 MB/s)", "Nhẹ (512 KB/s)")
-        self.bandwidth_selector.configure(values=tuple(self.locale.text(value) for value in bandwidth_labels))
-        self.bandwidth_display.set(self.locale.text(self.bandwidth_mode.get()))
+        self.speed_meter.set_presentation(self.theme, self.locale.text)
         self.last_jobs.clear()
         self._presentation_pending = False
 
@@ -312,7 +324,7 @@ class App:
         form.columnconfigure(1, weight=1)
         ttk.Label(form, text="Link", background=PANEL,
                   foreground=MUTED).grid(row=0, column=0, sticky="w", padx=(0, 12))
-        self.url_entry = ttk.Entry(form, textvariable=self.url)
+        self.url_entry = RoundedEntry(form, textvariable=self.url)
         self.url_entry.grid(row=0, column=1, sticky="ew")
         ttk.Label(form, text="Enter", background=PANEL, foreground=MUTED).grid(row=0, column=2, padx=(12, 0))
         self.url_entry.bind("<Return>", lambda _event: self.prepare_download())
@@ -327,23 +339,15 @@ class App:
         self.url.trace_add("write", self.link_changed)
         self.footer = ttk.Frame(parent)
         self.footer.grid(row=3, column=0, sticky="ew", pady=(14, 0))
-        self.speed = tk.StringVar(value="0 B/s")
-        ttk.Label(self.footer, textvariable=self.speed, font=("Segoe UI", 13, "bold")).pack(side="left", padx=(0, 16))
-        self.bandwidth_display = tk.StringVar(value=self.bandwidth_mode.get())
-        self.bandwidth_selector = ttk.Combobox(self.footer, textvariable=self.bandwidth_display,
-            state="readonly", width=18, values=("Tối đa", "Vừa (4 MB/s)", "Nhẹ (512 KB/s)"))
-        self.bandwidth_selector.pack(side="left")
-        def set_bandwidth(_event):
-            label = self.bandwidth_display.get()
-            self.bandwidth_mode.set(self.locale.reverse.get(label, label))
-            self.manager.set_bandwidth(
-                {"Tối đa": "maximum", "Vừa (4 MB/s)": "medium", "Nhẹ (512 KB/s)": "light"}[self.bandwidth_mode.get()])
-        self.bandwidth_selector.bind("<<ComboboxSelected>>", set_bandwidth)
-        self.transfer_button = ttk.Button(self.footer, text="Tiếp tục", command=self.toggle_transfer)
+        from .toolbar import SpeedMeter
+        self.speed_meter = SpeedMeter(self, self.footer)
+        self.speed_meter.pack(side="left")
+        from .rounded import RoundedButton
+        self.transfer_button = RoundedButton(self.footer, text="Tiếp tục", command=self.toggle_transfer, width=140)
         self.transfer_button.pack(side="right")
         ttk.Label(self.footer, textvariable=self.status, style="Muted.TLabel", width=48,
                   wraplength=360).pack(side="left", padx=16)
-        self.queue_panel = RoundedPanel(parent, padding=14, dashed=True)
+        self.queue_panel = RoundedPanel(parent, padding=14)
         self.queue_panel.grid(row=2, column=0, sticky="nsew")
         columns = ("name", "status", "progress", "size", "speed", "connections", "safety", "action")
         table_frame = self.queue_panel.content
@@ -361,7 +365,8 @@ class App:
         self.table.pack(fill="both", expand=True)
         self.empty_state = ttk.Frame(table_frame, style="Card.TFrame", padding=(16, 12))
         ttk.Label(self.empty_state, image=self.icons["download"], background=PANEL).pack(pady=(0, 12))
-        ttk.Label(self.empty_state, text="Bắt đầu lượt tải đầu tiên", background=PANEL,
+        self.empty_heading = tk.StringVar(value="Bắt đầu lượt tải đầu tiên")
+        ttk.Label(self.empty_state, textvariable=self.empty_heading, background=PANEL,
                   font=("Segoe UI", 16, "bold")).pack()
         ttk.Label(self.empty_state, text="Dán đường dẫn ở trên hoặc nhập danh sách từ bảng tính.",
                   background=PANEL, foreground=MUTED).pack(pady=(8, 0))
@@ -375,6 +380,21 @@ class App:
         self.detail = tk.StringVar(value="Chọn một lượt tải để xem chi tiết. Bấm chuột phải để đổi link hoặc nơi lưu.")
 
 
+
+    def set_filter(self, category):
+        from .filters import FILTERS
+        if category not in {key for key, _text, _icon in FILTERS}:
+            raise ValueError("Invalid download filter")
+        self.category_filter = category
+        self.categories.set_presentation(self.theme, self.locale.text)
+        self.last_jobs.clear()
+        self.root.after_cancel(self.refresh_id)
+        self.refresh()
+
+    def set_bandwidth(self, mode):
+        self.manager.set_bandwidth(mode)
+        self.bandwidth_mode.set({"maximum": "Tối đa", "medium": "Vừa (4 MB/s)", "light": "Nhẹ (512 KB/s)"}[mode])
+        self.speed_meter.set_presentation(self.theme, self.locale.text)
 
     def dismiss_download(self):
         editor = getattr(self, "download_editor", None)
@@ -443,7 +463,7 @@ class App:
             ttk.Button(actions, text="Quét bằng Windows Defender…", command=self.defender).pack(side="left")
         ttk.Button(actions, text="Kiểm tra ZIP / chữ ký…", command=self.inspect_safety).pack(side="left", padx=8)
         self.hash_value = tk.StringVar()
-        ttk.Entry(parent, textvariable=self.hash_value).pack(fill="x", pady=20)
+        RoundedEntry(parent, textvariable=self.hash_value).pack(fill="x", pady=20)
         self.hash_service = tk.StringVar(value="VirusTotal")
         ttk.Combobox(parent, textvariable=self.hash_service, values=("VirusTotal", "MetaDefender", "Kaspersky"),
                      state="readonly", width=22).pack(anchor="w", pady=(0, 8))
@@ -470,7 +490,7 @@ class App:
                   "sao chép Extension ID rồi đăng ký bên dưới. Quyền tùy chọn và bộ lọc được quản lý trong popup extension.",
                   wraplength=950, style="Muted.TLabel").pack(anchor="w", pady=12)
         self.extension_id = tk.StringVar(value=self.store.setting("extension_id", ""))
-        ttk.Entry(parent, textvariable=self.extension_id).pack(fill="x", pady=12)
+        RoundedEntry(parent, textvariable=self.extension_id).pack(fill="x", pady=12)
         def register():
             import shutil
             import sys
@@ -1122,8 +1142,10 @@ class App:
             visible.add(row)
             button = self.row_safety_buttons.get(row)
             if button is None:
-                button = ttk.Button(self.table, text=self.locale.text("Kiểm tra an toàn"),
-                    image=self.icons["shield"], compound="left", command=lambda row=row: self.check_selected_safety(row))
+                from .rounded import RoundedButton
+                button = RoundedButton(self.table, text="Kiểm tra an toàn",
+                    image=self.icons["shield"], command=lambda row=row: self.check_selected_safety(row))
+                button.set_presentation(self.theme, self.locale.text)
                 self.row_safety_buttons[row] = button
             x, y, width, height = box
             button.place(x=x+3, y=y+3, width=max(1, width-6), height=max(1, height-6))
@@ -1317,8 +1339,22 @@ class App:
             finally:
                 self.inbox_dialog = False
         jobs = self.store.all()
-        self.speed.set(human(sum(job.get("speed", 0) for job in jobs))+"/s")
-        if jobs:
+        down = sum(job.get("speed", 0) for job in jobs if job["state"] == "downloading")
+        up = 0
+        for torrent in getattr(self, "torrent_jobs", []):
+            if not torrent.closed:
+                state = torrent.status()
+                down += state["download_rate"]
+                up += state["upload_rate"]
+        self.speed_meter.update_rates(down, up)
+        from .filters import job_category
+        visible = [job for job in jobs if self.category_filter == "all" or job_category(job) == self.category_filter]
+        visible_ids = {job["id"] for job in visible}
+        for row in self.table.get_children():
+            if row not in visible_ids:
+                self.table.delete(row)
+        self.empty_heading.set("Bắt đầu lượt tải đầu tiên" if not jobs else "Chưa có tệp trong mục này")
+        if visible:
             self.empty_state.place_forget()
         elif not self.empty_state.winfo_manager():
             self.empty_state.place(x=2, y=44, relwidth=1, width=-22, relheight=1, height=-46)
@@ -1344,14 +1380,14 @@ class App:
                 from .power import shutdown_in
                 self.guarded(lambda: shutdown_in(60))
                 self.status.set("Đã hẹn tắt máy sau 60 giây. Bấm Hủy trong Công cụ để hủy.")
-        for job in jobs:
+        for job in visible:
             progress = f"{min(100, job['downloaded']/job['total']*100):.0f}%" if job["total"] else "—"
             values = (job["filename"], self.locale.text(STATES.get(job["state"], job["state"])), progress,
                       f"{human(job['downloaded'])} / {human(job['total']) if job['total'] else '?'}",
                       f"{human(job['speed'])}/s" if job["speed"] else "—",
                       "—" if job.get("kind") == "media" else f"{job.get('active_connections', 0)}/{job['connections']}",
                       self.locale.text(job.get("safety_note", "Chưa kiểm tra")), "")
-            if self.last_jobs.get(job["id"]) != values:
+            if self.last_jobs.get(job["id"]) != values or not self.table.exists(job["id"]):
                 if self.table.exists(job["id"]):
                     self.table.item(job["id"], values=values)
                 else:

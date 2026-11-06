@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.10 — 2026-11-06
+
+- Filter downloads by All, File, App, Video, Music, Image, Archive or Other without changing history.
+- Use an icon-only Info control; Appearance and Language are inside its menu.
+- Display live download/upload rates and select HIGH, MEDIUM or LOW bandwidth at the bottom left.
+- Use locally bundled Morphicons assets and consistent rounded panels, buttons and text fields in both themes.
+- Preserve native text editing, keyboard shortcuts, inline download details and per-file safety checks.
+
 ## 0.1.9 — 2026-11-06
 
 - Include the single-bar Enter workflow, inline details and per-file Check Safety from 0.1.8.

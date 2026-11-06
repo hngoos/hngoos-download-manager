@@ -74,9 +74,13 @@ class PresentationTests(unittest.TestCase):
         labels = [menu.entrycget(i, "label") for i in range(menu.index("end")+1)
                   if menu.type(i) != "separator"]
         self.assertIn("Ngôn ngữ", labels)
+        self.assertIn("Giao diện", labels)
         self.assertIn("Tiện ích trình duyệt", labels)
         self.assertEqual(len(self.app.header_controls.winfo_children()), 2)
         self.assertFalse(hasattr(self.app, "language_switch"))
+        self.assertFalse(hasattr(self.app, "theme_switch"))
+        self.assertEqual(self.app.info_button.label, "")
+        self.assertIs(self.app.info_button.image, self.app.icons["info"])
         dialog = self.app.open_preferences()
         self.assertIs(self.app.open_preferences(), dialog)
         self.pump()
@@ -88,7 +92,7 @@ class PresentationTests(unittest.TestCase):
         self.app.url.set("https://example.com/download?token=keep-me")
         self.app.filename.set("Tài liệu của tôi.pdf")
         inputs = (self.app.url.get(), self.app.filename.get(), self.app.connections.get())
-        self.app.theme_switch.toggle(False)
+        self.app.set_preference("theme", "light")
         self.app.set_preference("language", "en")
         self.pump()
         self.assertEqual(self.app.store.setting("theme"), "light")
@@ -96,15 +100,14 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(self.app.tabs.tab(0, "text"), "Download")
         self.assertEqual(self.app.table.heading("name", "text"), "FILENAME")
         self.assertEqual(inputs, (self.app.url.get(), self.app.filename.get(), self.app.connections.get()))
-        self.app.bandwidth_selector.current(1)
-        self.app.bandwidth_selector.event_generate("<<ComboboxSelected>>")
+        self.app.set_bandwidth("medium")
         self.pump()
         self.assertEqual(self.app.store.setting("bandwidth_mode"), "medium")
         self.assertEqual(self.app.bandwidth_mode.get(), "Vừa (4 MB/s)")
         self.app.set_preference("language", "vi")
         self.pump()
         self.assertEqual(self.app.tabs.tab(0, "text"), "Tải xuống")
-        self.assertEqual(self.app.bandwidth_display.get(), "Vừa (4 MB/s)")
+        self.assertEqual(self.app.speed_meter.mode.label, "MEDIUM")
 
     def test_confirmation_has_source_specific_options_and_cancel_never_downloads(self):
         from hngoos_dm.download_ui import DownloadEditor
@@ -185,6 +188,10 @@ class PresentationTests(unittest.TestCase):
             self.assertLess(self.app.url_entry.winfo_rootx()+self.app.url_entry.winfo_width(),
                             self.root.winfo_rootx()+self.root.winfo_width())
             self.assertFalse(hasattr(self.app, "download_button"))
+            self.assertLess(self.app.brand_label.winfo_rootx()+self.app.brand_label.winfo_width(),
+                            self.app.categories.winfo_rootx())
+            self.assertLessEqual(self.app.categories.winfo_rootx()+self.app.categories.winfo_width(),
+                                 self.app.info_button.winfo_rootx())
 
     def test_light_theme_has_readable_selection_and_new_dialogs_after_repeated_toggles(self):
         from tkinter import ttk
@@ -196,7 +203,7 @@ class PresentationTests(unittest.TestCase):
 
         style = ttk.Style(self.root)
         for light in (True, False, True):
-            self.app.theme_switch.toggle(not light)
+            self.app.set_preference("theme", "light" if light else "dark")
             self.pump()
             if not light:
                 self.assertEqual(str(style.lookup("TFrame", "background")), "#0f121c")
@@ -217,6 +224,71 @@ class PresentationTests(unittest.TestCase):
             self.assertEqual(dialog.cget("background"), "#f5f6fa")
             self.assertEqual(str(style.lookup("TButton", "foreground")), "#202434")
             dialog.destroy()
+
+    def test_filters_keep_history_and_restore_completed_safety_actions(self):
+        jobs = {}
+        for name, state in (("invoice.pdf", "complete"), ("setup.exe.chuakiemtra", "quarantined"),
+                            ("clip.mp4", "paused"), ("song.mp3", "paused")):
+            path = Path(self.folder.name)/name
+            path.touch()
+            row = self.app.store.create("https://example.com/"+name, path.parent, name)
+            self.app.store.update(row["id"], state=state, output=str(path))
+            jobs[name] = row["id"]
+        self.app.set_filter("all")
+        self.pump()
+        self.assertEqual(set(self.app.table.get_children()), set(jobs.values()))
+        self.app.set_filter("app")
+        self.pump()
+        app_id = jobs["setup.exe.chuakiemtra"]
+        self.assertEqual(self.app.table.get_children(), (app_id,))
+        self.assertIn(app_id, self.app.row_safety_buttons)
+        self.app.set_filter("image")
+        self.pump()
+        self.assertEqual(self.app.table.get_children(), ())
+        self.assertTrue(self.app.empty_state.winfo_ismapped())
+        self.app.set_filter("all")
+        self.pump()
+        self.assertEqual(set(self.app.table.get_children()), set(jobs.values()))
+        self.assertEqual(len(self.app.store.all()), 4)
+        self.assertIn(jobs["invoice.pdf"], self.app.row_safety_buttons)
+
+    def test_speed_meter_ignores_stale_rates_and_includes_torrent_upload(self):
+        from types import SimpleNamespace
+        for name, state, rate in (("active.pdf", "downloading", 2048), ("old.zip", "complete", 9000)):
+            row = self.app.store.create("https://example.com/"+name, Path(self.folder.name), name)
+            self.app.store.update(row["id"], state=state, speed=rate)
+        self.app.torrent_jobs = [SimpleNamespace(closed=False, completed=False,
+            status=lambda: {"download_rate": 1024, "upload_rate": 512}, close=lambda: None)]
+        self.app.set_filter("all")
+        self.pump()
+        self.assertEqual(self.app.speed_meter.down.get(), "3.0 KB/s")
+        self.assertEqual(self.app.speed_meter.up.get(), "512.0 B/s")
+        for mode, label in (("light", "LOW"), ("maximum", "HIGH"), ("medium", "MEDIUM")):
+            self.app.set_bandwidth(mode)
+            self.assertEqual(self.app.store.setting("bandwidth_mode"), mode)
+            self.assertEqual(self.app.manager.bandwidth.rate, self.app.manager.bandwidth.MODES[mode])
+            self.assertEqual(self.app.speed_meter.mode.label, label)
+
+    def test_rounded_fields_preserve_native_editing_return_and_readonly_choices(self):
+        from hngoos_dm.rounded import RoundedCombobox
+        entry = self.app.url_entry
+        entry.insert(0, "https://example.com/original")
+        entry.delete(20, "end")
+        entry.insert("end", "updated.pdf")
+        self.assertEqual(entry.get(), "https://example.com/updated.pdf")
+        with patch.object(self.app, "prepare_download") as prepare:
+            entry.focus_force()
+            self.pump()
+            entry.event_generate("<Return>")
+            self.pump()
+            prepare.assert_called_once()
+        combo = RoundedCombobox(self.root, values=("A", "B"), state="readonly")
+        combo.current(1)
+        self.assertEqual(combo.get(), "B")
+        combo.configure(values=("C", "D"), state="readonly")
+        combo.current(0)
+        self.assertEqual(combo.get(), "C")
+        combo.destroy()
 
     @patch("hngoos_dm.update_ui.check_update", return_value=None)
     def test_update_check_uses_single_dialog_and_stays_inside_app(self, check):

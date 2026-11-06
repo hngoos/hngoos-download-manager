@@ -31,7 +31,8 @@ def load_image(master, path, light=False):
 def load_icons(master, light=False):
     root = files("hngoos_dm")/"assets"/"icons"
     names = ("download", "play", "pause", "check", "shield", "settings", "folder", "list", "video",
-             "file", "search", "plus", "globe", "info", "scissors", "close")
+             "file", "search", "plus", "globe", "info", "scissors", "close", "app", "music", "image", "archive",
+             "arrow-down", "arrow-up", "activity", "sun", "moon")
     return {name: load_image(master, root/(name+".png"), light) for name in names}
 
 
@@ -58,9 +59,17 @@ class MorphPlayback:
         self.frames = [PhotoImage(master=button, file=str(root/f"play-pause-{i}.png")) for i in range(13)]
         self.running = False
         self.generation = 0
+        self.timer = None
+        button.bind("<Destroy>", lambda event: self.cancel() if event.widget == button else None, add="+")
         button.configure(image=self.frames[0], compound="left")
 
+    def cancel(self):
+        if self.timer is not None:
+            self.button.after_cancel(self.timer)
+            self.timer = None
+
     def set_theme(self, light):
+        self.cancel()
         self.generation += 1
         root = files("hngoos_dm")/"assets"/"icons"
         self.frames = [load_image(self.button, root/f"play-pause-{i}.png", light) for i in range(13)]
@@ -70,6 +79,7 @@ class MorphPlayback:
         if running == self.running:
             return
         self.running = running
+        self.cancel()
         self.generation += 1
         generation = self.generation
         indexes = list(range(13)) if running else list(range(12, -1, -1))
@@ -78,9 +88,10 @@ class MorphPlayback:
             self.button.configure(image=self.frames[indexes[-1]])
             return
         def tick(frame=0):
+            self.timer = None
             if generation != self.generation or not self.button.winfo_exists():
                 return
             self.button.configure(image=self.frames[indexes[frame]])
             if frame < 12:
-                self.button.after(16, tick, frame+1)
+                self.timer = self.button.after(16, tick, frame+1)
         tick()
