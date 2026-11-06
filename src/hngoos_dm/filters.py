@@ -12,6 +12,10 @@ APPLICATIONS = {".exe", ".msi", ".msix", ".msixbundle", ".appx", ".appxbundle", 
 
 
 def job_category(job):
+    if job.get("kind") == "media":
+        # Extractors report a title without an extension while downloading.
+        # Classify by the selected output so active audio/video stays visible.
+        return "music" if job.get("media_options", {}).get("audio") else "video"
     name = job["filename"].removesuffix(".chuakiemtra")
     suffix = Path(name).suffix.lower()
     if suffix in APPLICATIONS:

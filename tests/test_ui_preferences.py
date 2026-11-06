@@ -252,6 +252,17 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(len(self.app.store.all()), 4)
         self.assertIn(jobs["invoice.pdf"], self.app.row_safety_buttons)
 
+    def test_active_media_title_without_extension_uses_selected_output_category(self):
+        row = self.app.store.create("https://youtu.be/example", Path(self.folder.name), "Live title without extension")
+        self.app.store.update(row["id"], kind="media", state="downloading", media_options={"audio": "mp3"})
+        self.app.set_filter("music")
+        self.pump()
+        self.assertEqual(self.app.table.get_children(), (row["id"],))
+        self.app.store.update(row["id"], media_options={"audio": ""})
+        self.app.set_filter("video")
+        self.pump()
+        self.assertEqual(self.app.table.get_children(), (row["id"],))
+
     def test_speed_meter_ignores_stale_rates_and_includes_torrent_upload(self):
         from types import SimpleNamespace
         for name, state, rate in (("active.pdf", "downloading", 2048), ("old.zip", "complete", 9000)):

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.11 — 2026-11-06
+
+- Include the rounded category toolbar, icon-only Info and live transfer meter from 0.1.10.
+- Keep active media in Music or Video even when its extractor reports a title without a file extension.
+
 ## 0.1.10 — 2026-11-06
 
 - Filter downloads by All, File, App, Video, Music, Image, Archive or Other without changing history.
