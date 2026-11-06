@@ -2,7 +2,7 @@
 
 [Home](../README.md) · [User guide](USAGE.md) · [Security](SECURITY_MODEL.md)
 
-Applies to **hngoos-download-manager (HDM) v0.1.1** and its Chromium extension. Last updated: **6 November 2026**.
+Applies to **hngoos-download-manager (HDM) v0.1.2** and its Chromium extension. Last updated: **6 November 2026**.
 
 ## Data stored on your device
 
