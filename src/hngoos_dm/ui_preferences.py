@@ -2,10 +2,52 @@
 
 import re
 import tkinter as tk
-from functools import lru_cache
+from functools import lru_cache, wraps
 from string import Formatter
 from tkinter import ttk
 from weakref import WeakKeyDictionary
+
+
+def buffered_presentation(method):
+    """Publish a complete Windows frame after Tk has finished a page/theme change."""
+    @wraps(method)
+    def change(owner, *args, **kwargs):
+        import os
+        window = owner.root if hasattr(owner, "root") else owner.app.root
+        if os.name != "nt" or not window.winfo_ismapped():
+            return method(owner, *args, **kwargs)
+        if getattr(window, "_hdm_paint_depth", 0):
+            return method(owner, *args, **kwargs)
+
+        # Commit a pending resize before WM_SETREDRAW temporarily removes the
+        # native WS_VISIBLE flag. Otherwise Tk can lose the resize/map request.
+        window.update_idletasks()
+
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+        user32.GetAncestor.argtypes = [wintypes.HWND, wintypes.UINT]
+        user32.GetAncestor.restype = wintypes.HWND
+        user32.IsWindowVisible.argtypes = [wintypes.HWND]
+        user32.SendMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
+        user32.RedrawWindow.argtypes = [wintypes.HWND, ctypes.c_void_p, wintypes.HRGN, wintypes.UINT]
+        handle = user32.GetAncestor(window.winfo_id(), 2)
+        if not user32.IsWindowVisible(handle):
+            return method(owner, *args, **kwargs)
+        window._hdm_paint_depth = 1
+        user32.SendMessageW(handle, 0xB, False, 0)  # WM_SETREDRAW
+        try:
+            return method(owner, *args, **kwargs)
+        finally:
+            try:
+                # Drain geometry and Tk display work, never queued mouse/key events.
+                # Nested presentation callbacks remain inside this same transaction.
+                window.update_idletasks()
+            finally:
+                user32.SendMessageW(handle, 0xB, True, 0)
+                user32.RedrawWindow(handle, None, None, 0x185)  # INVALIDATE | ERASE | ALLCHILDREN | UPDATENOW
+                window._hdm_paint_depth = 0
+    return change
 
 
 def apply_window_theme(window, theme):

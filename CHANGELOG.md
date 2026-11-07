@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [0.1.2] — 2026-11-07
+
+- Buffer Windows appearance and page transitions until Tk has completed layout and drawing, preventing partially cleared controls and stale backgrounds.
+- Keep nested presentation changes in one paint transaction and restore drawing after a failed transition.
+- Add native painting regression checks and an opt-in screen capture test.
+
 ## [0.1.1] — 2026-11-07
 
 - Avoid blank native surfaces when toggling preferences or switching between light and dark appearance on Windows.
@@ -24,5 +30,6 @@ First public release of the current Hngoos Download Manager application.
 - One preferences page for downloads, system, appearance, language, browsers and proxy settings.
 - In-app update checks with publisher-signed metadata and SHA-256 verification.
 
+[0.1.2]: https://github.com/hngoos/hngoos-download-manager/releases/tag/v0.1.2
 [0.1.1]: https://github.com/hngoos/hngoos-download-manager/releases/tag/v0.1.1
 [0.1.0]: https://github.com/hngoos/hngoos-download-manager/releases/tag/v0.1.0

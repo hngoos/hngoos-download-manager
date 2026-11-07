@@ -18,6 +18,7 @@ from .platforms import open_path
 from .rounded import RoundedButton
 from .safety import filename_from_url, scan_defender, sha256_file
 from .store import Store
+from .ui_preferences import buffered_presentation
 
 BG, PANEL, TEXT, MUTED, BLUE = "#121212", "#181818", "#eeeeee", "#a6a6a6", "#67d1f4"
 STATES = {"queued": "Đang chờ", "downloading": "Đang tải", "paused": "Tạm dừng",
@@ -233,6 +234,7 @@ class App:
         else:
             self.open_preferences()
 
+    @buffered_presentation
     def open_preferences(self):
         from .information_ui import preferences_page
         return preferences_page(self)
@@ -346,6 +348,7 @@ class App:
             self.open_preferences()
         self.apply_preferences()
 
+    @buffered_presentation
     def set_preference(self, key, value):
         self.store.set_setting(key, value)
         if key == "theme":
@@ -376,6 +379,7 @@ class App:
             self._presentation_pending = True
             self.presentation_timer = self.root.after_idle(self.apply_preferences)
 
+    @buffered_presentation
     def apply_preferences(self):
         if getattr(self, "presentation_timer", None):
             self.root.after_cancel(self.presentation_timer)

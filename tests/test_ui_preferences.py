@@ -46,6 +46,120 @@ class PresentationTests(unittest.TestCase):
             set_proc(handle, -4, previous)
         self.pump()
 
+    @unittest.skipUnless(sys.platform == "win32", "Windows native painting")
+    def test_transitions_hold_native_paint_until_tk_finishes(self):
+        import ctypes
+        from ctypes import wintypes
+
+        import hngoos_dm.ui_preferences as preferences
+
+        user32 = ctypes.windll.user32
+        user32.GetAncestor.argtypes = [wintypes.HWND, wintypes.UINT]
+        user32.GetAncestor.restype = wintypes.HWND
+        user32.IsWindowVisible.argtypes = [wintypes.HWND]
+        handle = user32.GetAncestor(self.root.winfo_id(), 2)
+        observed = []
+        original = preferences.recolor
+
+        def recolor(*args):
+            if args[0] is self.root:
+                observed.append(bool(user32.IsWindowVisible(handle)))
+            return original(*args)
+
+        with patch.object(preferences, "recolor", side_effect=recolor):
+            page = self.app.open_preferences()
+            self.app.set_preference("theme", "light")
+            self.app.set_preference("theme", "dark")
+        self.assertTrue(observed)
+        self.assertEqual(observed, [False]*len(observed),
+                         "Native painting must stay suspended across nested page/theme changes")
+        self.assertTrue(user32.IsWindowVisible(handle))
+        self.assertTrue(page.winfo_ismapped())
+        self.assertTrue(self.app.preference_directory.control.winfo_ismapped())
+        original_redraw = self.app.schedule_redraw
+        observed.clear()
+
+        def redraw():
+            observed.append(bool(user32.IsWindowVisible(handle)))
+            original_redraw()
+
+        with patch.object(self.app, "schedule_redraw", side_effect=redraw):
+            self.app.open_information()
+            self.app.open_preferences()
+        self.assertTrue(observed)
+        self.assertEqual(observed, [False]*len(observed))
+        self.assertTrue(user32.IsWindowVisible(handle))
+
+    @unittest.skipUnless(sys.platform == "win32", "Windows native painting")
+    def test_failed_presentation_restores_painting_without_showing_hidden_windows(self):
+        from hngoos_dm.ui_preferences import buffered_presentation
+
+        observed = []
+
+        @buffered_presentation
+        def fail(owner):
+            observed.append(True)
+            raise ValueError("presentation fixture")
+
+        with self.assertRaisesRegex(ValueError, "presentation fixture"):
+            fail(self.app)
+        self.assertEqual(self.root._hdm_paint_depth, 0)
+        self.assertTrue(self.root.winfo_viewable())
+        self.root.withdraw()
+        fail_without_mapping = buffered_presentation(lambda owner: observed.append(True))
+        fail_without_mapping(self.app)
+        self.root.update_idletasks()
+        self.assertFalse(self.root.winfo_ismapped())
+        self.assertEqual(observed, [True, True])
+
+    @unittest.skipUnless(sys.platform == "win32" and __import__("os").environ.get("HDM_NATIVE_RENDER_TESTS") == "1",
+                         "Requires an unobstructed Windows desktop")
+    def test_theme_and_page_transitions_do_not_publish_partial_frames(self):
+        """Read the screen, never PrintWindow: requesting a repaint hides this regression."""
+        from PIL import ImageChops, ImageGrab
+
+        import hngoos_dm.ui_preferences as preferences
+
+        self.root.geometry("1280x800+30+30")
+        self.root.attributes("-topmost", True)
+        page = self.app.open_preferences()
+        self.pump(.5)
+        bounds = (self.root.winfo_rootx(), self.root.winfo_rooty(),
+                  self.root.winfo_rootx()+self.root.winfo_width(),
+                  self.root.winfo_rooty()+self.root.winfo_height()-80)
+
+        def assert_atomic(action, owner, name):
+            before = ImageGrab.grab(bbox=bounds, all_screens=True).convert("RGB")
+            captured = []
+            original = getattr(owner, name)
+
+            def observe(*args, **kwargs):
+                result = original(*args, **kwargs)
+                if name == "recolor" and args[0] is not self.root:
+                    return result
+                # Pause halfway through the transition, giving Windows time to
+                # expose any prematurely cleared or partly recolored children.
+                self.root.update_idletasks()
+                time.sleep(.12)
+                captured.append(ImageGrab.grab(bbox=bounds, all_screens=True).convert("RGB"))
+                return result
+
+            with patch.object(owner, name, side_effect=observe):
+                action()
+            self.pump(.3)
+            difference = ImageChops.difference(before, captured[0])
+            changed = sum(max(pixel) > 12 for pixel in difference.getdata())
+            self.assertLess(changed/(before.width*before.height), .002,
+                            "The desktop exposed an unfinished theme/page transition")
+
+        for theme in ("light", "dark"):
+            assert_atomic(lambda theme=theme: self.app.set_preference("theme", theme),
+                          preferences, "recolor")
+        assert_atomic(self.app.open_information, self.app, "schedule_redraw")
+        self.assertFalse(page.winfo_ismapped())
+        assert_atomic(self.app.open_preferences, self.app, "schedule_redraw")
+        self.assertTrue(page.winfo_ismapped())
+
     def test_selected_status_and_last_column_icons_survive_theme_changes(self):
         for theme in ("dark", "light", "dark"):
             self.app.set_preference("theme", theme)

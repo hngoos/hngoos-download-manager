@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from .rounded import RoundedPanel
+from .ui_preferences import buffered_presentation
 
 REPOSITORY = "https://github.com/hngoos/hngoos-download-manager"
 
@@ -151,6 +152,7 @@ class ContentPage(ttk.Frame):
         self.body.pack(fill="both", expand=True)
         self.show()
 
+    @buffered_presentation
     def show(self):
         app = self.app
         if self in app.page_stack:
@@ -177,6 +179,7 @@ class ContentPage(ttk.Frame):
             self.pack(fill="both", expand=True)
         app.schedule_redraw()
 
+    @buffered_presentation
     def hide(self):
         app = self.app
         if self not in app.page_stack:
