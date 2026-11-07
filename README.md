@@ -27,7 +27,7 @@ formats, and manage transfers in one place.
 
 ## Download
 
-The latest published release is **v0.1.1**. The `main` branch may contain
+The latest published release is **v0.1.3**. The `main` branch may contain
 changes listed under [Unreleased](CHANGELOG.md#unreleased).
 
 ### Windows
@@ -36,7 +36,7 @@ changes listed under [Unreleased](CHANGELOG.md#unreleased).
 
 #### Download
 
-[Download the Windows installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Setup-0.1.1.exe)
+[Download the Windows installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.3/HDM-Setup-0.1.3.exe)
 
 Or install from Command Prompt (CMD):
 
@@ -58,15 +58,15 @@ The command verifies the published package size and SHA-256 before starting setu
 
 #### Download
 
-- [Download for Apple Silicon](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-macOS-arm64.dmg)
-- [Download for Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-macOS-x64.dmg)
+- [Download for Apple Silicon](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.3/HDM-0.1.3-macOS-arm64.dmg)
+- [Download for Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.3/HDM-0.1.3-macOS-x64.dmg)
 
 Or download the matching package from Terminal:
 
 ```sh
 hdm_arch=$(uname -m)
 [ "$hdm_arch" = "x86_64" ] && hdm_arch=x64
-curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-macOS-$hdm_arch.dmg" -o HDM.dmg
+curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.3/HDM-0.1.3-macOS-$hdm_arch.dmg" -o HDM.dmg
 ```
 
 #### Installation
