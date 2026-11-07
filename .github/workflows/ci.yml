@@ -1,0 +1,101 @@
+name: Test and build Windows application
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [windows-latest]
+        python: ['3.11', '3.13']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -e ".[excel,media,processing,pdf,torrent,updates,dev]"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - run: node --test browser-extension/test/*.test.js
+      - run: python -m ruff check .
+      - if: runner.os == 'Windows'
+        run: python scripts/fetch-archive-tools.py
+      - run: python -m unittest discover -s tests -v
+      - if: runner.os == 'Windows'
+        run: python -m hngoos_dm --smoke-test
+  build:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.13'
+          architecture: x64
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - shell: pwsh
+        run: ./scripts/build.ps1
+      - shell: pwsh
+        timeout-minutes: 2
+        run: |
+          $appProcess = Start-Process -FilePath ./dist/HDM.exe -ArgumentList '--smoke-test' -Wait -PassThru -WindowStyle Hidden
+          if ($appProcess.ExitCode -ne 0) { throw "Packaged app smoke test failed: $($appProcess.ExitCode)" }
+      - shell: pwsh
+        timeout-minutes: 4
+        run: |
+          $report = Join-Path (Get-Location) 'dist/packaged-checks.json'
+          $appProcess = Start-Process -FilePath ./dist/HDM.exe -ArgumentList '--self-test-report', $report -Wait -PassThru -WindowStyle Hidden
+          Get-Content $report
+          if ($appProcess.ExitCode -ne 0) { throw 'Packaged feature checks failed' }
+      - shell: pwsh
+        run: '& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" scripts/installer.iss'
+      - name: Verify update runtime handoff
+        shell: pwsh
+        timeout-minutes: 5
+        run: ./.venv-build/Scripts/python.exe scripts/check-update-handoff.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: HDM-Windows-x64
+          path: |
+            dist/HDM-Setup-*.exe
+            dist/HDM-Browser-Extension.zip
+  browser:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -e ".[web,pdf,build]"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix browser-extension --ignore-scripts
+      - run: python scripts/package-extension.py
+      - run: python -m playwright install chromium
+      - run: python -m PyInstaller --noconfirm --onefile --console --name HDMBridge --paths src src/hngoos_dm/bridge_launcher.py
+      - run: python -m unittest discover -s tests -p test_browser_integration.py -v
+        env:
+          HNGOOS_BROWSER_TESTS: '1'
+          HNGOOS_BRIDGE_EXE: dist/HDMBridge.exe
+      - run: python -m unittest discover -s tests -p test_invoices.py -v
+        env:
+          HNGOOS_BROWSER_TESTS: '1'

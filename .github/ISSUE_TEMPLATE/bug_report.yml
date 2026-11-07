@@ -1,0 +1,32 @@
+name: Bug report
+description: Report a reproducible problem using non-sensitive data.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include cookies, API keys, URLs containing tokens, personal files or download history databases. Report vulnerabilities privately at https://github.com/hngoos/hngoos-download-manager/security/advisories/new.
+  - type: input
+    id: version
+    attributes:
+      label: HDM version and operating system
+      placeholder: HDM v0.1.1, Windows 11 x64; include browser and extension versions if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Use a public URL or synthetic data when an example is needed.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Additional information
+      description: Include error messages or screenshots with personal information removed.
