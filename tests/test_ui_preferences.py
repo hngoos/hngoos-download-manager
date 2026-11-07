@@ -1,6 +1,7 @@
 """UI behavior checks; headless runners exercise these in the packaged smoke test."""
 
 import gc
+import sys
 import tempfile
 import time
 import tkinter as tk
@@ -12,6 +13,39 @@ from hngoos_dm.app import App
 
 
 class PresentationTests(unittest.TestCase):
+    @unittest.skipUnless(sys.platform == "win32", "Windows native painting")
+    def test_native_redraw_does_not_erase_children_before_tk_can_repaint(self):
+        import ctypes
+        from ctypes import wintypes
+
+        from hngoos_dm.ui_preferences import redraw_window
+
+        user32 = ctypes.windll.user32
+        set_proc = user32.SetWindowLongPtrW if ctypes.sizeof(ctypes.c_void_p) == 8 else user32.SetWindowLongW
+        set_proc.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_ssize_t]
+        set_proc.restype = ctypes.c_ssize_t
+        user32.CallWindowProcW.argtypes = [ctypes.c_void_p, wintypes.HWND, wintypes.UINT,
+                                          wintypes.WPARAM, wintypes.LPARAM]
+        user32.CallWindowProcW.restype = ctypes.c_ssize_t
+        callback_type = ctypes.WINFUNCTYPE(ctypes.c_ssize_t, wintypes.HWND, wintypes.UINT,
+                                          wintypes.WPARAM, wintypes.LPARAM)
+        handle = self.app.empty_panel.winfo_id()
+        erases = []
+
+        @callback_type
+        def observe(hwnd, message, wparam, lparam):
+            if message == 0x14:  # WM_ERASEBKGND
+                erases.append(message)
+            return user32.CallWindowProcW(previous, hwnd, message, wparam, lparam)
+
+        previous = set_proc(handle, -4, ctypes.cast(observe, ctypes.c_void_p).value)
+        try:
+            redraw_window(self.root)
+            self.assertEqual(erases, [], "Native erasure must not expose a blank panel before Tk paints")
+        finally:
+            set_proc(handle, -4, previous)
+        self.pump()
+
     def test_selected_status_and_last_column_icons_survive_theme_changes(self):
         for theme in ("dark", "light", "dark"):
             self.app.set_preference("theme", theme)

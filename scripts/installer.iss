@@ -1,4 +1,4 @@
-#define AppVersion "0.1.0"
+#define AppVersion "0.1.1"
 [Setup]
 AppId={{E82104D8-7840-4C75-9E28-3229D109FD13}
 AppName=Hngoos Download Manager

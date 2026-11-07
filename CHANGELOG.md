@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## [0.1.1] — 2026-11-07
+
+- Avoid blank native surfaces when toggling preferences or switching between light and dark appearance on Windows.
 - Remove Windows download history and settings on uninstall so reinstalling starts with an empty journal; keep downloaded files and preserve history during upgrades.
 - Prevent standalone media downloads from probing unconfigured JavaScript runtimes through inaccessible Windows PATH junctions.
 - Restart partial downloads when their URL changes, preventing mixed bytes from unrelated resources with identical ETags and sizes.
@@ -21,4 +24,5 @@ First public release of the current Hngoos Download Manager application.
 - One preferences page for downloads, system, appearance, language, browsers and proxy settings.
 - In-app update checks with publisher-signed metadata and SHA-256 verification.
 
+[0.1.1]: https://github.com/hngoos/hngoos-download-manager/releases/tag/v0.1.1
 [0.1.0]: https://github.com/hngoos/hngoos-download-manager/releases/tag/v0.1.0

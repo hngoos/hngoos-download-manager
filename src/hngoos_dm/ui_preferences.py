@@ -38,9 +38,10 @@ def redraw_window(window):
     user32.GetAncestor.restype = wintypes.HWND
     user32.RedrawWindow.argtypes = [wintypes.HWND, ctypes.c_void_p, wintypes.HRGN, wintypes.UINT]
     handle = user32.GetAncestor(window.winfo_id(), 2)
-    # Invalidate + erase + all children + update now + non-client frame.
-    # Tk's stored colors may already be correct while DWM still shows old pixels.
-    user32.RedrawWindow(handle, None, None, 0x585)
+    # Invalidate all children and the frame, suppressing background erasure.
+    # Tk paints its widgets on idle. Erasing and forcing WM_PAINT synchronously
+    # exposes blank child surfaces before those Tk draws have run.
+    user32.RedrawWindow(handle, None, None, 0x4A1)
 
 
 def apply_checkbox_style(root, style, theme):
