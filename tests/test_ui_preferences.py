@@ -329,6 +329,21 @@ class PresentationTests(unittest.TestCase):
         self.pump()
         self.assertEqual(surface.presented, ("light", "en"))
 
+    def test_preferences_open_when_tk_does_not_support_iso_left_tab(self):
+        original = tk.Misc.bind
+
+        def portable_bind(widget, sequence=None, *args, **kwargs):
+            if sequence and "ISO_Left_Tab" in sequence:
+                raise tk.TclError('bad event type or keysym "ISO_Left_Tab"')
+            return original(widget, sequence, *args, **kwargs)
+
+        with patch.object(tk.Misc, "bind", portable_bind):
+            page = self.app.open_preferences()
+            self.pump()
+        self.assertTrue(page.surface.winfo_ismapped())
+        self.assertTrue(page.surface.editors)
+        self.assertTrue(page.surface.bind("<Shift-Tab>"))
+
     def test_shared_surface_keyboard_modal_and_recreation_preserve_actions(self):
         from hngoos_dm.information_ui import CenteredCard
 

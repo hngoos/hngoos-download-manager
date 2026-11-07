@@ -8,6 +8,7 @@
 - Retain displayed artwork until its replacement frame is ready and coalesce pending pointer actions to avoid replaying obsolete selections.
 - Preserve native text editing, folder selection and page navigation on the shared preferences surface.
 - Add regression coverage for rapid language and appearance changes, image lifetime and settings synchronization.
+- Keep keyboard navigation compatible with the Tk versions bundled with supported Python releases on Windows and macOS.
 
 ## [0.1.2] — 2026-11-07
 

@@ -38,7 +38,6 @@ class PreferencesSurface(tk.Canvas):
         self.bind("<space>", self.activate)
         self.bind("<Tab>", lambda event: self.move_focus(1))
         self.bind("<Shift-Tab>", lambda event: self.move_focus(-1))
-        self.bind("<ISO_Left_Tab>", lambda event: self.move_focus(-1))
         self.bind("<Configure>", self.schedule)
         self.bind("<Destroy>", self.cleanup, add="+")
         self.configure_binding = app.shell.bind("<Configure>", self.schedule, add="+")
@@ -165,7 +164,7 @@ class PreferencesSurface(tk.Canvas):
                 field.bind(sequence, lambda event, source=widget, sequence=sequence:
                            source.event_generate(sequence))
             field.bind("<FocusIn>", lambda _event: setattr(self, "focused", None))
-            for sequence, direction in (("<Tab>", 1), ("<Shift-Tab>", -1), ("<ISO_Left_Tab>", -1)):
+            for sequence, direction in (("<Tab>", 1), ("<Shift-Tab>", -1)):
                 field.bind(sequence, lambda _event, direction=direction, field=field:
                            self.move_focus(direction, field))
             self.editors[widget] = field
