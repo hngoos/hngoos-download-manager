@@ -16,6 +16,27 @@ def checksums(path, algorithms=("md5", "sha1", "sha256", "sha512")):
     return {name: digest.hexdigest() for name, digest in values.items()}
 
 
+def assemble_parts(parts, destination, stop):
+    """Merge durable ranges and calculate all integrity hashes in the same read pass."""
+    values = {name: hashlib.new(name, usedforsecurity=False) for name in ("md5", "sha1", "sha256", "sha512")}
+    with Path(destination).open("wb") as output:
+        for part in parts:
+            if stop.is_set():
+                from .policy import TransferCancelled
+                raise TransferCancelled()
+            with Path(part).open("rb") as source:
+                while block := source.read(1024*1024):
+                    if stop.is_set():
+                        from .policy import TransferCancelled
+                        raise TransferCancelled()
+                    output.write(block)
+                    for digest in values.values():
+                        digest.update(block)
+        output.flush()
+        os.fsync(output.fileno())
+    return {name: digest.hexdigest() for name, digest in values.items()}
+
+
 def mark_internet(path):
     if os.name == "nt":
         try:

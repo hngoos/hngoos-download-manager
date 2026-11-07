@@ -25,7 +25,7 @@ extension and development tools.
 | Node.js | 22 or later, with npm |
 | Chromium browser | For manual extension testing |
 
-Windows is the primary release platform. macOS and Linux editions are previews;
+HDM supports Windows and macOS;
 see [platform support](../docs/PLATFORMS.md) for available features and dependencies.
 
 ## Get the source
@@ -58,7 +58,7 @@ RAR/7z inspection. Windows installer builds also require Inno Setup 6.
 </details>
 
 <details>
-<summary><strong>macOS / Linux</strong></summary>
+<summary><strong>macOS</strong></summary>
 
 Install Python with Tkinter and venv support for your platform. See
 [platform prerequisites](../docs/PLATFORMS.md#optional-installation-from-source).
@@ -82,6 +82,13 @@ features you are changing.
 
 ## Find your way around
 
+For native UI work, run `python scripts/dev-native.py` with your virtual environment.
+It opens a working desktop app with separate data in `tools/native-live-data`.
+UI edits refresh automatically; F5 also refreshes the view. Active HTTP transfers
+keep the same download manager, and open dialogs defer refresh until dismissed.
+Backend changes require restarting the development session. This mode does not
+open a web server or modify the installed application's history.
+
 | Path | Contents |
 | --- | --- |
 | [`src/hngoos_dm/`](../src/hngoos_dm) | Desktop app, download engine and native messaging bridge |
@@ -102,8 +109,8 @@ npm test --prefix browser-extension
 .\.venv\Scripts\python.exe -m hngoos_dm --smoke-test
 ```
 
-On macOS/Linux, replace `.\.venv\Scripts\python.exe` with `.venv/bin/python`.
-The UI smoke test needs a graphical desktop, or a virtual display on Linux.
+On macOS, replace `.\.venv\Scripts\python.exe` with `.venv/bin/python`.
+The UI smoke test needs a graphical desktop.
 Tests that require optional dependencies or browser integration may be skipped
 unless those dependencies are installed and the relevant test mode is enabled.
 
@@ -158,7 +165,7 @@ and `dist/`. Check the packaged EXE with `--smoke-test` and
 </details>
 
 <details>
-<summary><strong>macOS / Linux packages</strong></summary>
+<summary><strong>macOS packages</strong></summary>
 
 Build on the target operating system with the optional build dependencies
 installed:
@@ -167,7 +174,7 @@ installed:
 .venv/bin/python scripts/build-desktop.py
 ```
 
-The workflow builds macOS DMGs and Linux DEB/AppImage packages, then checks the
+The workflow builds Apple Silicon and Intel macOS DMGs, then checks the
 packaged UI and native messaging bridge. See [platform support](../docs/PLATFORMS.md)
 for the tested operating systems and packaging requirements.
 

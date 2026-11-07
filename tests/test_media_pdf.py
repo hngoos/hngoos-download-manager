@@ -7,6 +7,34 @@ from hngoos_dm.media import find_ffmpeg
 
 
 class MediaQualityTests(unittest.TestCase):
+    def test_portrait_quality_uses_source_tier_instead_of_pixel_height(self):
+        from hngoos_dm.media import video_quality
+        self.assertEqual(video_quality({"format_note": "360p", "width": 360, "height": 468}), 360)
+        self.assertEqual(video_quality({"width": 144, "height": 188}), 144)
+        self.assertEqual(video_quality({"width": 1920, "height": 1080}), 1080)
+        self.assertEqual(video_quality({"format_note": "1080p60", "height": 1440}), 1080)
+
+    def test_youtube_runtime_configuration_is_shared_by_preview_and_download(self):
+        from unittest.mock import patch
+
+        from hngoos_dm.media import ydl_options
+        with patch("hngoos_dm.media.shutil.which", side_effect=lambda name: "C:/Node/node.exe" if name == "node" else None):
+            settings = ydl_options("out")
+        self.assertEqual(settings["js_runtimes"], {"node": {"path": "C:/Node/node.exe"}})
+
+    def test_explicit_source_streams_keep_selected_container_and_require_merger(self):
+        from hngoos_dm.media import MediaOptions, ydl_options
+        options = MediaOptions(container="webm", format_id="247+251")
+        settings = ydl_options("out", options, ffmpeg="ffmpeg")
+        self.assertEqual(settings["format"], "247+251")
+        self.assertEqual(settings["merge_output_format"], "webm")
+        self.assertNotIn("postprocessors", settings)
+        with self.assertRaises(ValueError):
+            ydl_options("out", options)
+        native_audio = ydl_options("out", MediaOptions(format_id="140"))
+        self.assertEqual(native_audio["format"], "140")
+        self.assertNotIn("postprocessors", native_audio)
+
     def test_real_selector_respects_cap_and_refuses_only_oversize_formats(self):
         from yt_dlp import YoutubeDL
         from yt_dlp.utils import DownloadError, ExtractorError

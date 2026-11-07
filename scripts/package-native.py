@@ -106,6 +106,7 @@ def package_macos():
     image_root = ROOT/'build/native-packages/dmg'
     image_root.mkdir(parents=True, exist_ok=False)
     shutil.copytree(ROOT/'dist/HDM.app', image_root/'HDM.app', symlinks=True)
+    shutil.copy2(ROOT/'dist/HDM-Browser-Extension.zip', image_root/'HDM-Browser-Extension.zip')
     (image_root/'Applications').symlink_to('/Applications')
     image = ROOT/f'dist/HDM-{__version__}-macOS-{arch}.dmg'
     command('hdiutil', 'create', '-volname', 'HDM', '-srcfolder', image_root, '-ov', '-format', 'UDZO', image)
@@ -169,10 +170,12 @@ def verify_packages(packages):
 
 
 if __name__ == '__main__':
+    if sys.platform != 'darwin':
+        raise SystemExit('Native DMG packaging requires macOS. Use build.ps1 on Windows.')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verify', action='store_true')
     args = parser.parse_args()
-    packages = package_macos() if sys.platform == 'darwin' else package_linux()
+    packages = package_macos()
     if args.verify:
         verify_packages(packages)
     for package in packages:

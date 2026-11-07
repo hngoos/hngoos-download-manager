@@ -1,4 +1,5 @@
 import {mountIcon, icons} from './icons.js';
+import {setCaptureEnabled} from './capture-settings.js';
 const chrome = globalThis.browser || globalThis.chrome;
 const controls = {};
 for (const [id, name] of Object.entries({download: 'download', video: 'video', enable: 'shield', allow: 'globe', reset: 'settings'})) {
@@ -31,10 +32,13 @@ document.getElementById('mode').value = settings.mode || 'off';
 document.getElementById('session').checked = !!settings.useSession;
 document.getElementById('takeover').checked = !!settings.takeover;
 document.getElementById('takeover').onchange = async event => {
-  let enabled = event.target.checked;
-  if (enabled) enabled = await chrome.permissions.request({permissions: ['downloads']});
-  event.target.checked = enabled;
-  await chrome.storage.local.set({takeover: enabled});
+  const enabled = event.target.checked;
+  try {
+    if (!await setCaptureEnabled(chrome, enabled)) event.target.checked = !enabled;
+  } catch (error) {
+    event.target.checked = !enabled;
+    status.textContent = error.message;
+  }
 };
 document.getElementById('session').onchange = async event => {
   if (event.target.checked) {

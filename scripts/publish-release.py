@@ -29,8 +29,7 @@ assert notes.count(MANIFEST_START) == notes.count(MANIFEST_END) == 1
 payload = verify_manifest(json.loads(notes.split(MANIFEST_START, 1)[1].split(MANIFEST_END, 1)[0]))
 assert payload["version"] == __version__
 required = {f"HDM-Setup-{__version__}.exe", "HDM-Browser-Extension.zip"}
-allowed = required | {f"HDM-{__version__}-macOS-{arch}.dmg" for arch in ("arm64", "x64")} | {
-    f"HDM-{__version__}-Linux-x64.deb", f"HDM-{__version__}-Linux-x64.AppImage"}
+allowed = required | {f"HDM-{__version__}-macOS-{arch}.dmg" for arch in ("arm64", "x64")}
 names = {item["name"] for item in payload["assets"]}
 assert required <= names <= allowed
 assert len(names) == len(payload["assets"])

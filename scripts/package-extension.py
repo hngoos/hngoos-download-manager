@@ -6,7 +6,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 root = Path(__file__).resolve().parents[1]
 files = ("manifest.json", "background.js", "filters.js", "options.html", "options.js",
-         "popup.html", "popup.js", "style.css", "video.js", "takeover.js", "icons.js", "invoice-capture.js",
+         "popup.html", "popup.js", "style.css", "video.js", "takeover.js", "capture-settings.js", "capture-insert.js", "icons.js", "invoice-capture.js",
          "licenses/morphicons.txt", "licenses/lucide.txt", "media-capture.js", "site-protection.js",
          "assets/icons/hdm-16.png", "assets/icons/hdm-32.png", "assets/icons/hdm-48.png", "assets/icons/hdm-128.png")
 destination = root/"dist/HDM-Browser-Extension.zip"

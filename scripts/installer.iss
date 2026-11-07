@@ -1,4 +1,4 @@
-#define AppVersion "0.1.13"
+#define AppVersion "0.1.0"
 [Setup]
 AppId={{E82104D8-7840-4C75-9E28-3229D109FD13}
 AppName=Hngoos Download Manager
@@ -21,6 +21,7 @@ UninstallDisplayIcon={app}\HDM.exe
 [Files]
 Source: "..\dist\HDM.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\HDMBridge.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\HDM-Browser-Extension.zip"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\browser-extension\*"; DestDir: "{app}\browser-extension"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion

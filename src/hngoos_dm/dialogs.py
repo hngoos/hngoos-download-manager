@@ -7,13 +7,16 @@ from tkinter import filedialog, messagebox, ttk
 
 def media_tools(app, initial=None):
     dialog = tk.Toplevel(app.root)
-    dialog.title("Cắt / ghép / nén video, nhạc")
+    dialog.title(app.locale.text("Cắt / ghép / nén video, nhạc"))
     dialog.geometry("760x650")
     frame = ttk.Frame(dialog, padding=20)
     frame.pack(fill="both", expand=True)
     ttk.Label(frame, text="Xử lý video và âm thanh", font=("Segoe UI", 18, "bold")).pack(anchor="w", pady=10)
     mode = tk.StringVar(value="Cắt nhanh")
-    ttk.Combobox(frame, textvariable=mode, state="readonly", values=("Cắt nhanh", "Cắt chính xác", "Ghép", "Nén MP4", "Đổi MP4", "Tách MP3", "Tách M4A")).pack(fill="x", pady=8)
+    from .rounded import ChoiceRow
+    ChoiceRow(frame, mode, [(label, label) for label in
+              ("Cắt nhanh", "Cắt chính xác", "Ghép", "Nén MP4", "Đổi MP4", "Tách MP3", "Tách M4A")],
+              lambda: None, app).pack(fill="x", pady=8)
     listing = tk.Listbox(frame, bg="#181818", fg="#eeeeee", height=7, selectmode="browse")
     listing.pack(fill="both", expand=True, pady=8)
     if initial:
@@ -21,7 +24,7 @@ def media_tools(app, initial=None):
     actions = ttk.Frame(frame)
     actions.pack(fill="x")
     def add():
-        for path in filedialog.askopenfilenames(title="Chọn video hoặc nhạc"):
+        for path in filedialog.askopenfilenames(title=app.locale.text("Chọn video hoặc nhạc")):
             listing.insert("end", path)
     def move(offset):
         selected = listing.curselection()
@@ -63,7 +66,7 @@ def media_tools(app, initial=None):
         try:
             cut_start, cut_end, target_mb = float(start.get()), float(end.get()), float(target.get())
         except ValueError:
-            messagebox.showerror("Giá trị", "Thời gian và dung lượng phải là số.", parent=dialog)
+            messagebox.showerror(app.locale.text("Giá trị"), app.locale.text("Thời gian và dung lượng phải là số."), parent=dialog)
             return
         stop.clear()
         run_button.configure(state="disabled")
@@ -92,18 +95,18 @@ def media_tools(app, initial=None):
 
 
 def redact_pdf(app):
-    source = filedialog.askopenfilename(title="Chọn PDF cần xóa thông tin", filetypes=[("PDF", "*.pdf")])
+    source = filedialog.askopenfilename(title=app.locale.text("Chọn PDF cần xóa thông tin"), filetypes=[(app.locale.text("PDF"), "*.pdf")])
     if not source:
         return
     from .pdf_tools import preview, redact
     try:
         image, count = preview(source)
     except Exception as exc:  # noqa: BLE001 -- Optional PDF library errors belong in the UI.
-        messagebox.showerror("PDF", str(exc), parent=app.root)
+        messagebox.showerror(app.locale.text("PDF"), app.locale.text(str(exc)), parent=app.root)
         return
     from PIL import ImageTk
     dialog = tk.Toplevel(app.root)
-    dialog.title("Che thông tin PDF — xóa thật, xuất bản raster")
+    dialog.title(app.locale.text("Che thông tin PDF — xóa thật, xuất bản raster"))
     dialog.geometry("950x850")
     frame = ttk.Frame(dialog, padding=14)
     frame.pack(fill="both", expand=True)
@@ -128,7 +131,8 @@ def redact_pdf(app):
         canvas.create_image(x, y, image=photo[0], anchor="nw")
         for x0, y0, x1, y1 in rectangles.get(page_index[0], []):
             canvas.create_rectangle(x+x0*width, y+y0*height, x+x1*width, y+y1*height, fill="black")
-        page_label.set(f"Trang {page_index[0]+1}/{count} · {sum(map(len, rectangles.values()))} vùng xóa")
+        page_label.set(app.locale.text("Trang {page}/{count} · {regions} vùng xóa").format(
+            page=page_index[0]+1, count=count, regions=sum(map(len, rectangles.values()))))
     def normalized(event):
         x, y, width, height = geometry
         return max(0, min(1, (event.x-x)/width)), max(0, min(1, (event.y-y)/height))
@@ -158,7 +162,7 @@ def redact_pdf(app):
         if destination:
             selected = {page: list(boxes) for page, boxes in rectangles.items()}
             app.background(lambda: redact(source, destination, selected), lambda path: messagebox.showinfo(
-                "PDF", f"Đã xuất bản xóa thông tin:\n{path}", parent=app.root))
+                app.locale.text("PDF"), app.locale.text(f"Đã xuất bản xóa thông tin:\n{path}"), parent=app.root))
     canvas.bind("<Configure>", draw)
     canvas.bind("<Button-1>", begin)
     canvas.bind("<ButtonRelease-1>", finish)
@@ -175,14 +179,14 @@ def torrent_dialog(app, source=None, folder=None):
 
     from .torrent import TorrentJob
     if source is None:
-        source = askstring("Torrent / magnet", "Dán magnet, hoặc để trống rồi bấm OK để chọn tệp .torrent", parent=app.root)
+        source = askstring(app.locale.text("Torrent / magnet"), app.locale.text("Dán magnet, hoặc để trống rồi bấm OK để chọn tệp .torrent"), parent=app.root)
     if source is None:
         return
     if not source.strip():
-        source = filedialog.askopenfilename(filetypes=[("Torrent", "*.torrent")])
+        source = filedialog.askopenfilename(filetypes=[(app.locale.text("Torrent"), "*.torrent")])
     if not source:
         return
-    folder = folder or filedialog.askdirectory(title="Thư mục tải torrent")
+    folder = folder or filedialog.askdirectory(title=app.locale.text("Thư mục tải torrent"))
     if not folder:
         return
     job = TorrentJob(source, folder, state_directory=app.data_dir/"torrents")
@@ -193,7 +197,7 @@ def torrent_dialog(app, source=None, folder=None):
         app.torrent_jobs = []
     app.torrent_jobs.append(job)
     dialog = tk.Toplevel(app.root)
-    dialog.title("Torrent — chọn tệp tải, dừng chia sẻ sau hoàn tất")
+    dialog.title(app.locale.text("Torrent — chọn tệp tải, dừng chia sẻ sau hoàn tất"))
     dialog.geometry("850x550")
     frame = ttk.Frame(dialog, padding=20)
     frame.pack(fill="both", expand=True)
@@ -218,8 +222,10 @@ def torrent_dialog(app, source=None, folder=None):
                             listing.selection_set(row)
                     loaded[0] = True
             info = job.status()
-            status.set(f"{'Hoàn tất, đã dừng seed' if info['complete'] else 'Tiến độ'}: {info['progress']*100:.1f}% · "
-                       f"{info['download_rate']/1024:.1f} KB/s · {info['peers']} peers · {info['error']}")
+            label = app.locale.text("Hoàn tất, đã dừng chia sẻ" if info['complete'] else "Tiến độ")
+            peers = app.locale.text("máy ngang hàng")
+            status.set(f"{label}: {info['progress']*100:.1f}% · "
+                       f"{info['download_rate']/1024:.1f} KB/s · {info['peers']} {peers} · {info['error']}")
         except (ValueError, RuntimeError) as exc:
             status.set(str(exc))
         dialog.after(500, refresh)
@@ -239,10 +245,10 @@ def torrent_dialog(app, source=None, folder=None):
 def torrent_history_dialog(app):
     history = app.store.setting("torrent_history", [])
     if not history:
-        messagebox.showinfo("Torrent", "Chưa có torrent đã lưu.", parent=app.root)
+        messagebox.showinfo(app.locale.text("Torrent"), app.locale.text("Chưa có torrent đã lưu."), parent=app.root)
         return
     dialog = tk.Toplevel(app.root)
-    dialog.title("Mở lại torrent đã lưu")
+    dialog.title(app.locale.text("Mở lại torrent đã lưu"))
     listing = tk.Listbox(dialog, width=100, height=15, exportselection=False)
     listing.pack(fill="both", expand=True, padx=16, pady=16)
     for item in history:

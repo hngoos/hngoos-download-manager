@@ -52,7 +52,10 @@ class Store:
     def update(self, job_id, **changes):
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
-            job = json.loads(db.execute("SELECT data FROM jobs WHERE id=?", (job_id,)).fetchone()[0])
+            row = db.execute("SELECT data FROM jobs WHERE id=?", (job_id,)).fetchone()
+            if row is None:
+                raise KeyError(job_id)
+            job = json.loads(row[0])
             job.update(changes)
             db.execute("UPDATE jobs SET data=? WHERE id=?", (json.dumps(job), job_id))
         return job
@@ -60,6 +63,12 @@ class Store:
     def all(self):
         with self.connect() as db:
             return [json.loads(row[0]) for row in db.execute("SELECT data FROM jobs ORDER BY rowid DESC")]
+
+    def delete(self, job_id):
+        with self.connect() as db:
+            db.execute("DELETE FROM jobs WHERE id=?", (job_id,))
+            db.execute("DELETE FROM chunks WHERE job=?", (job_id,))
+            db.execute("DELETE FROM events WHERE job=?", (job_id,))
 
     def chunks(self, job_id):
         with self.connect() as db:
@@ -81,6 +90,9 @@ class Store:
         for job in self.all():
             if job["state"] in {"queued", "downloading", "verifying"}:
                 self.update(job["id"], state="paused", speed=0, active_connections=0)
+            if job.get("safety_check", {}).get("status") == "scanning":
+                self.update(job["id"], safety_check={"provider": "defender", "status": "error",
+                    "detail": "Lần quét trước bị gián đoạn; hãy quét lại."})
 
     def setting(self, key, default=None):
         with self.connect() as db:

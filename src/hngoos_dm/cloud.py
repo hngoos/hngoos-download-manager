@@ -6,7 +6,7 @@ from urllib.parse import parse_qs, quote, urlencode, urlsplit, urlunsplit
 from .safety import validate_url
 
 
-def resolve(url):
+def resolve(url, proxy=None):
     url = validate_url(url)
     parsed = urlsplit(url)
     host = parsed.hostname.lower()
@@ -30,7 +30,7 @@ def resolve(url):
         import html
 
         from .engine import request
-        with request(url) as response:
+        with request(url, **({"proxy": proxy} if proxy else {})) as response:
             text = response.read(2 * 1024 * 1024).decode("utf-8", errors="replace")
         for tag in re.findall(r"<a\b[^>]+>", text, re.IGNORECASE):
             if re.search(r'id=[\"\']downloadButton[\"\']', tag, re.IGNORECASE):

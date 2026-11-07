@@ -5,6 +5,7 @@ import threading
 import time
 import unittest
 import zipfile
+from contextlib import ExitStack
 from pathlib import Path
 
 from hngoos_dm.bridge import MAX_MESSAGE, handle_message, read_message, write_message
@@ -110,6 +111,31 @@ class BridgeTests(unittest.TestCase):
 
 
 class PolicyTests(unittest.TestCase):
+    def test_profile_caps_saved_host_limits_and_wakes_queued_connection(self):
+        with tempfile.TemporaryDirectory() as folder:
+            store = Store(Path(folder)/"db")
+            url = "https://example.com/file"
+            store.set_setting("host_limits", {"example.com:443": 32})
+            policy = HostPolicy(store, default_limit=8)
+            stop, waiting, entered = threading.Event(), threading.Event(), threading.Event()
+            def ninth():
+                waiting.set()
+                with policy.connection(url, stop):
+                    entered.set()
+            with ExitStack() as occupied:
+                for _ in range(8):
+                    occupied.enter_context(policy.connection(url, stop))
+                worker = threading.Thread(target=ninth)
+                worker.start()
+                self.assertTrue(waiting.wait(1))
+                self.assertFalse(entered.wait(0.15))
+                with policy.condition:
+                    policy.default_limit = 32
+                    policy.condition.notify_all()
+                self.assertTrue(entered.wait(1))
+            worker.join(1)
+            self.assertFalse(worker.is_alive())
+
     def test_host_penalty_persists_and_limits_inflight(self):
         with tempfile.TemporaryDirectory() as folder:
             store = Store(Path(folder)/"db")
@@ -149,10 +175,10 @@ class PolicyTests(unittest.TestCase):
 
     def test_media_choice_subtitles_and_audio_are_explicit(self):
         settings = ydl_options("out", MediaOptions(height=720, playlist=True, subtitles=True), ffmpeg="ffmpeg")
-        self.assertIn("height<=720", settings["format"])
+        self.assertIn("height<=?720", settings["format"])
         self.assertFalse(settings["noplaylist"])
         self.assertEqual(settings["subtitleslangs"], ["vi", "en"])
         audio = ydl_options("out", MediaOptions(audio="m4a"), ffmpeg="ffmpeg")
-        self.assertEqual(audio["postprocessors"][0]["preferredcodec"], "m4a")
+        self.assertEqual(audio["format"], "bestaudio/best")
         with self.assertRaises(ValueError):
             ydl_options("out", MediaOptions(audio="mp3"))

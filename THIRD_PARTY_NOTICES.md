@@ -6,7 +6,11 @@ The hngoos-download-manager (HDM) application is proprietary. Included or option
 | --- | --- | --- |
 | Morphicons | MIT, Copyright (c) 2026 Guillermo | https://www.morphicons.com and https://github.com/guillermolg00/morphicons |
 | Lucide icon data used with Morphicons | ISC | https://lucide.dev and https://github.com/lucide-icons/lucide |
+| Iconoir trash outline used with Morphicons | MIT; notice in docs/licenses/iconoir.txt | https://github.com/iconoir-icons/iconoir |
+| Material Symbols alert outline | Apache-2.0; notice in docs/licenses/material-symbols.txt | https://github.com/google/material-design-icons |
+| Phosphor sort outline | MIT; notice in docs/licenses/phosphor.txt | https://github.com/phosphor-icons/core |
 | Simple Icons social-brand artwork in README badges | CC0-1.0 | https://github.com/simple-icons/simple-icons |
+| Browser logos | Trademarks belong to their respective owners; Browser Logos collection MIT notice in docs/licenses/browser-logos.txt | https://github.com/alrra/browser-logos; Cốc Cốc artwork from https://coccoc.com/assets/images/home/compare/coccoc.png |
 | Python | Python Software Foundation License | https://www.python.org/downloads/source/ |
 | Tcl/Tk | Tcl/Tk BSD-style licenses | https://www.tcl.tk/software/tcltk/ |
 | PyInstaller bootloader | GPL-2.0-or-later with bootloader exception | https://github.com/pyinstaller/pyinstaller |

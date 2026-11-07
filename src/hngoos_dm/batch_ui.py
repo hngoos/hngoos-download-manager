@@ -7,13 +7,12 @@ import uuid
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from .batch import normalize, parse_text, read_batch
+from .information_ui import ContentPage
 
 
 def open_batch(app):
-    dialog = tk.Toplevel(app.root)
-    dialog.title("HDM — Xem trước và sửa danh sách")
-    dialog.geometry("960x680")
-    frame = ttk.Frame(dialog, padding=16)
+    dialog = ContentPage(app, "Nhập danh sách…")
+    frame = ttk.Frame(dialog.body, padding=16)
     frame.pack(fill="both", expand=True)
     ttk.Label(frame, text="Dán hai cột link / tên, rồi bấm Xem trước. Nhấp đúp một dòng để sửa.").pack(anchor="w")
     editor = tk.Text(frame, height=7, wrap="none", undo=True)
@@ -38,7 +37,7 @@ def open_batch(app):
         redraw()
 
     def load():
-        path = filedialog.askopenfilename(parent=dialog, filetypes=[("Danh sách", "*.xlsx *.csv *.txt")])
+        path = filedialog.askopenfilename(parent=dialog, filetypes=[(app.locale.text("Danh sách"), "*.xlsx *.csv *.txt")])
         if path:
             values = read_batch(path)
             buffer = io.StringIO()
@@ -52,10 +51,10 @@ def open_batch(app):
         for item in table.selection():
             index = int(item)
             url, name = rows[index]
-            url = simpledialog.askstring("Sửa link", "Đường dẫn HTTP/HTTPS", initialvalue=url, parent=dialog)
+            url = simpledialog.askstring(app.locale.text("Sửa link"), app.locale.text("Đường dẫn HTTP/HTTPS"), initialvalue=url, parent=dialog)
             if url is None:
                 continue
-            name = simpledialog.askstring("Sửa tên", "Tên tệp", initialvalue=name, parent=dialog)
+            name = simpledialog.askstring(app.locale.text("Sửa tên"), app.locale.text("Tên tệp"), initialvalue=name, parent=dialog)
             if name is not None:
                 rows[index] = normalize([(url, name)])[0]
         redraw()
@@ -66,7 +65,7 @@ def open_batch(app):
         redraw()
 
     def rename():
-        prefix = simpledialog.askstring("Đổi tên hàng loạt", "Tiền tố tên tệp (sẽ thêm 001, 002… và giữ đuôi)", parent=dialog)
+        prefix = simpledialog.askstring(app.locale.text("Đổi tên hàng loạt"), app.locale.text("Tiền tố tên tệp (sẽ thêm 001, 002… và giữ đuôi)"), parent=dialog)
         if prefix is None:
             return
         from pathlib import Path
@@ -104,7 +103,7 @@ def open_batch(app):
             try:
                 action()
             except (ValueError, OSError) as exc:
-                messagebox.showerror("Danh sách", str(exc), parent=dialog)
+                messagebox.showerror(app.locale.text("Danh sách"), app.locale.text(str(exc)), parent=dialog)
         return call
 
     table.bind("<Double-1>", guarded(edit))
@@ -114,6 +113,8 @@ def open_batch(app):
                          ("Đổi tên hàng loạt", rename), ("Xóa dòng", remove)):
         ttk.Button(actions, text=text, command=guarded(action)).pack(side="left", padx=3)
     ttk.Button(actions, text="Bắt đầu tải", command=guarded(submit), style="Primary.TButton").pack(side="right")
+    app.apply_preferences()
+    return dialog
 
 
 def export_batch_report(store, destination):

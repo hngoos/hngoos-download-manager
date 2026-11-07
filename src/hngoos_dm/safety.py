@@ -202,14 +202,36 @@ def authenticode(path):
     return json.loads(result.stdout.decode("utf-8-sig", errors="replace"))
 
 
-def scan_defender(path):
+def scan_defender(path, stop=None):
     import os
     root = Path(os.environ.get("ProgramFiles", "C:/Program Files")) / "Windows Defender"
     tool = root / "MpCmdRun.exe"
     if not tool.is_file():
         raise FileNotFoundError("Không tìm thấy Windows Defender trên máy này.")
-    return subprocess.run([str(tool), "-Scan", "-ScanType", "3", "-DisableRemediation", "-File", str(Path(path).resolve())],
-                          check=False, capture_output=True, text=True, timeout=600, creationflags=0x08000000)
+    command = [str(tool), "-Scan", "-ScanType", "3", "-DisableRemediation", "-File", str(Path(path).resolve())]
+    if stop is None:
+        return subprocess.run(command, check=False, capture_output=True, text=True, timeout=600, creationflags=0x08000000)
+    from .policy import TransferCancelled
+    if stop.is_set():
+        raise TransferCancelled()
+    with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                          creationflags=0x08000000) as process:
+        deadline = time.monotonic()+600
+        try:
+            while True:
+                if stop.is_set():
+                    raise TransferCancelled()
+                if time.monotonic() >= deadline:
+                    raise subprocess.TimeoutExpired(command, 600)
+                try:
+                    stdout, stderr = process.communicate(timeout=.25)
+                    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+                except subprocess.TimeoutExpired:
+                    continue
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.communicate()
 
 
 def inspect_download(path, filename, high_security=False, antivirus=False):

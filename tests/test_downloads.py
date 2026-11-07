@@ -1,6 +1,7 @@
 import hashlib
 import json
 import re
+import sys
 import tempfile
 import threading
 import time
@@ -110,6 +111,7 @@ class DownloadsTest(unittest.TestCase):
     def tearDown(self):
         self.manager.close()
         self.manager.pool.shutdown(wait=True)
+        self.manager.safety_pool.shutdown(wait=True)
         self.temp.cleanup()
 
     def add(self, path="/file", filename="file.bin", **kw):
@@ -134,6 +136,36 @@ class DownloadsTest(unittest.TestCase):
         self.assert_payload(self.wait(self.add()))
         ranges = {value for path, value in Handler.seen if path == "/file"}
         self.assertGreater(len(ranges), 3)
+
+    @unittest.skipUnless(sys.platform == "win32", "Windows Defender integration")
+    def test_slow_defender_does_not_hold_completed_download_or_next_download(self):
+        import subprocess
+        from unittest.mock import patch
+        self.manager.close()
+        self.manager.pool.shutdown(wait=True)
+        self.manager = DownloadManager(self.store, simultaneous=1)
+        entered, release = threading.Event(), threading.Event()
+        def scan(_path, stop=None):
+            entered.set()
+            release.wait(8)
+            return subprocess.CompletedProcess([], 0, "", "")
+        self.store.set_setting("auto_defender", True)
+        try:
+            with patch("hngoos_dm.safety.scan_defender", side_effect=scan):
+                job_id = self.add()
+                self.assertTrue(entered.wait(4))
+                job = self.wait(job_id, timeout=1)
+                self.assert_payload(job)
+                self.assertEqual(job["safety_check"]["status"], "scanning")
+                self.store.set_setting("auto_defender", False)
+                self.assert_payload(self.wait(self.add(filename="next.bin"), timeout=2))
+                release.set()
+                until = time.monotonic()+3
+                while self.store.get(job_id).get("safety_check", {}).get("status") == "scanning" and time.monotonic()<until:
+                    time.sleep(.02)
+                self.assertEqual(self.store.get(job_id)["safety_check"]["status"], "clean")
+        finally:
+            release.set()
 
     def test_no_range_support(self):
         self.assert_payload(self.wait(self.add("/sequential")))

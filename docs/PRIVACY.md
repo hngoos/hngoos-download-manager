@@ -2,11 +2,21 @@
 
 [Home](../README.md) · [User guide](USAGE.md) · [Security](SECURITY_MODEL.md)
 
-Applies to **hngoos-download-manager (HDM) v0.1.13** and its Chromium extension. Last updated: **6 November 2026**.
+Applies to **hngoos-download-manager (HDM) v0.1.0** and its Chromium extension. Source changes last updated: **7 November 2026**.
+
+## Accounts and bug reports
+
+HDM opens directly without an HDM account or sign-in. It does not request your email or store
+authentication tokens for an HDM account.
+
+Report a bug opens [a new GitHub Issue](https://github.com/hngoos/hngoos-download-manager/issues/new?labels=bug)
+in your default browser. GitHub handles sign-in and submission. You choose the report text and
+attachments on GitHub; HDM does not automatically send logs, files, screenshots or download history.
+Submitted reports are public and associated with your GitHub account.
 
 ## Data stored on your device
 
-HDM stores download history, source URLs, filenames, destinations, progress, and settings in the current account's local data directory. Download URLs can contain private access tokens; treat this history as sensitive data. macOS/Linux previews use the platform data locations described in [platform support](PLATFORMS.md).
+HDM stores download history, source URLs, filenames, destinations, progress, and settings in the current account's local data directory. Download URLs can contain private access tokens; treat this history as sensitive data. macOS packages use the platform data locations described in [platform support](PLATFORMS.md).
 
 The extension stores settings, site exceptions, and hidden-element selectors in local browser storage. Detected media URLs are held temporarily per tab, up to 30 candidates. Entries older than 30 minutes are excluded when the list is read; closing the tab or navigating to a new page clears its list.
 
@@ -14,15 +24,12 @@ HDM has no developer-operated history collection or advertising service. The app
 
 ## Clipboard and launch at sign-in
 
-Clipboard link detection is enabled by default and can be disabled in **Info → Preferences → General**.
-HDM reads clipboard text once per second while running and accepts a single HTTP/HTTPS or magnet link.
-Recognition stays on your device: no network request or download starts until you press Enter to inspect a source or confirm a download.
-An existing URL is preserved; a separate action lets you use a newly copied link.
-Clipboard text that is not a valid link is not stored in the download database. Recognized links are
-kept in memory until confirmed; accepted download URLs are saved as part of local history.
+The current source does not monitor or automatically read the clipboard. Paste a URL yourself.
+Pasted URLs remain in the app until you inspect a source or confirm a download; accepted download
+URLs are saved as part of local history.
 
 Launch at sign-in is opt-in and affects only your operating-system account. Disable it in the same
-settings. HDM uses the Windows current-user Run entry, a macOS LaunchAgent, or a Linux autostart entry.
+settings. HDM uses the Windows current-user Run entry, or a macOS LaunchAgent.
 
 Automatic Defender scans are enabled by default on Windows. HDM does not upload files to a developer
 server; Defender's own cloud protection or sample-submission settings remain under Windows control.
@@ -34,19 +41,14 @@ server; Defender's own cloud protection or sample-submission settings remain und
 | File and video downloads | Requests go to the websites and content servers you choose. Those servers receive your IP address and necessary protocol information. Browser-originated video requests may include the source website's origin as Referer, without the page path or query. |
 | Application and downloader updates | Requests go to GitHub for release information and assets. |
 | Optional content filtering | Lists are fetched directly from EasyList, EasyPrivacy, ABPVN, and uBlock badware sources after you grant access. |
-| Hash lookups | The selected reputation service receives SHA-256 when requested. VirusTotal API lookups also use the personal API key entered in the app. |
-| Explicit VirusTotal scan | Only after you select Submit file and confirm, the entire selected file is sent to VirusTotal. Submitted samples may be shared with its security partners under its policies. No upload occurs from clipboard detection, Enter, downloading or local safety checks. |
+| Manual safety checks | Windows Defender scans files locally. HDM does not upload the file to a third-party scanning service. |
 | Subtitle lookup | Requests go to OpenSubtitles when you use the feature with the credentials you provide. |
 | Torrents | Connections go to peers and torrent network services. Peers can see your IP address. |
 
 These services have their own privacy policies. Local media conversion and PDF redaction do not require sending the file to an external conversion service.
 
-VirusTotal API keys are masked in the UI and held only in process memory for the
-current app session. They are not written to settings, download history, logs or
-exports. Local safety results, SHA-256 and optional VirusTotal detection counts
-and report timestamps may be saved with the download history. Uploads use a
-generic filename; the service still receives the complete file content, your IP
-address and account credentials needed for the request.
+Manual Windows Defender results and check timestamps may be saved in the local download
+history. Windows controls Defender cloud protection and sample submission settings.
 
 ## Chromium extension permissions
 

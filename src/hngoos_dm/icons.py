@@ -8,11 +8,63 @@ def load_brand_icons(master):
     """Set the default icon for this window and its dialogs; retain Tk images."""
     folder = files("hngoos_dm") / "assets" / "branding"
     source = PhotoImage(master=master, file=str(folder / "hdm.png"))
-    icons = tuple(source.subsample(factor) for factor in (4, 8, 16, 32))
+    icons = tuple(source.subsample(factor) for factor in (4, 8, 16, 32, 6))
     master.iconphoto(True, *icons)
     if sys.platform == "win32":
+        master.iconbitmap(str(folder / "hdm.ico"))
         master.iconbitmap(default=str(folder / "hdm.ico"))
+        master.after_idle(lambda: set_windows_icon(master, folder / "hdm.ico"))
     return icons
+
+
+def load_header_logo(master, width, height):
+    """Fit the approved artwork, excluding its transparent icon padding."""
+    path = files("hngoos_dm") / "assets" / "branding" / "hdm.png"
+    try:
+        from PIL import Image, ImageTk
+        with Image.open(path) as source:
+            artwork = source.convert("RGBA")
+            artwork = artwork.crop(artwork.getbbox())
+            artwork.thumbnail((width, height), Image.Resampling.LANCZOS)
+            return ImageTk.PhotoImage(artwork, master=master)
+    except ImportError:
+        import math
+        source = PhotoImage(master=master, file=str(path))
+        factor = max(1, math.ceil(max(source.width()/width, source.height()/height)))
+        return source.subsample(factor)
+
+
+def set_windows_icon(master, path):
+    """Tk's default icon alone does not replace an existing Windows wrapper icon."""
+    import ctypes
+    from ctypes import wintypes
+    user = ctypes.windll.user32
+    user.GetAncestor.argtypes = [wintypes.HWND, wintypes.UINT]
+    user.GetAncestor.restype = wintypes.HWND
+    user.LoadImageW.argtypes = [wintypes.HINSTANCE, wintypes.LPCWSTR, wintypes.UINT,
+                               ctypes.c_int, ctypes.c_int, wintypes.UINT]
+    user.LoadImageW.restype = wintypes.HANDLE
+    user.SendMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
+    user.SendMessageW.restype = wintypes.LPARAM
+    user.DestroyIcon.argtypes = [wintypes.HANDLE]
+    hwnd = user.GetAncestor(master.winfo_id(), 2)
+    previous = getattr(master, "_hdm_icon_handles", [])
+    handles = []
+    for which, size in ((0, 16), (1, 32)):
+        handle = user.LoadImageW(None, str(path), 1, size, size, 0x10)
+        if handle:
+            user.SendMessageW(hwnd, 0x80, which, handle)
+            handles.append(handle)
+    master._hdm_icon_handles = handles
+    for handle in previous:
+        user.DestroyIcon(handle)
+    if not getattr(master, "_hdm_icon_cleanup", False):
+        def release(event):
+            if event.widget == master:
+                for handle in getattr(master, "_hdm_icon_handles", []):
+                    user.DestroyIcon(handle)
+        master.bind("<Destroy>", release, add="+")
+        master._hdm_icon_cleanup = True
 
 
 def load_image(master, path, light=False):
@@ -32,8 +84,17 @@ def load_icons(master, light=False):
     root = files("hngoos_dm")/"assets"/"icons"
     names = ("download", "play", "pause", "check", "shield", "settings", "folder", "list", "video",
              "file", "search", "plus", "globe", "info", "scissors", "close", "app", "music", "image", "archive",
-             "arrow-down", "arrow-up", "activity", "sun", "moon")
+             "arrow-down", "arrow-up", "activity", "sun", "moon", "more", "trash", "refresh", "transfer", "progress",
+             "grid", "remove", "alert")
     return {name: load_image(master, root/(name+".png"), light) for name in names}
+
+
+def load_browser_icons(master):
+    """Browser trademarks keep their own colors, separate from themed UI icons."""
+    root = files("hngoos_dm")/"assets"/"icons"
+    return {(name, enabled): PhotoImage(master=master,
+                file=str(root/f"browser-{'opera' if name == 'opera-gx' else name}{'' if enabled else '-dim'}.png"))
+            for name in ("chrome", "edge", "brave", "coccoc", "opera", "opera-gx", "vivaldi") for enabled in (True, False)}
 
 
 def decorate_buttons(parent, icons):

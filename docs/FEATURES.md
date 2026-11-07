@@ -2,33 +2,40 @@
 
 [Home](../README.md) · [User guide](USAGE.md) · [Privacy](PRIVACY.md) · [Security](SECURITY_MODEL.md)
 
-This reference describes **HDM v0.1.13**. It separates implemented behavior from conditions that depend on servers, websites, accounts, or hardware. The release does not complete every planned capability. The stable binary release targets Windows; the current source also offers [macOS/Linux desktop previews](PLATFORMS.md), with platform-specific features and optional dependencies listed there.
+This reference describes **HDM v0.1.0**. It separates implemented behavior from conditions that depend on servers, websites, accounts, or hardware. The release does not complete every planned capability. The desktop releases target [Windows and macOS](PLATFORMS.md), with platform-specific features and optional dependencies listed there.
 
 ## One download screen
 
-The main window contains a URL bar above the download list, with current speed and bandwidth
-presets at the bottom left. Category filters sit beside an icon-only Info button at the top right.
-Appearance and Language are inside Info. Filters change the visible list without deleting history.
-The Info menu also offers import/export, preferences, browser extension installation, support,
-bug reporting, Discord, in-app updates, About and Quit.
+The native window has the HDM logo, a URL/destination card and a source-options card above
+its download journal. The source-options card appears for supported video, audio or images.
+Only the journal scrolls. Click the logo to open Preferences or return to downloads.
+Light/dark appearance and Vietnamese/English language choices apply immediately.
+Transfers default to unlimited app bandwidth and up to 32 connections, while respecting learned host limits.
 
-Clipboard recognition is local and waits for a click, preserving a URL already being edited.
-Press Enter to recognize the source and reveal details beneath the URL bar. Direct files show
-filename and destination; Advanced options adds checksums/mirrors or media format, quality,
-playlist and subtitles as applicable. Click Download in the details to start. HTML source pages go to
-the media extractor after confirmation rather than being saved as a supposed video.
-Spotify music is DRM-protected and cannot be downloaded directly as MP3.
+HDM starts directly without sign-in. Report a bug opens the repository's
+[new GitHub Issue page](https://github.com/hngoos/hngoos-download-manager/issues/new?labels=bug)
+in the default browser. Reports are written and submitted on GitHub.
+
+Clipboard monitoring is disabled; users paste links explicitly. Source filenames are retrieved
+when available and may be edited. Media format and quality choices reflect the available source streams.
+Click Download or press Enter in the URL field to start. Spotify music is DRM-protected and
+cannot be downloaded directly as MP3.
 
 Both HTTP and media tasks appear in the same history. Media pause/resume is supported where the
 extractor and retained source allow it; one media task runs at a time. Media sources do not report
 HTTP worker counts as 32: fragment concurrency is capped at 32 and depends on their protocols.
 
-Launch at sign-in is opt-in on Windows, macOS and Linux and does not require administrator access.
+Launch at sign-in is opt-in on Windows and macOS and does not require administrator access.
 
-Completed files offer **Check Safety** directly on their row: local checks, Windows Defender,
-and optional VirusTotal multi-engine reports with the user's session-only API key. Hash lookups
-do not upload contents. A new cloud scan requires a separate upload action and explicit consent.
-Unknown, pending, unavailable and failed checks are never reported as clean.
+Completed files offer a one-click **Safety check** using Windows Defender. Scans run locally
+without opening another page. After scanning, the Check column shows the result as text.
+Unavailable, interrupted and failed scans are never reported as safe. Automatic risk checks
+and quarantine remain active independently of manual scans.
+
+The download table is a persistent journal. Completed transfers show **Done**. If an output
+is deleted outside HDM, its entry stays visible with **File deleted**. Click a filename to
+open its containing folder; the last column removes only the journal entry, keeping the
+actual file. Active transfers cannot be removed through this control.
 
 ## Downloads and recovery
 
@@ -70,7 +77,7 @@ The batch dialog is intended for up to 500 rows per import. Website capture need
 
 ## Retained processing libraries
 
-The following library APIs remain included for development and compatibility. HDM 0.1.13 keeps the
+The following library APIs remain included for development and compatibility. HDM 0.1.0 keeps the
 main desktop workflow focused on downloads and no longer exposes the separate conversion, PDF
 redaction or website-capture dialogs in its menus.
 
@@ -133,7 +140,7 @@ Known-domain popup/overlay handling, an explicit element picker, and per-site re
 
 ## Updates and local data
 
-Use **Check for update** on the Download screen or in About to check and download a new release inside HDM. Updates require an Ed25519-signed manifest, verified against the pinned publisher key, followed by package size and SHA-256 checks. Choose **Install update** to open the verified local package with your operating system; Windows exits HDM for setup, while macOS/Linux use their system installer or AppImage folder. Active transfers must be paused or finished first. This manifest signature is separate from Authenticode; the current Windows installer does not have an Authenticode certificate.
+Use **Check for update** on the Download screen or in About to check and download a new release inside HDM. Updates require an Ed25519-signed manifest, verified against the pinned publisher key, followed by package size and SHA-256 checks. Choose **Install update** to open the verified local package with your operating system; Windows exits HDM for setup, while macOS uses its system installer. Active transfers must be paused or finished first. This manifest signature is separate from Authenticode; the current Windows installer does not have an Authenticode certificate.
 
 The top-right appearance switch and Info → Language change the theme and VI/EN language immediately. HDM remembers both choices. Tool-specific dialogs and diagnostics may retain their original language.
 

@@ -37,7 +37,8 @@ def main():
     with Image.open(io.BytesIO(rendered)) as source:
         image = source.convert("RGBA")
     assert image.size == (1024, 1024)
-    image.resize((512, 512), Image.Resampling.LANCZOS).save(BRANDING / "hdm.png")
+    desktop = image.resize((512, 512), Image.Resampling.LANCZOS)
+    desktop.save(BRANDING / "hdm.png")
     image.save(BRANDING / "hdm.ico", sizes=[(s, s) for s in (16, 24, 32, 48, 64, 128, 256)])
     image.save(BRANDING / "hdm.icns")
     for size in (16, 32, 48, 128):

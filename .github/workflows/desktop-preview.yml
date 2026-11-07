@@ -1,4 +1,4 @@
-name: macOS and Linux desktop preview
+name: macOS desktop packages
 on:
   push:
     branches: [main]
@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-15, macos-15-intel]
+        os: [macos-15, macos-15-intel]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
@@ -32,8 +32,6 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.13'
-      - if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb libegl1 libopengl0 zstd desktop-file-utils
       - run: sh -n install.sh
       - name: Install the desktop preview from this checkout
         shell: bash
@@ -46,25 +44,15 @@ jobs:
       - name: Desktop UI smoke test
         shell: bash
         run: |
-          if [ "$RUNNER_OS" = Linux ]; then
-            xvfb-run -a "$HOME/.local/bin/hdm" --smoke-test
-          else
-            "$HOME/.local/bin/hdm" --smoke-test
-          fi
+          "$HOME/.local/bin/hdm" --smoke-test
       - run: python scripts/build-desktop.py
       - name: Packaged desktop UI smoke test
         shell: bash
         run: |
-          if [ "$RUNNER_OS" = Linux ]; then
-            xvfb-run -a dist/HDM/HDM --smoke-test
-          else
-            dist/HDM.app/Contents/MacOS/HDM --smoke-test
-          fi
+          dist/HDM.app/Contents/MacOS/HDM --smoke-test
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: HDM-desktop-preview-${{ runner.os }}-${{ runner.arch }}
           path: |
             dist/HDM-*.dmg
-            dist/HDM-*.deb
-            dist/HDM-*.AppImage
           if-no-files-found: error

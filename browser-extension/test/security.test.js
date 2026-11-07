@@ -5,9 +5,11 @@ let receive;
 let cookieReads = 0;
 let sent;
 let installed;
+let optionsOpened = 0;
 const menus = [];
 globalThis.chrome = {
   runtime: {
+    async openOptionsPage() { optionsOpened++; },
     getURL: path => `chrome-extension://fixture/${path}`,
     onInstalled: {addListener(callback) { installed = callback; }},
     onMessage: {addListener(callback) { receive = callback; }},
@@ -24,8 +26,11 @@ globalThis.chrome = {
 await import('../background.js');
 
 test('extension installation creates both download menus through Promise APIs', async () => {
-  await installed();
+  await installed({reason:'install'});
   assert.deepEqual(menus.map(menu => menu.id), ['download-link', 'download-video']);
+  assert.equal(optionsOpened, 1);
+  await installed({reason:'update'});
+  assert.equal(optionsOpened, 1);
 });
 
 function request(url, source) {

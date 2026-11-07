@@ -3,8 +3,7 @@
 set -eu
 case "$(uname -s)" in
     Darwin) hdm_parent="$HOME/Library/Application Support/HDM" ;;
-    Linux) hdm_parent="${XDG_DATA_HOME:-$HOME/.local/share}/hdm" ;;
-    *) printf '%s\n' 'Use install.ps1 on Windows.' >&2; exit 1 ;;
+    *) printf '%s\n' 'HDM supports Windows and macOS. Use install.ps1 on Windows.' >&2; exit 1 ;;
 esac
 hdm_python="${HDM_PYTHON:-python3}"
 hdm_root="${HDM_INSTALL_DIR:-$hdm_parent/runtime}"
@@ -25,7 +24,6 @@ esac
 "$hdm_root/bin/python" -m pip install --upgrade "$hdm_requirement"
 "$hdm_root/bin/python" -c 'from hngoos_dm.app import App; from hngoos_dm.engine import DownloadManager'
 "$hdm_root/bin/python" - "$hdm_root" <<'PY'
-import os
 import shlex
 import shutil
 import sys
@@ -59,19 +57,6 @@ if sys.platform == 'darwin':
         'CFBundleExecutable': 'HDM', 'CFBundlePackageType': 'APPL',
         'CFBundleShortVersionString': __version__, 'CFBundleIconFile': 'hdm.icns',
     }))
-else:
-    data = Path(os.environ.get('XDG_DATA_HOME') or Path.home()/'.local/share')
-    directory = data/'applications'
-    directory.mkdir(parents=True, exist_ok=True)
-    icons = data/'icons/hicolor/512x512/apps'
-    icons.mkdir(parents=True, exist_ok=True)
-    with (branding/'hdm.png').open('rb') as source, (icons/'hdm.png').open('wb') as output:
-        shutil.copyfileobj(source, output)
-    # Desktop entry quoting differs from shell quoting, including literal percent signs.
-    command = str(runtime/'bin/hdm').replace('\\', '\\\\').replace('"', '\\"').replace('`', '\\`').replace('$', '\\$').replace('%', '%%')
-    (directory/'com.hngoos.hdm.desktop').write_text(
-        '[Desktop Entry]\nType=Application\nName=HDM\nComment=Download, organize and process files\n'
-        f'Exec="{command}"\nIcon=hdm\nTerminal=false\nCategories=Network;FileTransfer;\n')
 print(f'HDM installed. Open HDM from your applications menu, or run {binary/"hdm"}.')
 print('For terminal access, add ~/.local/bin to PATH if it is not already included.')
 PY

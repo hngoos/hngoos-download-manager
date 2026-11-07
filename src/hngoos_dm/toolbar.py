@@ -1,10 +1,7 @@
-"""Rounded category navigation and a live transfer-rate / bandwidth control."""
+"""Live download and upload rates."""
 
 import tkinter as tk
 from tkinter import ttk
-
-from .filters import FILTERS
-from .rounded import RoundedButton, RoundedPanel
 
 
 class Tooltip:
@@ -36,67 +33,15 @@ class Tooltip:
             self.window = None
 
 
-class CategoryBar(ttk.Frame):
+class SpeedMeter(ttk.Frame):
     def __init__(self, app, parent):
         super().__init__(parent)
-        self.app, self.buttons = app, {}
-        for key, text, icon in FILTERS:
-            button = RoundedButton(self, text=text, command=lambda key=key: app.set_filter(key),
-                                   image=app.icons[icon], width=94 if text == "Archive" else 80, height=40)
-            button.pack(side="left", padx=(0, 4))
-            self.buttons[key] = button
-
-    def set_presentation(self, theme, translate):
-        for key, _text, icon in FILTERS:
-            button = self.buttons[key]
-            button.primary = self.app.category_filter == key
-            button.image = self.app.primary_icons[icon] if button.primary else self.app.icons[icon]
-            button.set_presentation(theme, translate)
-
-
-class SpeedMeter(RoundedPanel):
-    def __init__(self, app, parent):
-        super().__init__(parent, height=44, padding=6, radius=20)
         self.app = app
-        self.configure(width=310)
         self.down, self.up = tk.StringVar(value="0 B/s"), tk.StringVar(value="0 B/s")
-        self.down_icon = ttk.Label(self.content, style="Card.TLabel")
-        self.down_icon.pack(side="left", padx=(4, 3))
-        ttk.Label(self.content, textvariable=self.down, style="Card.TLabel").pack(side="left", padx=(0, 8))
-        self.up_icon = ttk.Label(self.content, style="Card.TLabel")
-        self.up_icon.pack(side="left", padx=(0, 3))
-        ttk.Label(self.content, textvariable=self.up, style="Card.TLabel").pack(side="left", padx=(0, 8))
-        self.mode = RoundedButton(self.content, text="HIGH", image=app.icons["activity"],
-                                  command=self.open_menu, width=92, height=32)
-        self.mode.pack(side="right")
-        self.menu = None
-
-    def open_menu(self):
-        from .ui_preferences import PALETTES
-        if self.menu:
-            self.menu.destroy()
-        _, panel, text, _, accent = PALETTES[self.app.theme]
-        self.menu = tk.Menu(self, tearoff=False, background=panel, foreground=text,
-                            activebackground=accent, activeforeground="white")
-        self.choice = tk.StringVar(value=self.app.store.setting("bandwidth_mode", "maximum"))
-        for key, label in (("maximum", "Tối đa"), ("medium", "Vừa (4 MB/s)"), ("light", "Nhẹ (512 KB/s)")):
-            self.menu.add_radiobutton(label=self.app.locale.text(label), variable=self.choice, value=key,
-                command=lambda key=key: self.app.set_bandwidth(key))
-        try:
-            self.menu.tk_popup(self.winfo_rootx(), self.winfo_rooty()-110)
-        finally:
-            self.menu.grab_release()
+        ttk.Label(self, textvariable=self.down).pack(side="left", padx=(0, 12))
+        ttk.Label(self, textvariable=self.up).pack(side="left")
 
     def update_rates(self, down, up):
         from .app import human
         self.down.set("0 B/s" if not down else human(down)+"/s")
         self.up.set("0 B/s" if not up else human(up)+"/s")
-
-    def set_presentation(self, theme, translate=str):
-        super().set_presentation(theme, translate)
-        self.down_icon.configure(image=self.app.icons["arrow-down"])
-        self.up_icon.configure(image=self.app.icons["arrow-up"])
-        self.mode.image = self.app.icons["activity"]
-        mode = self.app.store.setting("bandwidth_mode", "maximum")
-        self.mode.label = {"maximum": "HIGH", "medium": "MEDIUM", "light": "LOW"}[mode]
-        self.mode.set_presentation(theme, translate)

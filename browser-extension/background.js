@@ -1,10 +1,18 @@
 import {compileFilters, protectionRules, MODES} from './filters.js';
-import {installTakeover} from './takeover.js';
+import {installTakeover, settleTakeovers} from './takeover.js';
 import {mediaCandidate, mergeCandidates} from './media-capture.js';
+import {syncCaptureSettings} from './capture-settings.js';
 
 const chrome = globalThis.browser || globalThis.chrome;
 installTakeover(globalThis.browser || chrome);
-chrome.permissions.onAdded?.addListener(() => installTakeover(globalThis.browser || chrome));
+chrome.permissions.onAdded?.addListener(() => {
+  installTakeover(globalThis.browser || chrome);
+  syncCaptureSettings(chrome, true);
+});
+chrome.permissions.onRemoved?.addListener(() => syncCaptureSettings(chrome, true));
+chrome.alarms.create('hdm-integration', {periodInMinutes: 1});
+settleTakeovers(chrome).catch(() => {});
+syncCaptureSettings(chrome);
 
 const HOST = 'com.hngoos.download_manager';
 const candidates = new Map();
@@ -56,13 +64,14 @@ const SOURCES = [
   ['ABPVN', 'https://abpvn.com/filter/abpvn.txt'],
   ['uBlock badware', 'https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/badware.txt'],
 ];
-chrome.runtime.onInstalled.addListener(async () => {
+chrome.runtime.onInstalled.addListener(async details => {
   const settings = await chrome.storage.local.get(['mode']);
   if (!settings.mode) await chrome.storage.local.set({mode: 'ads'});
   await chrome.contextMenus.removeAll();
   chrome.contextMenus.create({id: 'download-link', title: 'Tải bằng HDM', contexts: ['link']});
   chrome.contextMenus.create({id: 'download-video', title: 'Tải video bằng HDM', contexts: ['video', 'page']});
   chrome.alarms.create('filters', {periodInMinutes: 720});
+  if (details.reason === 'install') await chrome.runtime.openOptionsPage();
 });
 
 async function sendDownload(message, sourceUrl = message.url) {
@@ -141,10 +150,20 @@ async function updateFilters() {
 }
 
 chrome.alarms.onAlarm.addListener(alarm => {
+  if (alarm.name === 'hdm-integration') {
+    syncCaptureSettings(chrome);
+    settleTakeovers(chrome).catch(() => {});
+  }
   if (alarm.name === 'filters') updateFilters().catch(error => chrome.storage.local.set({lastError: error.message}));
 });
 
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
+  if (message?.action === 'capture-insert') {
+    if (sender.id !== chrome.runtime.id || !sender.tab || !/^https?:\/\//i.test(sender.url || '')) return;
+    chrome.storage.local.set({insertBypass:{tabId:sender.tab.id,until:Date.now()+(message.held ? 2000 : 500)}})
+      .then(()=>respond({ok:true}));
+    return true;
+  }
   const allowed = new Set(['download', 'ping', 'enable-video', 'mode', 'update-filters', 'allow-site', 'save-invoice', 'invoice-error',
     'media-candidates','stats','pick-element','reset-site']);
   if (!allowed.has(message?.action)) return;

@@ -5,6 +5,7 @@ import os
 import struct
 import subprocess
 import sys
+import time
 import uuid
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -42,6 +43,31 @@ def write_message(stream, value):
 
 
 def handle_message(message, store):
+    if message.get("action") == "set-browser-capture":
+        from .browser_preferences import validate_preferences
+        enabled = message.get("enabled")
+        if not isinstance(enabled, bool):
+            raise TypeError("Capture must be a boolean")
+        settings = validate_preferences(store.setting("browser_preferences", {}))
+        settings["capture"] = enabled
+        store.set_setting("browser_preferences", settings)
+        revision = str(time.time_ns())
+        store.set_setting("browser_preferences_revision", revision)
+        return {"ok": True, "settings": settings, "revision": revision}
+    if message.get("action") == "download-status":
+        request_id = message.get("id")
+        if not isinstance(request_id, str) or not 0 < len(request_id) <= 100:
+            raise ValueError("Invalid request id")
+        with store.connect() as db:
+            row = db.execute("SELECT state FROM inbox WHERE id=?", (request_id,)).fetchone()
+        return {"ok": True, "state": row[0] if row else "unknown"}
+    if message.get("action") == "browser-settings":
+        store.set_setting("browser_extension_seen", time.time())
+        settings = store.setting("browser_preferences")
+        if settings is not None:
+            from .browser_preferences import validate_preferences
+            settings = validate_preferences(settings)
+        return {"ok": True, "settings": settings, "revision": store.setting("browser_preferences_revision", "")}
     if message.get("action") == "ping":
         return {"ok": True, "protocol": 1}
     if message.get("action") == "save-invoice":
@@ -63,7 +89,8 @@ def handle_message(message, store):
     filename = str(message.get("filename", ""))
     if message.get("takeover"):
         from .engine import probe
-        info = probe(url)
+        proxy = store.setting("proxy")
+        info = probe(url, **({"proxy": proxy} if proxy else {}))
         filename = filename or info.get("filename", "")
         expected_size = message.get("expected_size", 0)
         if (not isinstance(expected_size, (int, float)) or expected_size < 0
@@ -73,6 +100,8 @@ def handle_message(message, store):
     if len(request_id) > 100:
         raise ValueError("Request id too long")
     data = {"url": url, "filename": safe_filename(filename) if filename else "", "kind": kind, "origin": "browser"}
+    settings = store.setting("browser_preferences", {})
+    data["auto_start"] = bool(message.get("takeover") and settings.get("auto_start", False))
     if kind == "video" and message.get("referrer"):
         referrer = validate_url(str(message["referrer"]))
         if len(referrer) > 8192:

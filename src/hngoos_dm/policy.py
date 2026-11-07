@@ -85,7 +85,7 @@ class HostPolicy:
     def connection(self, url, stop):
         host = self.key(url)
         with self.condition:
-            while (self.in_use.get(host, 0) >= self.limits.get(host, self.default_limit)
+            while (self.in_use.get(host, 0) >= min(self.default_limit, self.limits.get(host, self.default_limit))
                    or self.cooldowns.get(host, 0) > time.monotonic()):
                 if stop.is_set():
                     raise TransferCancelled()

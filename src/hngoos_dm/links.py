@@ -60,8 +60,8 @@ def resolve_source(value, force_file=False):
     return "file", direct
 
 
-def describe_source(value):
-    """Fetch metadata only after Enter; never download content into the user folder."""
+def describe_source(value, proxy=None):
+    """Fetch metadata after manual paste or Enter; never save content in the user folder."""
     from .cloud import resolve
     from .engine import request
     from .safety import filename_from_url, safe_filename
@@ -69,8 +69,8 @@ def describe_source(value):
     kind = link_kind(value)
     result = {"original": value, "kind": kind, "url": value, "filename": "", "size": None}
     if kind == "file":
-        direct = resolve(value)
-        with request(direct, {"Range": "bytes=0-0"}) as response:
+        direct = resolve(value, **({"proxy": proxy} if proxy else {}))
+        with request(direct, {"Range": "bytes=0-0"}, **({"proxy": proxy} if proxy else {})) as response:
             headers = response.headers
             content_type = headers.get_content_type()
             if content_type in {"text/html", "application/xhtml+xml"} and not headers.get_filename():
@@ -86,9 +86,11 @@ def describe_source(value):
     if kind == "media":
         from .media import describe_media
         try:
-            metadata = describe_media(value)
+            metadata = describe_media(value, **({"proxy": proxy} if proxy else {}))
+            result.update(heights=metadata.get("heights", []), formats=metadata.get("formats", []))
             if metadata.get("title"):
                 result["filename"] = safe_filename(metadata["title"])+".mp4"
-        except Exception:  # noqa: BLE001 -- Logged-in sources can still be configured with cookies below.
-            result["filename"] = ""
+        except Exception as error:  # noqa: BLE001 -- Cookie-protected sources remain configurable.
+            result["metadata_error"] = str(error)
+            result["filename"] = filename_from_url(value).rsplit(".", 1)[0]+".mp4"
     return result

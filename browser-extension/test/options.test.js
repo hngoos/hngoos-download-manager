@@ -4,7 +4,7 @@ import test from 'node:test';
 import vm from 'node:vm';
 
 test('late storage initialization preserves the result of an explicit connection test', async () => {
-  const elements = Object.fromEntries(['identity', 'sources', 'status', 'ping'].map(id => [id, {textContent: ''}]));
+  const elements = Object.fromEntries(['identity', 'sources', 'status', 'ping', 'capture'].map(id => [id, {textContent: ''}]));
   let finishStorage;
   const settings = new Promise(resolve => { finishStorage = resolve; });
   const chrome = {
@@ -12,7 +12,8 @@ test('late storage initialization preserves the result of an explicit connection
     runtime: {id: 'a'.repeat(32), sendMessage: async () => ({ok: true})},
   };
   const context = vm.createContext({chrome, document: {getElementById: id => elements[id]}});
-  vm.runInContext(readFileSync(new URL('../options.js', import.meta.url), 'utf8'), context);
+  const source = readFileSync(new URL('../options.js', import.meta.url), 'utf8').replace(/^import .*;\r?\n/gm, '');
+  vm.runInContext(source, context);
   await elements.ping.onclick();
   const result = elements.status.textContent;
   assert.ok(result.length > 0);

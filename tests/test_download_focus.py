@@ -19,6 +19,39 @@ from hngoos_dm.store import Store
 
 
 class LinkTests(unittest.TestCase):
+    def test_video_selector_accepts_unknown_resolution_and_honors_known_limit(self):
+        from yt_dlp import YoutubeDL
+        settings = ydl_options("out", MediaOptions(height=720), ffmpeg="ffmpeg")
+        with YoutubeDL({"quiet": True}) as downloader:
+            selector = downloader.build_format_selector(settings["format"])
+            unknown = {"format_id": "direct", "ext": "mp4", "vcodec": "h264", "acodec": "aac",
+                       "url": "https://example.com/file.mp4"}
+            self.assertEqual(downloader._select_formats([unknown], selector)[0]["format_id"], "direct")
+            low = dict(unknown, format_id="low", height=360)
+            high = dict(unknown, format_id="high", height=1080)
+            self.assertEqual(downloader._select_formats([low, high], selector)[0]["format_id"], "low")
+
+    def test_media_metadata_reports_real_heights_and_visible_error_instead_of_blank_name(self):
+        from hngoos_dm.links import describe_source
+        from hngoos_dm.media import describe_media
+        url = "https://youtu.be/example"
+        info = {"title": "A video", "formats": [
+            {"height": 720, "vcodec": "avc1"}, {"height": 360, "vcodec": "avc1"},
+            {"height": 1080, "vcodec": "avc1", "has_drm": True}, {"vcodec": "none"}]}
+        with patch("yt_dlp.YoutubeDL") as extractor:
+            extractor.return_value.__enter__.return_value.extract_info.return_value = info
+            metadata = describe_media(url)
+            self.assertEqual(metadata["heights"], [360, 720])
+            self.assertFalse(extractor.call_args.args[0]["extract_flat"])
+        with patch("hngoos_dm.media.describe_media", return_value=metadata):
+            description = describe_source(url)
+            self.assertEqual(description["filename"], "A video.mp4")
+            self.assertEqual(description["heights"], [360, 720])
+        with patch("hngoos_dm.media.describe_media", side_effect=ValueError("Sign in required")):
+            description = describe_source(url)
+            self.assertTrue(description["filename"])
+            self.assertEqual(description["metadata_error"], "Sign in required")
+
     def test_enter_metadata_uses_server_filename_and_full_range_size_without_saving_a_file(self):
         from email.message import Message
 

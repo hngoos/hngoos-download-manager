@@ -12,7 +12,7 @@ import urllib.request
 from contextlib import contextmanager
 from pathlib import Path
 
-from .files import category, checksums, deliver
+from .files import assemble_parts, category, checksums, deliver
 from .policy import BandwidthBudget, HostPolicy, TransferCancelled
 from .safety import filename_from_url, inspect_download, safe_filename, validate_url
 
@@ -23,19 +23,20 @@ class Paused(TransferCancelled):
     pass
 
 
-def request(url, headers=None):
-    return urllib.request.urlopen(urllib.request.Request(validate_url(url), headers={
+def request(url, headers=None, proxy=None):
+    from .network import open_url
+    return open_url(urllib.request.Request(validate_url(url), headers={
         "User-Agent": "HDM/0.1", "Accept-Encoding": "identity", **(headers or {})
-    }), timeout=15)
+    }), timeout=15, proxy=proxy)
 
 
 def strong_etag(value):
     return bool(value and not value.startswith("W/"))
 
 
-def probe(url):
+def probe(url, proxy=None):
     try:
-        response = request(url, {"Range": "bytes=0-0"})
+        response = request(url, {"Range": "bytes=0-0"}, **({"proxy": proxy} if proxy else {}))
     except urllib.error.HTTPError as exc:
         if exc.code == 416 and exc.headers.get("Content-Range") == "bytes */0":
             return {"total": 0, "ranged": False, "etag": "", "modified": "", "empty": True}
@@ -58,9 +59,18 @@ def probe(url):
 
 
 class DownloadManager:
+    def _request(self, url, headers=None):
+        proxy = self.store.setting("proxy")
+        return request(url, headers, **({"proxy": proxy} if proxy else {}))
+
+    def _probe(self, url):
+        proxy = self.store.setting("proxy")
+        return probe(url, **({"proxy": proxy} if proxy else {}))
+
     def __init__(self, store, simultaneous=2):
         self.store = store
         self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=simultaneous)
+        self.safety_pool = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="hdm-safety")
         self.active = {}
         self.lock = threading.RLock()
         self.closed = False
@@ -80,7 +90,8 @@ class DownloadManager:
         from .cloud import resolve
         original_url = url
         if urlsplit(url).hostname in {"drive.google.com", "docs.google.com", "dropbox.com", "www.dropbox.com", "onedrive.live.com", "1drv.ms", "www.mediafire.com", "mediafire.com"}:
-            url = resolve(url)
+            proxy = self.store.setting("proxy")
+            url = resolve(url, **({"proxy": proxy} if proxy else {}))
         validate_url(url)
         if expected_sha256 and not re.fullmatch(r"[a-fA-F0-9]{64}", expected_sha256):
             raise ValueError("SHA-256 phải có đúng 64 ký tự hex.")
@@ -113,12 +124,12 @@ class DownloadManager:
         import hashlib
         partial = Path(partial).resolve()
         size = partial.stat().st_size
-        info = probe(url)
+        info = self._probe(url)
         if not info["ranged"] or not strong_etag(info["etag"]) or not 0 < size < info["total"]:
             raise ValueError("Cần tệp dở là tiền tố liên tục, máy chủ hỗ trợ Range/ETag và tệp còn thiếu byte.")
         expected = f"bytes 0-{size-1}/{info['total']}"
         digest = hashlib.sha256()
-        with partial.open("rb") as local, request(url, {"Range": f"bytes=0-{size-1}", "If-Match": info["etag"]}) as response:
+        with partial.open("rb") as local, self._request(url, {"Range": f"bytes=0-{size-1}", "If-Match": info["etag"]}) as response:
             if (response.status != 206 or response.headers.get("Content-Range") != expected
                     or response.headers.get("ETag") != info["etag"]):
                 raise ValueError("Không xác minh được tiền tố từ máy chủ.")
@@ -156,9 +167,18 @@ class DownloadManager:
 
     def _schedule_loop(self):
         while not self.scheduler_stop.wait(0.5):
-            for job in self.store.all():
-                if job["state"] == "scheduled" and job.get("scheduled_at", 0) <= time.time():
-                    self.start(job["id"])
+            self._schedule_once(time.time())
+
+    def _schedule_once(self, now):
+        for job in self.store.all():
+            scheduled = job["state"] == "scheduled" and job.get("scheduled_at", 0) <= now
+            retry = (self.store.setting("retry_failed", True) and job["state"] == "error"
+                     and job.get("retry_at", 0) and job["retry_at"] <= now)
+            if scheduled or retry:
+                self.start(job["id"], automatic=True)
+
+    def maintain_history(self):
+        """History is a journal. Only explicit user actions remove its records."""
 
     def relocate(self, job_id, directory):
         directory = str(Path(directory).expanduser().resolve())
@@ -192,7 +212,7 @@ class DownloadManager:
         self.store.update(job_id, directory=directory)
         self.store.event(job_id, "relocate", "Đã chuyển dữ liệu tải dở sang nơi lưu mới")
 
-    def start(self, job_id):
+    def start(self, job_id, automatic=False):
         with self.lock:
             if self.closed or job_id in self.active:
                 return
@@ -200,7 +220,8 @@ class DownloadManager:
                 return
             stop = threading.Event()
             self.active[job_id] = stop
-            self.store.update(job_id, state="queued", error="")
+            changes = {} if automatic else {"retry_count": 0}
+            self.store.update(job_id, state="queued", error="", retry_at=0, **changes)
             self.pool.submit(self._run, job_id, stop)
 
     def pause(self, job_id):
@@ -209,6 +230,8 @@ class DownloadManager:
                 self.active[job_id].set()
             elif self.store.get(job_id)["state"] == "scheduled":
                 self.store.update(job_id, state="paused", scheduled_at=0)
+            elif self.store.get(job_id)["state"] == "error":
+                self.store.update(job_id, state="paused", retry_at=0)
 
     def replace_url(self, job_id, url):
         validate_url(url)
@@ -225,6 +248,7 @@ class DownloadManager:
                 stop.set()
         self.scheduler.join(timeout=35)
         self.pool.shutdown(wait=False)
+        self.safety_pool.shutdown(wait=False, cancel_futures=True)
 
     def _run(self, job_id, stop):
         try:
@@ -232,7 +256,15 @@ class DownloadManager:
         except TransferCancelled:
             self.store.update(job_id, state="paused", speed=0)
         except Exception as exc:  # noqa: BLE001 -- Persist job errors at the worker boundary.
-            self.store.update(job_id, state="error", error=str(exc), speed=0)
+            count = self.store.get(job_id).get("retry_count", 0)
+            transient = (isinstance(exc, (urllib.error.URLError, TimeoutError, ConnectionError))
+                         and not isinstance(exc, (PermissionError, FileNotFoundError)))
+            if isinstance(exc, urllib.error.HTTPError):
+                transient = exc.code in {408, 429, 500, 502, 503, 504}
+            retry = self.store.setting("retry_failed", True) and transient and count < 3
+            self.store.update(job_id, state="error", error=str(exc), speed=0,
+                              retry_count=count+1 if retry else count,
+                              retry_at=time.time()+30*2**count if retry else 0)
         finally:
             self.store.update(job_id, active_connections=0)
             with self.lock:
@@ -254,7 +286,7 @@ class DownloadManager:
             raise Paused()
         job = self.store.get(job_id)
         self.store.update(job_id, state="downloading", speed=0)
-        info = probe(job["url"])
+        info = self._probe(job["url"])
         suggested = info.pop("filename", "")
         if suggested and job["filename"] in {"download.bin", filename_from_url(job["url"])}:
             job["filename"] = suggested
@@ -265,7 +297,7 @@ class DownloadManager:
                 if stop.is_set():
                     raise Paused()
                 try:
-                    mirror_info = probe(mirror)
+                    mirror_info = self._probe(mirror)
                     if (mirror_info["ranged"] and strong_etag(mirror_info["etag"])
                             and mirror_info["total"] == info["total"]):
                         sources.append((mirror, mirror_info))
@@ -315,14 +347,14 @@ class DownloadManager:
             with self.hosts.connection(source_url, stop):
                 with active_lock:
                     counts["active"] += 1
-                    counts["peak"] = max(counts["peak"], counts["active"])
-                    self.store.update(job_id, active_connections=counts["active"], peak_connections=counts["peak"])
+                    if counts["active"] > counts["peak"]:
+                        counts["peak"] = counts["active"]
+                        self.store.update(job_id, active_connections=counts["active"], peak_connections=counts["peak"])
                 try:
                     yield
                 finally:
                     with active_lock:
                         counts["active"] -= 1
-                        self.store.update(job_id, active_connections=counts["active"])
 
         def report(idx, count, force=False):
             with progress_lock:
@@ -330,8 +362,11 @@ class DownloadManager:
                 now = time.monotonic()
                 if force or now - last_write[0] > 0.4:
                     total = sum(progress.values())
+                    with active_lock:
+                        active, peak = counts["active"], counts["peak"]
                     self.store.update(job_id, downloaded=total,
-                                      speed=max(0, total-initial)/max(0.1, now-began))
+                                      speed=max(0, total-initial)/max(0.1, now-began),
+                                      active_connections=active, peak_connections=peak)
                     last_write[0] = now
 
         def transfer(chunk):
@@ -365,7 +400,7 @@ class DownloadManager:
                 if strong_etag(source_info["etag"]):
                     headers["If-Match"] = source_info["etag"]
                 try:
-                    with connection(source_url), request(source_url, headers) as response:
+                    with connection(source_url), self._request(source_url, headers) as response:
                         if response.headers.get("Content-Encoding", "identity").lower() != "identity":
                             raise ValueError("Máy chủ trả nội dung đã nén ngoài dự kiến.")
                         if info["ranged"]:
@@ -393,11 +428,12 @@ class DownloadManager:
                         if info["total"] and count != end-start+1:
                             raise OSError("Kết nối đóng khi tệp chưa đủ byte.")
                     self.store.mark_chunk(job_id, idx)
-                    with source_lock:
-                        chunk_sources[str(idx)] = source_url
-                        self.store.update(job_id, chunk_sources=dict(chunk_sources))
+                    if len(sources) > 1:
+                        with source_lock:
+                            chunk_sources[str(idx)] = source_url
+                            self.store.update(job_id, chunk_sources=dict(chunk_sources))
                     self.hosts.succeeded(source_url)
-                    report(idx, count, True)
+                    report(idx, count)
                     return
                 except (urllib.error.URLError, TimeoutError, OSError, ValueError) as exc:
                     report(idx, 0, True)
@@ -444,17 +480,9 @@ class DownloadManager:
                 raise
         if stop.is_set():
             raise Paused()
-        self.store.update(job_id, state="verifying", speed=0)
+        self.store.update(job_id, state="verifying", speed=0, downloaded=sum(progress.values()))
         assembled = staging / "assembled.tmp"
-        with assembled.open("wb") as output:
-            for idx, *_ in chunks:
-                if stop.is_set():
-                    raise Paused()
-                with (staging / f"{idx}.part").open("rb") as source:
-                    shutil.copyfileobj(source, output, BLOCK)
-            output.flush()
-            os.fsync(output.fileno())
-        digests = checksums(assembled)
+        digests = assemble_parts((staging / f"{idx}.part" for idx, *_ in chunks), assembled, stop)
         digest = digests["sha256"]
         if stop.is_set():
             raise Paused()
@@ -468,9 +496,9 @@ class DownloadManager:
                         (staging/f"{idx}.part").unlink(missing_ok=True)
             assembled.unlink()
             return self._download(job_id, stop)
+        auto_scan = self.store.setting("auto_defender", False) and os.name == "nt"
         inspection = inspect_download(assembled, job["filename"],
-            high_security=self.store.setting("high_security", False),
-            antivirus=self.store.setting("auto_defender", False) and os.name == "nt")
+            high_security=self.store.setting("high_security", False), antivirus=False)
         reasons = inspection["reasons"]
         if stop.is_set():
             raise Paused()
@@ -491,17 +519,65 @@ class DownloadManager:
         self.store.update(job_id, state="quarantined" if reasons else "complete", downloaded=size,
                           total=size, speed=0, sha256=digest, checksums=digests,
                           output=str(candidate), error="; ".join(reasons),
-                          safety_note="Cách ly" if reasons else inspection["safety_note"])
-        if not reasons and self.store.setting("auto_extract", False) and candidate.suffix.lower() == ".zip":
-            from .extraction import extract_zip
-            try:
-                extracted = extract_zip(candidate, candidate.with_name(candidate.stem+"-extracted"))
-                self.store.event(job_id, "extracted", str(extracted))
-            except (OSError, ValueError) as exc:
-                self.store.event(job_id, "extraction_error", str(exc))
+                          safety_note="Cách ly" if reasons else inspection["safety_note"],
+                          safety_check={"provider": "defender", "status": "scanning"} if auto_scan else {})
+        if auto_scan:
+            self.safety_pool.submit(self._scan_completed, job_id, candidate, digest, bool(reasons))
+        elif not reasons:
+            self._extract_completed(job_id, candidate)
         for part in staging.glob("*.part"):
             part.unlink()
         try:
             staging.rmdir()
         except OSError:
             pass
+
+    def _scan_completed(self, job_id, candidate, digest, quarantined):
+        from .safety import scan_defender, sha256_file
+        scan_risk = False
+        try:
+            result = scan_defender(candidate, stop=self.scheduler_stop)
+            status = "clean" if result.returncode == 0 else "threat" if result.returncode == 2 else "error"
+            detail = (result.stdout or "")+"\n"+(result.stderr or "")
+            if self.closed:
+                return
+            scan_risk = result.returncode != 0
+            if sha256_file(candidate) != digest:
+                status, detail = "error", "Tệp thay đổi trong lúc kiểm tra; hãy quét lại."
+                scan_risk = False
+        except TransferCancelled:
+            return
+        except Exception as error:  # noqa: BLE001 -- A failed optional scan never becomes a clean result.
+            status, detail = "error", str(error)
+            scan_risk = False
+        try:
+            if self.closed:
+                return
+            job = self.store.get(job_id)
+            if job.get("output") != str(candidate):
+                return
+            if scan_risk and not quarantined:
+                candidate = deliver(candidate, candidate.parent, candidate.name+".chuakiemtra", self.scheduler_stop)
+                self.store.update(job_id, state="quarantined", output=str(candidate), safety_note="Cách ly",
+                                  error="Defender phát hiện rủi ro hoặc chưa hoàn tất quét; cần kiểm tra trước khi mở")
+            self.store.update(job_id, safety_check={"provider": "defender", "status": status,
+                "detail": detail, "checked_at": time.time()})
+            if status == "clean" and not quarantined and not self.closed:
+                self._extract_completed(job_id, candidate)
+        except (KeyError, TransferCancelled):
+            pass  # Removing a journal entry while its scan runs must not recreate it.
+        except OSError as error:
+            try:
+                self.store.update(job_id, safety_check={"provider": "defender", "status": "error",
+                    "detail": str(error), "checked_at": time.time()})
+            except KeyError:
+                pass
+
+    def _extract_completed(self, job_id, candidate):
+        if self.store.setting("auto_extract", False) and candidate.suffix.lower() == ".zip":
+            from .extraction import extract_zip
+            try:
+                extracted = extract_zip(candidate, candidate.with_name(candidate.stem+"-extracted"))
+                self.store.event(job_id, "extracted", str(extracted))
+            except (OSError, ValueError) as exc:
+                self.store.event(job_id, "extraction_error", str(exc))

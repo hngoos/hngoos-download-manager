@@ -3,8 +3,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-Setup-0.1.13.exe"><img src="docs/assets/install-windows.svg" width="25%" alt="Download HDM for Windows 10/11 x64"></a><a href="#macos"><img src="docs/assets/install-macos.svg" width="25%" alt="Download HDM for macOS"></a><a href="https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-Linux-x64.AppImage"><img src="docs/assets/install-linux.svg" width="25%" alt="Download HDM for Linux"></a><a href="#mobile"><img src="docs/assets/install-mobile.svg" width="25%" alt="Mobile: coming soon"></a>
+  <a href="#windows"><img src="docs/assets/install-windows.svg" width="49%" alt="Download HDM for Windows 10/11 x64"></a><a href="#macos"><img src="docs/assets/install-macos.svg" width="49%" alt="Download HDM for macOS"></a>
 </p>
+
+Available for **Windows and macOS**. Chromium browser integration is configured inside HDM.
 
 ## Features
 
@@ -12,7 +14,7 @@
   automatic retries, verified mirrors and expired-link recovery.
 - **Built-in safety checks** — inspect file content, names, macros and archives,
   verify checksums and quarantine risky files. Optional Windows Defender scanning.
-- **One download screen** — detect clipboard links and choose original files,
+- **One download screen** — paste a link and choose original files,
   video or MP3/M4A from supported sources, with details revealed after Enter.
 - **Everyday essentials** — batch imports, scheduling, bandwidth limits,
   background operation, optional launch at sign-in and in-app updates.
@@ -26,7 +28,7 @@
 
 ### Download
 
-[Windows 10/11 x64 installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-Setup-0.1.13.exe)
+[Windows 10/11 x64 installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe)
 
 Or install from **Command Prompt (CMD)**:
 
@@ -38,10 +40,11 @@ curl.exe -fL https://raw.githubusercontent.com/hngoos/hngoos-download-manager/ma
 
 1. Run the downloaded `.exe` and follow the setup wizard, or run the CMD command above.
 2. Open **HDM** from the Start menu.
-3. Paste a link, press **Enter**, review the details, then click **Download**.
+3. Paste a link, choose the available options, then click **Download** or press **Enter**.
 
-For browser integration, open **Info → Browser extension** in HDM to download
-and set up the Chromium extension.
+For browser integration, click the HDM logo → **Browser**, then select your browser.
+The extension ZIP is included with HDM. Follow the installation guide inside the
+app, then enable download capture in the extension.
 
 The CMD installer verifies the package before installing it for your account.
 
@@ -54,14 +57,14 @@ The CMD installer verifies the package before installing it for your account.
 
 ### Download
 
-- [Apple Silicon (M-series)](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-macOS-arm64.dmg)
-- [Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-macOS-x64.dmg)
+- [Apple Silicon (M-series)](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-0.1.0-macOS-arm64.dmg)
+- [Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-0.1.0-macOS-x64.dmg)
 
 Or download from **Terminal** (automatically selects Apple Silicon or Intel):
 
 ```sh
 arch=$(uname -m); [ "$arch" = "x86_64" ] && arch=x64
-curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-macOS-$arch.dmg" -o HDM.dmg
+curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-0.1.0-macOS-$arch.dmg" -o HDM.dmg
 ```
 
 ### Installation
@@ -71,56 +74,6 @@ curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0
 3. Launch **HDM** from Applications.
 
 Requires macOS 15. See [platform support](docs/PLATFORMS.md#macos) for signing requirements.
-
-</details>
-
-<a id="linux"></a>
-
-<details>
-<summary><strong>Linux</strong></summary>
-
-### Download
-
-[DEB — Ubuntu/Debian x64](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-Linux-x64.deb) ·
-[AppImage — Linux x64](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-Linux-x64.AppImage)
-
-Or download the DEB from **Terminal**:
-
-```sh
-curl -fLO https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.13/HDM-0.1.13-Linux-x64.deb
-```
-
-### Installation
-
-For Ubuntu/Debian, install the downloaded DEB and launch **HDM** from your applications:
-
-```sh
-sudo apt install ./HDM-0.1.13-Linux-x64.deb
-```
-
-For AppImage, make the downloaded file executable and run it:
-
-```sh
-chmod +x HDM-0.1.13-Linux-x64.AppImage
-./HDM-0.1.13-Linux-x64.AppImage
-```
-
-Requires glibc 2.35 or later. [Platform support](docs/PLATFORMS.md#linux).
-
-</details>
-
-<a id="mobile"></a>
-
-<details>
-<summary><strong>Mobile</strong></summary>
-
-### Download
-
-Coming soon for Android and iOS.
-
-### Installation
-
-Instructions will be available when the mobile apps are released.
 
 </details>
 
