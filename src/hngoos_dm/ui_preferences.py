@@ -18,6 +18,12 @@ def buffered_presentation(method):
             return method(owner, *args, **kwargs)
         if getattr(window, "_hdm_paint_depth", 0):
             return method(owner, *args, **kwargs)
+        surface = getattr(window, "_hdm_preferences_surface", None)
+        if (method.__name__ in {"set_preference", "apply_preferences"}
+                and surface is not None and surface.winfo_ismapped()):
+            # The scene retains its previous complete frame while its model is
+            # updated. Native erasure would discard that backing pixmap.
+            return method(owner, *args, **kwargs)
 
         # Commit a pending resize before WM_SETREDRAW temporarily removes the
         # native WS_VISIBLE flag. Otherwise Tk can lose the resize/map request.
@@ -70,6 +76,9 @@ def apply_window_theme(window, theme):
 
 def redraw_window(window):
     """Invalidate native child surfaces after changing themes or overlapping pages."""
+    surface = getattr(window, "_hdm_preferences_surface", None)
+    if surface is not None and surface.winfo_ismapped():
+        return
     import os
     if os.name != "nt":
         return
@@ -785,6 +794,9 @@ def message_templates():
 
 def recolor(parent, colors):
     """Update explicit colors as well as themed styles, including open dialogs."""
+    if getattr(parent, "_hdm_shared_surface", False):
+        # Its vector frame is replaced once, after layout and translation finish.
+        return
     for option in ("background", "foreground", "insertbackground", "selectbackground",
                    "selectforeground", "highlightbackground", "highlightcolor"):
         if option in set(parent.keys()):

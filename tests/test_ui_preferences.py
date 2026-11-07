@@ -7,6 +7,7 @@ import time
 import tkinter as tk
 import unittest
 from pathlib import Path
+from tkinter import ttk
 from unittest.mock import patch
 
 from hngoos_dm.app import App
@@ -71,8 +72,8 @@ class PresentationTests(unittest.TestCase):
             self.app.set_preference("theme", "light")
             self.app.set_preference("theme", "dark")
         self.assertTrue(observed)
-        self.assertEqual(observed, [False]*len(observed),
-                         "Native painting must stay suspended across nested page/theme changes")
+        self.assertEqual(observed, [False, True, True],
+                         "Navigation buffers native surfaces; the shared scene retains its own complete frame")
         self.assertTrue(user32.IsWindowVisible(handle))
         self.assertTrue(page.winfo_ismapped())
         self.assertTrue(self.app.preference_directory.control.winfo_ismapped())
@@ -159,6 +160,216 @@ class PresentationTests(unittest.TestCase):
         self.assertFalse(page.winfo_ismapped())
         assert_atomic(self.app.open_preferences, self.app, "schedule_redraw")
         self.assertTrue(page.winfo_ismapped())
+
+    def test_preferences_text_icons_and_checks_share_one_drawing_surface(self):
+        page = self.app.open_preferences()
+        self.pump()
+        surface = getattr(page, "surface", None)
+        self.assertIsInstance(surface, tk.Canvas,
+                              "Preferences must draw labels and icons on a common surface")
+        self.assertTrue(surface.winfo_ismapped())
+        self.assertIn(self.app.brand_label, surface.items_by_widget)
+        caption = self.app.preference_rows["Giao diện"][0]
+        self.assertIn(caption, surface.items_by_widget)
+        self.assertEqual(surface.type(surface.items_by_widget[caption][0]), "text")
+        self.assertIn(self.app.browser_capture_button, surface.items_by_widget)
+        self.assertTrue(all(surface.type(item) != "window"
+                            for item in surface.items_by_widget[self.app.browser_capture_button]))
+        self.assertEqual(str(surface.cget("background")), "#121212")
+        self.assertTrue(surface.editors)
+        self.assertTrue(all(isinstance(field, ttk.Entry)
+                            for field in surface.editors.values()))
+
+    def test_shared_preferences_surface_replaces_language_and_theme_as_complete_frames(self):
+        page = self.app.open_preferences()
+        self.pump()
+        surface = getattr(page, "surface", None)
+        self.assertIsInstance(surface, tk.Canvas)
+        for language, theme in (("en", "light"), ("vi", "dark"), ("en", "dark"), ("vi", "light")):
+            self.app.set_preference("language", language)
+            self.app.set_preference("theme", theme)
+            self.pump(.1)
+            caption = self.app.preference_rows["Giao diện"][0]
+            items = surface.items_by_widget[caption]
+            self.assertEqual(len(items), 1)
+            self.assertEqual(surface.itemcget(items[0], "text"), "Appearance" if language == "en" else "Giao diện")
+            self.assertEqual(surface.presented, (theme, language))
+        self.app.open_information()
+        self.pump()
+        self.assertFalse(surface.winfo_ismapped())
+        self.assertTrue(self.app.tabs.winfo_ismapped())
+        self.app.open_preferences()
+        self.pump()
+        self.assertIs(self.app.preferences_dialog.surface, surface)
+        self.assertTrue(surface.winfo_ismapped())
+
+    def test_shared_surface_clicks_fields_and_nested_pages_preserve_commands(self):
+        from unittest.mock import Mock
+
+        from hngoos_dm.information_ui import ContentPage
+
+        page = self.app.open_preferences()
+        self.pump()
+        surface = page.surface
+        button = self.app.browser_capture_button
+        previous = self.app.browser_capture.get()
+        region = next(region for region in surface.regions if region[0] == button)
+        x, y, width, height = region[1]
+        surface.event_generate("<Button-1>", x=x+width//2, y=y+height//2)
+        self.pump()
+        self.assertEqual(self.app.browser_capture.get(), not previous)
+        source = self.app.preference_directory.control
+        editor = surface.editors[source]
+        destination = str(Path(self.folder.name)/"chosen")
+        editor.delete(0, "end")
+        editor.insert(0, destination)
+        editor.event_generate("<FocusOut>")
+        self.pump()
+        self.assertEqual(self.app.directory.get(), destination)
+        self.assertEqual(self.app.store.setting("download_directory"), destination)
+        action = self.app.preference_directory.action_button
+        callback = Mock()
+        action.command = callback
+        surface.render()
+        region = next(region for region in surface.regions if region[0] == action)
+        x, y, width, height = region[1]
+        surface.event_generate("<Button-1>", x=x+width//2, y=y+height//2)
+        self.pump()
+        callback.assert_called_once()
+        child = ContentPage(self.app, "test")
+        self.pump()
+        self.assertFalse(surface.winfo_ismapped())
+        child.destroy()
+        self.pump()
+        self.assertTrue(surface.winfo_ismapped())
+        self.assertIn(self.app.brand_label, surface.items_by_widget)
+
+    def test_shared_surface_rapid_choices_publish_only_complete_scenes(self):
+        page = self.app.open_preferences()
+        self.pump()
+        surface = page.surface
+        for index in range(20):
+            choices = self.app.preference_language if index % 2 == 0 else self.app.preference_theme
+            value = ("en" if index % 4 == 0 else "vi") if index % 2 == 0 else (
+                "light" if index % 4 == 1 else "dark")
+            button = choices.buttons[value]
+            region = next(region for region in surface.regions if region[0] == button)
+            x, y, width, height = region[1]
+            surface.event_generate("<Button-1>", x=x+width//2, y=y+height//2)
+            self.pump(.1)
+            self.assertEqual(surface.presented, (self.app.theme, self.app.locale.language))
+            for widget, items in surface.items_by_widget.items():
+                if isinstance(widget, ttk.Label) and not widget.cget("image"):
+                    self.assertEqual(len(items), 1)
+                    self.assertEqual(surface.itemcget(items[0], "text"), surface.text(widget))
+        final = self.app.preference_language.buttons["en"]
+        region = next(region for region in surface.regions if region[0] == final)
+        x, y, width, height = region[1]
+        for index in range(20):
+            surface.event_generate("<Button-1>", x=x+width//2, y=y+height//2, when="tail")
+        self.pump(.4)
+        self.assertEqual(self.app.locale.language, "en")
+        self.assertIsNone(surface.action_timer)
+        self.assertIsNone(surface.pending_action)
+
+    @unittest.skipUnless(sys.platform == "win32", "Windows native painting")
+    def test_shared_surface_does_not_force_native_erasure_during_preferences(self):
+        import ctypes
+
+        page = self.app.open_preferences()
+        self.pump()
+        with patch.object(ctypes.windll.user32, "RedrawWindow") as redraw:
+            for language, theme in (("en", "light"), ("vi", "dark")):
+                self.app.set_preference("language", language)
+                self.app.set_preference("theme", theme)
+                self.pump(.1)
+                self.assertEqual(page.surface.presented, (theme, language))
+            redraw.assert_not_called()
+
+    def test_shared_surface_tracks_native_and_programmatic_settings_changes(self):
+        page = self.app.open_preferences()
+        self.pump()
+        surface = page.surface
+        button = self.app.browser_capture_button
+        button.invoke()
+        self.pump()
+        mark = surface.items_by_widget[button][0]
+        self.assertEqual(surface.itemcget(mark, "fill"), "#67d1f4" if self.app.browser_capture.get() else "#121212")
+        self.app.proxy_mode.set("manual")
+        self.pump()
+        self.assertEqual(len(surface.editors), 2)
+        visible = [item for item in surface.editor_windows.values()
+                   if surface.itemcget(item, "state") != "hidden"]
+        self.assertEqual(len(visible), 2)
+        self.app.proxy_mode.set("direct")
+        self.pump()
+        visible = [item for item in surface.editor_windows.values()
+                   if surface.itemcget(item, "state") != "hidden"]
+        self.assertEqual(len(visible), 1)
+
+    def test_shared_surface_retains_images_until_the_next_frame_is_ready(self):
+        self.app.open_preferences()
+        self.app.set_preference("theme", "light")
+        self.pump()
+        image = str(self.app.preference_directory.action_button.image)
+        self.app.set_preference("theme", "dark")
+        gc.collect()
+        self.assertIn(image, self.root.tk.call("image", "names"),
+                      "The displayed frame must retain its images until replacement")
+        self.pump()
+        self.assertEqual(self.app.preferences_dialog.surface.presented, ("dark", self.app.locale.language))
+
+    def test_shared_surface_keeps_latest_choice_for_each_independent_setting(self):
+        surface = self.app.open_preferences().surface
+        self.pump()
+        for choices, value in ((self.app.preference_theme, "light"), (self.app.preference_language, "en")):
+            region = next(region for region in surface.regions if region[0] == choices.buttons[value])
+            x, y, width, height = region[1]
+            surface.event_generate("<Button-1>", x=x+width//2, y=y+height//2, when="tail")
+        self.pump()
+        self.assertEqual(surface.presented, ("light", "en"))
+
+    def test_shared_surface_keyboard_modal_and_recreation_preserve_actions(self):
+        from hngoos_dm.information_ui import CenteredCard
+
+        page = self.app.open_preferences()
+        self.pump()
+        surface = page.surface
+        surface.focus_force()
+        surface.focused = self.app.browser_capture_button
+        previous = self.app.browser_capture.get()
+        surface.event_generate("<Return>")
+        self.pump()
+        self.assertEqual(self.app.browser_capture.get(), not previous)
+        editor = surface.editors[self.app.preference_directory.control]
+        editor.focus_force()
+        self.pump()
+        editor.event_generate("<Tab>")
+        self.pump()
+        self.assertIs(self.root.focus_get(), surface)
+        surface.event_generate("<Shift-Tab>")
+        self.pump()
+        self.assertIs(self.root.focus_get(), editor)
+        card = CenteredCard(self.app)
+        self.pump()
+        region = next(region for region in surface.regions if region[0] == self.app.browser_capture_button)
+        x, y, width, height = region[1]
+        surface.event_generate("<Button-1>", x=x+width//2, y=y+height//2)
+        self.pump()
+        self.assertFalse(card.winfo_exists())
+        self.assertEqual(self.app.browser_capture.get(), not previous)
+        for _ in range(3):
+            old = self.app.preferences_dialog.surface
+            button = self.app.preference_reset_button
+            region = next(region for region in old.regions if region[0] == button)
+            x, y, width, height = region[1]
+            with patch("hngoos_dm.app.messagebox.askyesno", return_value=True):
+                old.event_generate("<Button-1>", x=x+width//2, y=y+height//2)
+            self.pump()
+            self.assertFalse(old.winfo_exists())
+            self.assertFalse(old.traces)
+            self.assertFalse(old.geometry_bindings)
+            self.assertTrue(self.app.preferences_dialog.surface.winfo_ismapped())
 
     def test_selected_status_and_last_column_icons_survive_theme_changes(self):
         for theme in ("dark", "light", "dark"):

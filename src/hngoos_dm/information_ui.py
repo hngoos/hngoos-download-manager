@@ -160,6 +160,8 @@ class ContentPage(ttk.Frame):
         if not app.page_stack:
             app.resize_source_card()
         previous = app.page_stack[-1] if app.page_stack else app.tabs
+        if hasattr(previous, "surface"):
+            previous.surface.hide()
         previous.pack_forget()
         previous.place_forget()
         if not app.page_stack:
@@ -172,6 +174,8 @@ class ContentPage(ttk.Frame):
             app.header.pack_forget()
             if hasattr(self, "position_columns"):
                 self.position_columns()
+            if hasattr(self, "surface"):
+                self.surface.show()
         else:
             if getattr(previous, "beside_logo", False):
                 app.header.place_forget()
@@ -188,6 +192,8 @@ class ContentPage(ttk.Frame):
         for child in list(app.page_stack[index+1:])[::-1]:
             child.destroy()
         app.page_stack.remove(self)
+        if hasattr(self, "surface"):
+            self.surface.hide()
         self.place_forget()
         self.pack_forget()
         if not getattr(app, "_closing", False) and app.tabs.winfo_exists():
@@ -195,6 +201,8 @@ class ContentPage(ttk.Frame):
             if getattr(previous, "beside_logo", False):
                 previous.place(relx=.04, rely=.05, relwidth=.90, relheight=.88)
                 previous.position_columns()
+                if hasattr(previous, "surface"):
+                    previous.surface.show()
             else:
                 previous.pack(fill="both", expand=True)
             if not app.page_stack:
@@ -210,6 +218,8 @@ class ContentPage(ttk.Frame):
 
     def destroy(self):
         self.hide()
+        if hasattr(self, "surface"):
+            self.surface.destroy()
         super().destroy()
 
 
@@ -279,6 +289,8 @@ def preferences_page(app):
     dialog.fit = fit
     fit()
     app.apply_preferences()
+    from .preferences_surface import PreferencesSurface
+    dialog.surface = PreferencesSurface(app, dialog)
     return dialog
 
 
