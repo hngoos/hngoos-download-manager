@@ -37,6 +37,18 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: 
 [Run]
 Filename: "{app}\HDM.exe"; Description: "Open HDM"; Flags: nowait postinstall skipifsilent runascurrentuser
 
+[UninstallDelete]
+; Remove application history/settings on uninstall, never user downloads or staging.
+; Installing an update does not execute this section.
+Type: files; Name: "{localappdata}\HDM\downloads.sqlite3"
+Type: files; Name: "{localappdata}\HDM\downloads.sqlite3-wal"
+Type: files; Name: "{localappdata}\HDM\downloads.sqlite3-shm"
+Type: files; Name: "{localappdata}\HDM\downloads.sqlite3-journal"
+Type: files; Name: "{localappdata}\HngoosDM\downloads.sqlite3"
+Type: files; Name: "{localappdata}\HngoosDM\downloads.sqlite3-wal"
+Type: files; Name: "{localappdata}\HngoosDM\downloads.sqlite3-shm"
+Type: files; Name: "{localappdata}\HngoosDM\downloads.sqlite3-journal"
+
 [Code]
 function SetEnvironmentVariable(Name, Value: String): Boolean;
   external 'SetEnvironmentVariableW@kernel32.dll stdcall';

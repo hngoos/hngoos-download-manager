@@ -270,7 +270,9 @@ def external_download(executable, url, settings, stop, progress):
     import os
     import subprocess
     from collections import deque
+    # Match preview's explicit runtimes instead of adding yt-dlp's implicit Deno PATH scan.
     arguments = [str(executable), "--newline", "--progress", "--no-color", "--windows-filenames", "--no-overwrites",
+                 "--no-js-runtimes",
                  "--no-playlist" if settings["noplaylist"] else "--yes-playlist", "-o", settings["outtmpl"], "-f", settings["format"]]
     arguments += ["--print", "after_move:HNGOOS_FILE:%(filepath)s"]
     arguments += ["--progress-template",

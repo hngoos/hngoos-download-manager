@@ -131,4 +131,6 @@ Source commits on `main` are not available through this check until published.
 Existing installations may retain the legacy Windows location
 `%LOCALAPPDATA%\HngoosDM`. `HDM_DATA_DIR` overrides the data directory.
 History may contain private URLs. Close HDM before backing up or removing its
-data. Uninstalling HDM does not remove files saved elsewhere.
+data. The Windows uninstaller removes HDM's history and settings, including
+legacy databases. Installing an update over the existing app preserves them.
+Downloaded files and staging files are kept.

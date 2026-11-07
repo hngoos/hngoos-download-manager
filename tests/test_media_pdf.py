@@ -7,6 +7,31 @@ from hngoos_dm.media import find_ffmpeg
 
 
 class MediaQualityTests(unittest.TestCase):
+    def test_external_downloader_does_not_probe_unconfigured_runtimes_in_blocked_paths(self):
+        import subprocess
+        import sys
+        import threading
+        from unittest.mock import patch
+
+        from yt_dlp import YoutubeDL, parse_options
+
+        from hngoos_dm.media import external_download, ydl_options
+
+        class CaptureCommand(Exception):
+            pass
+
+        settings = ydl_options("out")
+        settings["js_runtimes"] = {"node": {"path": sys.executable}}
+        with patch.object(subprocess, "Popen", side_effect=CaptureCommand) as launch, self.assertRaises(CaptureCommand):
+            external_download("yt-dlp", "https://example.com/video", settings,
+                              threading.Event(), None)
+        parsed = parse_options(launch.call_args.args[0][1:])
+        with patch("yt_dlp.utils._jsruntime._find_exe", side_effect=PermissionError("Untrusted mount point")), \
+                YoutubeDL(parsed.ydl_opts) as downloader:
+            for runtime in downloader._js_runtimes.values():
+                _ = runtime.info
+            self.assertEqual(set(downloader._js_runtimes), {"node"})
+
     def test_portrait_quality_uses_source_tier_instead_of_pixel_height(self):
         from hngoos_dm.media import video_quality
         self.assertEqual(video_quality({"format_note": "360p", "width": 360, "height": 468}), 360)

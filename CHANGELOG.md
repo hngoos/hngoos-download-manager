@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Remove Windows download history and settings on uninstall so reinstalling starts with an empty journal; keep downloaded files and preserve history during upgrades.
+- Prevent standalone media downloads from probing unconfigured JavaScript runtimes through inaccessible Windows PATH junctions.
 - Restart partial downloads when their URL changes, preventing mixed bytes from unrelated resources with identical ETags and sizes.
 - Preserve available audio when selecting video streams across source containers; reject incompatible WebM audio instead of producing a silent file or a failed merge.
 - Keep preference selections and proxy button widths synchronized when switching language or appearance.
