@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Hngoos Download Manager",
+  "version": "0.1.0",
+  "description": "Send browser downloads and videos to Hngoos Download Manager.",
+  "minimum_chrome_version": "120",
+  "homepage_url": "https://github.com/hngoos/hngoos-download-manager",
+  "icons": {"16":"assets/icons/hdm-16.png","32":"assets/icons/hdm-32.png","48":"assets/icons/hdm-48.png","128":"assets/icons/hdm-128.png"},
+  "permissions": ["nativeMessaging", "contextMenus", "storage", "activeTab", "scripting", "downloads", "alarms", "webRequest", "webNavigation"],
+  "host_permissions": ["<all_urls>"],
+  "optional_permissions": ["cookies"],
+  "background": {"service_worker": "background.js", "type": "module"},
+  "action": {"default_popup": "popup.html", "default_title": "Hngoos Download Manager", "default_icon": {"16":"assets/icons/hdm-16.png","32":"assets/icons/hdm-32.png","48":"assets/icons/hdm-48.png","128":"assets/icons/hdm-128.png"}},
+  "options_page": "options.html"
+}

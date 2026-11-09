@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hngoos Download Manager</title>
+<link rel="icon" href="assets/icons/hdm-32.png">
+<link rel="stylesheet" href="style.css">
+<body class="popup">
+  <header class="brand">
+    <img src="assets/icons/hdm-128.png" width="44" height="44" alt="">
+    <div><h1>HDM</h1><span>Hngoos Download Manager</span></div>
+    <button id="settings" class="icon-button" aria-label="Settings"></button>
+  </header>
+  <main>
+    <label class="toggle"><span data-i18n="capture">Send downloads to HDM</span><input id="takeover" type="checkbox" role="switch"></label>
+    <button id="download"><span data-i18n="download">Download this page or video</span></button>
+    <button id="video"><span data-i18n="video">Show video download button</span></button>
+    <section id="media" hidden>
+      <label for="streams" data-i18n="streams">Detected video streams</label>
+      <select id="streams"></select>
+      <button id="stream-download" data-i18n="downloadStream">Download selected stream</button>
+    </section>
+    <label class="toggle session"><span data-i18n="session">Use this site's signed-in session</span><input id="session" type="checkbox"></label>
+  </main>
+  <footer><p id="connection" role="status" aria-live="polite"></p><p id="status" role="status" aria-live="polite"></p></footer>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
