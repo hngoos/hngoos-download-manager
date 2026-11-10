@@ -23,13 +23,15 @@ envelope = {"payload": payload, "signature": base64.b64encode(key.sign(canonical
 (folder/"update-manifest.json").write_text(json.dumps(envelope, ensure_ascii=False, indent=2), encoding="utf-8")
 notes = f"""# Hngoos Download Manager v{__version__}
 
-The first release of HDM for Windows and macOS.
+Browser integration and audio export fixes for Windows and macOS.
 
-- Adaptive parallel downloads with connection reuse, pause and resume.
-- Video and audio formats from supported sources.
-- Optional automatic verification and manual Windows Defender checks.
-- Persistent download history, light/dark themes, and English/Vietnamese.
-- Included browser extension and installation guide in Preferences.
+- The video download button is an on/off switch that persists across reloads and browser restarts.
+- Browser download requests restore and activate the HDM window automatically.
+- Received media links open filename, format, and quality choices without pasting again.
+- Export the audio from supported videos as PCM WAV, preserving the source sample rate.
+
+After updating HDM, reload its extension on your browser's extensions page,
+then refresh existing video tabs to load the updated content script.
 
 Choose the Windows x64 installer or the macOS DMG matching your processor.
 Windows packages are not Authenticode-signed; macOS packages are not notarized.

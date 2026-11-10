@@ -15,7 +15,7 @@ formats, and manage transfers in one place.
 - **Parallel downloads:** up to 32 HTTP connections, pause and resume,
   automatic retries, and recovery from interrupted transfers.
 - **Video and audio:** format and quality choices from supported sources,
-  with MP3 and M4A audio conversion.
+  with MP3, M4A, and PCM WAV audio conversion.
 - **File checks:** checksum verification, local content inspection, and
   Windows Defender scanning on Windows.
 - **Download history:** progress, transfer speed, scan results, and a record
@@ -30,7 +30,7 @@ formats, and manage transfers in one place.
 
 ## Download
 
-The current release is **v0.1.0**.
+The current release is **v0.1.1**.
 
 ### Windows
 
@@ -38,7 +38,7 @@ The current release is **v0.1.0**.
 
 #### Download
 
-[Download the Windows installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe)
+[Download the Windows installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Setup-0.1.1.exe)
 
 Or install from Command Prompt (CMD):
 
@@ -62,15 +62,15 @@ Click the HDM logo to change the download folder in Preferences.
 
 #### Download
 
-- [Download for Apple Silicon](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-0.1.0-macOS-arm64.dmg)
-- [Download for Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-0.1.0-macOS-x64.dmg)
+- [Download for Apple Silicon](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-macOS-arm64.dmg)
+- [Download for Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-macOS-x64.dmg)
 
 Or download the matching package from Terminal:
 
 ```sh
 hdm_arch=$(uname -m)
 [ "$hdm_arch" = "x86_64" ] && hdm_arch=x64
-curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-0.1.0-macOS-$hdm_arch.dmg" -o HDM.dmg
+curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-0.1.1-macOS-$hdm_arch.dmg" -o HDM.dmg
 ```
 
 #### Installation

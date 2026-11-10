@@ -11,6 +11,37 @@ def platform_label():
     return {"win32": "Windows", "darwin": "macOS"}.get(sys.platform, "Linux")
 
 
+def allow_app_activation():
+    """Transfer a browser download's user gesture to HDM's existing window."""
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+
+        allow = ctypes.windll.user32.AllowSetForegroundWindow
+        allow.argtypes, allow.restype = (wintypes.DWORD,), wintypes.BOOL
+        allow(0xFFFFFFFF)  # ASFW_ANY; Windows revokes this on the next user input.
+
+
+def activate_window(root):
+    """Restore the download window without leaving it permanently on top."""
+    root.deiconify()
+    root.lift()
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+
+        user = ctypes.windll.user32
+        user.GetAncestor.argtypes, user.GetAncestor.restype = (wintypes.HWND, wintypes.UINT), wintypes.HWND
+        user.SetForegroundWindow.argtypes, user.SetForegroundWindow.restype = (wintypes.HWND,), wintypes.BOOL
+        user.ShowWindow.argtypes, user.ShowWindow.restype = (wintypes.HWND, ctypes.c_int), wintypes.BOOL
+        window = user.GetAncestor(root.winfo_id(), 2)  # GA_ROOT: Tk's decorated native window.
+        if window:
+            if root.state() != "zoomed":
+                user.ShowWindow(window, 9)  # SW_RESTORE
+            user.SetForegroundWindow(window)
+    root.focus_force()
+
+
 def open_path(path):
     target = str(Path(path).resolve())
     if os.name == "nt":

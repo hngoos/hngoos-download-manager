@@ -48,7 +48,8 @@ class BrowserIntegrationTests(unittest.TestCase):
                         self.assertEqual(page.locator("html").get_attribute("data-theme"), theme)
                         self.assertTrue(page.evaluate("document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight"))
                         self.assertTrue(page.locator(".brand img").evaluate("image => image.complete && image.naturalWidth >= 44"))
-                        self.assertEqual(page.locator("#download svg, #video svg").count(), 2)
+                        self.assertEqual(page.locator("#download svg").count(), 1)
+                        self.assertEqual(page.locator("#video").get_attribute("role"), "switch")
                         artifacts = os.environ.get("HNGOOS_BROWSER_ARTIFACTS")
                         if artifacts:
                             Path(artifacts).mkdir(parents=True, exist_ok=True)
@@ -81,6 +82,61 @@ class BrowserIntegrationTests(unittest.TestCase):
                 options.locator("#status").wait_for()
                 self.assertEqual(options.locator("button").count(), 0)
                 self.assertEqual(worker.evaluate("async () => (await chrome.storage.session.get('optionsTabId')).optionsTabId"), tab["id"])
+            finally:
+                context.close()
+
+    def test_video_toggle_persists_across_reload_navigation_and_browser_restart(self):
+        import json
+
+        from playwright.sync_api import sync_playwright
+
+        extension = Path(__file__).resolve().parents[1]/"browser-extension"
+        html = "<html><body><video src='https://example.com/video.mp4'></video></body></html>"
+        with tempfile.TemporaryDirectory() as profile, sync_playwright() as playwright:
+            context = playwright.chromium.launch_persistent_context(profile, headless=True, channel="chromium",
+                args=[f"--disable-extensions-except={extension}", f"--load-extension={extension}"])
+            try:
+                context.route("https://example.com/**", lambda route: route.fulfill(body=html, content_type="text/html"))
+                worker = context.service_workers[0] if context.service_workers else context.wait_for_event("serviceworker")
+                extension_id = worker.url.split("/")[2]
+                source = context.new_page()
+                source.goto("https://example.com/video-page")
+                tab = worker.evaluate("async () => (await chrome.tabs.query({url:'https://example.com/video-page'}))[0]")
+                popup = context.new_page()
+                popup.add_init_script("chrome.runtime.sendNativeMessage = () => new Promise(() => {});"
+                    "const queryTabs = chrome.tabs.query.bind(chrome.tabs);"
+                    f"chrome.tabs.query = async query => query.active ? [{json.dumps(tab)}] : queryTabs(query);")
+                popup.goto(f"chrome-extension://{extension_id}/popup.html")
+                toggle = popup.get_by_role("switch", name="Show video download button")
+                toggle.wait_for()
+                self.assertFalse(toggle.is_checked())
+                self.assertEqual(source.locator("[data-hdm-video-download]").count(), 0)
+                toggle.check()
+                source.locator("[data-hdm-video-download]").wait_for()
+                source.reload()
+                source.locator("[data-hdm-video-download]").wait_for()
+                source.goto("https://example.com/next-video")
+                source.locator("[data-hdm-video-download]").wait_for()
+                source.evaluate("document.body.append(document.createElement('video'))")
+                source.wait_for_function("document.querySelectorAll('[data-hdm-video-download]').length === 2")
+                popup.reload()
+                toggle.wait_for()
+                self.assertTrue(toggle.is_checked())
+                toggle.uncheck()
+                source.wait_for_function("!document.querySelector('[data-hdm-video-download]')")
+                source.reload()
+                self.assertEqual(source.locator("[data-hdm-video-download]").count(), 0)
+                toggle.check()
+                source.locator("[data-hdm-video-download]").wait_for()
+                popup.wait_for_function("async () => (await chrome.storage.local.get('videoButton')).videoButton === true")
+                context.close()
+                context = playwright.chromium.launch_persistent_context(profile, headless=True, channel="chromium",
+                    args=[f"--disable-extensions-except={extension}", f"--load-extension={extension}"])
+                context.route("https://example.com/**", lambda route: route.fulfill(body=html, content_type="text/html"))
+                source = context.new_page()
+                source.goto("https://example.com/restarted")
+                source.locator("[data-hdm-video-download]").wait_for()
+                self.assertEqual(source.locator("[data-hdm-video-download]").count(), 1)
             finally:
                 context.close()
 
@@ -275,7 +331,9 @@ class BrowserIntegrationTests(unittest.TestCase):
                 page = context.new_page()
                 page.set_content("<html><body><video src='https://example.com/video.mp4'></video></body></html>")
                 # Execute the same isolated-world button insertion script, with a safe local mock for transport.
-                page.evaluate("globalThis.__hngoosMessages=0;globalThis.chrome={runtime:{sendMessage:async()=>{globalThis.__hngoosMessages++;return {ok:true}}}}")
+                page.evaluate("globalThis.__hngoosMessages=0;globalThis.chrome={"
+                    "storage:{local:{get:async()=>({videoButton:true})},onChanged:{addListener(){}}},"
+                    "runtime:{sendMessage:async()=>{globalThis.__hngoosMessages++;return {ok:true}}}}")
                 page.add_script_tag(path=str(extension/"video.js"))
                 button = page.locator("button")
                 self.assertEqual(button.count(), 1)

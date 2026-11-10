@@ -179,6 +179,24 @@ class MediaQualityTests(unittest.TestCase):
 
 
 class ProcessingTests(unittest.TestCase):
+    def test_video_audio_exports_as_pcm_wav_with_original_sample_rate(self):
+        import threading
+        import wave
+
+        from hngoos_dm.media import MediaOptions, normalize_audio, ydl_options
+
+        options = MediaOptions(audio="wav")
+        settings = ydl_options(self.folder, options, ffmpeg=find_ffmpeg())
+        self.assertEqual(settings["format"], "bestaudio/best")
+        normalize_audio(self.folder, options, threading.Event())
+        target = self.folder/"source.wav"
+        with wave.open(str(target), "rb") as audio:
+            self.assertEqual(audio.getframerate(), 48000)
+            self.assertEqual(audio.getsampwidth(), 2)
+            self.assertEqual(audio.getcomptype(), "NONE")
+            self.assertGreater(audio.getnframes(), 90000)
+        self.assertFalse(self.source.exists())
+
     @classmethod
     def setUpClass(cls):
         try:

@@ -1012,6 +1012,74 @@ class PresentationTests(unittest.TestCase):
             self.app.update_safety_buttons()
             self.assertEqual(str(self.app.row_cell_labels[row_id, "speed"]["foreground"]), PALETTES[theme][3])
 
+    def test_browser_video_automatically_opens_filename_and_source_options(self):
+        url = "https://www.youtube.com/watch?v=browser-fixture"
+        description = {"original": url, "url": url, "kind": "media", "filename": "Browser video.mp4",
+            "heights": [720], "formats": [
+                {"format_id": "22", "ext": "mp4", "height": 720, "vcodec": "avc1", "acodec": "aac"},
+                {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "aac", "abr": 128},
+            ]}
+        self.app.open_preferences()
+        self.app.store.enqueue("browser-video-options", {"kind": "video", "url": url, "origin": "browser"})
+        with patch("hngoos_dm.links.describe_source", return_value=description):
+            self.app._refresh_state()
+            deadline = time.monotonic()+3
+            while not getattr(self.app, "download_editor", None) and time.monotonic() < deadline:
+                self.pump(.05)
+            self.assertIsNotNone(getattr(self.app, "download_editor", None),
+                                 "A browser video must open its download options without a paste or Enter")
+            self.pump(.1)
+        editor = self.app.download_editor
+        self.assertEqual(editor.filename.get(), "Browser video.mp4")
+        self.assertEqual(set(editor.format_choices.buttons), {"MP4", "M4A", "MP3", "WAV"})
+        self.assertEqual(editor.heights, [720])
+        self.assertTrue(editor.quality_label.winfo_ismapped())
+        self.assertFalse(self.app.page_stack)
+        self.assertEqual(self.app.store.all(), [], "Receiving a video must wait for download confirmation")
+
+    def test_browser_file_labelled_youtube_link_still_opens_media_options(self):
+        url = "https://www.youtube.com/watch?v=browser-file-fixture"
+        description = {"original": url, "url": url, "kind": "media", "filename": "Video.mp4",
+            "heights": [720], "formats": [
+                {"format_id": "22", "ext": "mp4", "height": 720, "vcodec": "avc1", "acodec": "aac"}]}
+        self.root.withdraw()
+        self.app.store.enqueue("media-labelled-file", {"kind": "file", "url": url, "filename": "", "origin": "browser"})
+        with patch("hngoos_dm.links.describe_source", return_value=description):
+            self.app._refresh_state()
+            deadline = time.monotonic()+3
+            while (not getattr(self.app, "download_editor", None)
+                   or self.app.download_editor.kind != "media") and time.monotonic() < deadline:
+                self.pump(.05)
+            self.assertEqual(self.app.download_editor.kind, "media")
+        self.assertIn(self.root.state(), {"normal", "zoomed"})
+        self.assertTrue(self.app.download_editor.show_options)
+
+    def test_wav_choice_submits_audio_extraction_without_lossy_bitrate_choices(self):
+        from hngoos_dm.download_ui import DownloadEditor
+
+        url = "https://youtu.be/wav-fixture"
+        self.app.url.set(url)
+        editor = self.app.download_editor = DownloadEditor(self.app, {
+            "original": url, "url": url, "kind": "media", "filename": "Audio source.mp4",
+            "formats": [{"format_id": "22", "ext": "mp4", "height": 720,
+                         "vcodec": "avc1", "acodec": "aac"}]})
+        editor.pack(fill="both", expand=True)
+        self.assertIn("WAV", editor.format_choices.buttons)
+        editor.format.set("WAV")
+        editor.format_changed()
+        self.assertEqual(editor.filename.get(), "Audio source.wav")
+        self.assertFalse(editor.video_output)
+        self.assertEqual(editor.format_id.get(), "")
+        self.assertEqual(set(editor.quality_choices.buttons), {"Original"})
+        target = Path(self.folder.name)/"Audio source.wav"
+        target.write_bytes(b"audio fixture")
+        with patch("hngoos_dm.media.download_video", return_value=[target]) as download:
+            editor.confirm()
+            deadline = time.monotonic()+3
+            while self.app.media_busy and time.monotonic() < deadline:
+                self.pump(.05)
+        self.assertEqual(download.call_args.kwargs["options"].audio, "wav")
+
     def test_browser_download_uses_existing_folder_and_inline_confirmation(self):
         page = self.app.open_preferences()
         self.pump()
@@ -1221,7 +1289,7 @@ class PresentationTests(unittest.TestCase):
             ]})
         editor.pack(fill="both", expand=True)
         self.pump()
-        self.assertEqual(set(editor.format_choices.buttons), {"MP4", "M4A", "MP3"})
+        self.assertEqual(set(editor.format_choices.buttons), {"MP4", "M4A", "MP3", "WAV"})
         self.assertEqual(set(editor.quality_choices.buttons), {"720"})
         self.assertEqual(editor.format_id.get(), "22")
         editor.format_choices.buttons["M4A"].invoke()

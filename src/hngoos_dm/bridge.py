@@ -163,6 +163,8 @@ def main():
                 return
             response = handle_message(message, store)
             if response.get("queued"):
+                from .platforms import allow_app_activation
+                allow_app_activation()
                 # The app starts only for a user-initiated download, never for a ping.
                 if not (data_dir / "instance.lock").exists():
                     launch_app()
@@ -171,7 +173,7 @@ def main():
                     try:
                         lock = InstanceLock(data_dir / "instance.lock")
                     except RuntimeError:
-                        pass
+                        InstanceLock.request_show(data_dir / "instance.lock")
                     else:
                         lock.close()
                         launch_app()

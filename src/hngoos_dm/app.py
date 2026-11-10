@@ -922,9 +922,9 @@ class App:
                 from .dialogs import torrent_dialog
                 self.guarded(lambda: torrent_dialog(self, value, self.directory.get()))
                 return
-            if kind == "media" or self.download_format.get() in {"MP4", "MOV", "MP3", "M4A"}:
+            if kind == "media" or self.download_format.get() in {"MP4", "MOV", "MP3", "M4A", "WAV"}:
                 self.media_url.set(value)
-                self.start_media({"MP3": "mp3", "M4A": "m4a"}.get(self.download_format.get(), ""))
+                self.start_media({"MP3": "mp3", "M4A": "m4a", "WAV": "wav"}.get(self.download_format.get(), ""))
                 return
             digest = self.expected_hash.get().strip()
             algorithm = self.hash_algorithm.get().lower().replace("-", "")
@@ -1967,10 +1967,12 @@ class App:
         self.resize_source_card()
 
     def _refresh_state(self):
+        from .links import link_kind
+        from .platforms import activate_window
+
         instance = getattr(self, "instance", None)
         if instance and instance.consume_show_request():
-            self.root.deiconify()
-            self.root.lift()
+            activate_window(self.root)
         self.automatic_updates.tick()
         self.automatic_video_updates.tick()
         now = time.monotonic()
@@ -1989,9 +1991,7 @@ class App:
                 if item["kind"] != "invoice":
                     if self.page_stack:
                         self.page_stack[0].hide()
-                    self.root.deiconify()
-                    self.root.lift()
-                    self.root.focus_force()
+                    activate_window(self.root)
                 self.store.acknowledge(request_id, "reviewing")
                 if item["kind"] == "invoice":
                     from .invoices import save_invoice
@@ -2001,7 +2001,7 @@ class App:
                         self.status.set(f"Đã lưu phiếu: {path}")
                     self.background(lambda item=item: save_invoice(item["url"], item["html"], item["order_id"], destination),
                         archived)
-                elif item["kind"] == "video":
+                elif item["kind"] == "video" or link_kind(item["url"]) == "media":
                     self.video_inbox_busy = True
                     self.browser_session = item.get("session_dpapi", "")
                     self.browser_session_url = item["url"]
@@ -2010,6 +2010,7 @@ class App:
                     self.url.set(item["url"])
                     self.status.set("Đã nhận link video từ trình duyệt; chọn chất lượng rồi tải.")
                     self.store.acknowledge(request_id)
+                    self.prepare_download()
                 else:
                     suggested = item["filename"] or filename_from_url(item["url"])
                     if item.get("auto_start"):

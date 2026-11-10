@@ -69,7 +69,7 @@ class DownloadEditor(ttk.Frame):
         available = list(dict.fromkeys(item["ext"].upper() for item in self.source_formats)) if self.kind == "media" else ["Original"]
         available.sort(key=lambda ext: not any(item["ext"].upper() == ext and item.get("height") for item in self.source_formats))
         if self.kind == "media" and any(item.get("acodec") not in {None, "none"} for item in self.source_formats):
-            available.append("MP3")
+            available.extend(value for value in ("MP3", "WAV") if value not in available)
         self.format.set(available[0] if available else "Original")
         self.format_label = ttk.Label(self, text="Định dạng", style="Source.Card.TLabel")
         self.format_label.grid(row=2, column=0, sticky="w", padx=(0, 12))

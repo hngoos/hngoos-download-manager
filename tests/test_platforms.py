@@ -11,6 +11,40 @@ from hngoos_dm.safety import inspect_file
 
 
 class PlatformTests(unittest.TestCase):
+    def test_browser_request_wakes_running_instance_without_starting_another_app(self):
+        import io
+        from types import SimpleNamespace
+
+        from hngoos_dm.bridge import main, read_message, write_message
+        from hngoos_dm.instance import InstanceLock
+        from hngoos_dm.store import Store
+
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            owner = InstanceLock(root/"instance.lock")
+            try:
+                incoming, outgoing = io.BytesIO(), io.BytesIO()
+                write_message(incoming, {"action": "download", "kind": "video", "id": "wake-fixture",
+                                         "url": "https://www.youtube.com/watch?v=fixture"})
+                incoming.seek(0)
+                stream = SimpleNamespace(buffer=incoming, fileno=lambda: 0)
+                output = SimpleNamespace(buffer=outgoing, fileno=lambda: 1)
+                with patch("hngoos_dm.bridge.data_directory", return_value=root), \
+                        patch("hngoos_dm.bridge.sys.stdin", stream), patch("hngoos_dm.bridge.sys.stdout", output), \
+                        patch("hngoos_dm.bridge.launch_app") as launch:
+                    if os.name == "nt":
+                        with patch("msvcrt.setmode"):
+                            main()
+                    else:
+                        main()
+                outgoing.seek(0)
+                self.assertTrue(read_message(outgoing)["queued"])
+                self.assertEqual(len(Store(root/"downloads.sqlite3").inbox()), 1)
+                launch.assert_not_called()
+                self.assertTrue(owner.consume_show_request(), "Browser requests must wake an existing hidden/busy app")
+            finally:
+                owner.close()
+
     def test_update_installer_does_not_inherit_onefile_runtime_state(self):
         from hngoos_dm.platforms import launch_installer
         inherited = {"_PYI_ARCHIVE_FILE": "old/HDM.exe", "_PYI_APPLICATION_HOME_DIR": "deleted/_MEI123",

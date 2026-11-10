@@ -24,6 +24,11 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible { 
 label { display:block; margin:12px 0; }
 .toggle { display:flex; align-items:center; justify-content:space-between; gap:14px; }
 .toggle input { flex-shrink:0; accent-color:var(--text); width:16px; height:16px; margin:0; }
+#video { appearance:none; width:32px; height:18px; border:1px solid var(--muted); border-radius:10px; background:var(--control); cursor:pointer; position:relative; }
+#video::before { content:''; position:absolute; width:12px; height:12px; top:2px; left:2px; border-radius:50%; background:var(--muted); }
+#video:checked { background:var(--text); border-color:var(--text); }
+#video:checked::before { left:16px; background:var(--bg); }
+#video:disabled { opacity:.45; cursor:default; }
 .session { color:var(--muted); font-size:12px; margin-top:16px; }
 select { width:100%; padding:8px; margin:5px 0; }
 footer { margin-top:16px; padding-top:12px; border-top:1px solid var(--line); }

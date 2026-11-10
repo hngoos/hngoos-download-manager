@@ -5,11 +5,11 @@ import {localize} from './ui-text.js';
 
 const api = globalThis.browser || globalThis.chrome;
 const status = document.getElementById('status');
-const settings = await api.storage.local.get(['language', 'theme', 'useSession', 'takeover']);
+const settings = await api.storage.local.get(['language', 'theme', 'useSession', 'takeover', 'videoButton']);
 let text = localize(settings);
 const [tab] = await api.tabs.query({active: true, currentWindow: true});
 const webPage = /^https?:\/\//i.test(tab?.url || '');
-for (const [id, name] of Object.entries({download: 'download', video: 'video', settings: 'settings'})) {
+for (const [id, name] of Object.entries({download: 'download', settings: 'settings'})) {
   mountIcon(document.getElementById(id), name);
 }
 const capture = document.getElementById('takeover');
@@ -61,7 +61,21 @@ document.getElementById('settings').onclick = async () => {
 document.getElementById('settings').setAttribute('aria-label', text('settings'));
 for (const id of ['download', 'video']) document.getElementById(id).disabled = !webPage;
 document.getElementById('download').onclick = event => send(event.currentTarget, {action: 'download', kind: 'video', url: tab.url});
-document.getElementById('video').onclick = event => send(event.currentTarget, {action: 'enable-video', tabId: tab.id});
+const video = document.getElementById('video');
+video.checked = !!settings.videoButton;
+video.onchange = async () => {
+  video.disabled = true;
+  try {
+    await api.storage.local.set({videoButton: video.checked});
+    if (video.checked) {
+      // Already-open pages may predate the extension's content script.
+      const result = await api.runtime.sendMessage({action: 'enable-video', tabId: tab.id});
+      if (!result?.ok) throw Error('Video button unavailable');
+    }
+  } catch {
+    status.textContent = text('offline');
+  } finally { video.disabled = !webPage; }
+};
 // Cached settings make the popup usable even while the native host is offline.
 const connection = document.getElementById('connection');
 connection.textContent = text('working');

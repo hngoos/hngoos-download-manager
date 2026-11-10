@@ -95,8 +95,8 @@ def ydl_options(directory, options=None, ffmpeg=None):
     if options.container not in {"mp4", "mov", "webm", "mkv"}:
         raise ValueError("Định dạng video không được hỗ trợ.")
     if options.audio:
-        if options.audio not in {"mp3", "m4a"}:
-            raise ValueError("Chỉ nhận định dạng âm thanh MP3 hoặc M4A.")
+        if options.audio not in {"mp3", "m4a", "wav"}:
+            raise ValueError("Chỉ nhận định dạng âm thanh MP3, M4A hoặc WAV.")
         if not ffmpeg:
             raise ValueError("Cần FFmpeg để tách nhạc.")
         if options.audio_bitrate not in {96, 128, 192, 256, 320}:
@@ -286,8 +286,11 @@ def normalize_audio(directory, options, stop):
             if output != source and output.exists():
                 raise FileExistsError(output)
             target = Path(folder)/output.name
-            _execute_ffmpeg(["-i", source, "-map", "0:a:0", "-vn", "-c:a",
-                "libmp3lame" if options.audio == "mp3" else "aac", "-b:a", f"{options.audio_bitrate}k", target], stop)
+            codec = {"mp3": "libmp3lame", "m4a": "aac", "wav": "pcm_s16le"}[options.audio]
+            encoding = ["-c:a", codec]
+            if options.audio != "wav":
+                encoding += ["-b:a", f"{options.audio_bitrate}k"]
+            _execute_ffmpeg(["-i", source, "-map", "0:a:0", "-vn", *encoding, target], stop)
             target.replace(output)
             if output != source:
                 source.unlink()
