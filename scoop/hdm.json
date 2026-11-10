@@ -1,5 +1,5 @@
 {
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "HDM: resumable downloads, batch imports and local media tools",
     "homepage": "https://github.com/hngoos/hngoos-download-manager",
     "license": {
@@ -8,8 +8,8 @@
     },
     "architecture": {
         "64bit": {
-            "url": "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.0/HDM-Setup-0.1.0.exe#/HDM-Setup.exe",
-            "hash": "ce8ae6fb4c26b67237c5301e2aa10acbb43996510c008e16f62f9f96a3adbdfd"
+            "url": "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.1/HDM-Setup-0.1.1.exe#/HDM-Setup.exe",
+            "hash": "cb338b56a3f8468370295640a73722d5447d05c6ad119f5f37ad2d5b8e526b3a"
         }
     },
     "innosetup": true,
