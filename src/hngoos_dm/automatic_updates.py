@@ -41,9 +41,13 @@ class AutomaticVideoUpdates:
 
 
 class AutomaticUpdates:
+    CHECK_INTERVAL = 5*60
+    RETRY_INTERVAL = 60
+
     def __init__(self, app):
         self.app = app
-        self.next_check = max(time.time()+30, app.store.setting("last_update_check", 0)+6*3600)
+        # A release may have appeared since the previous session's check.
+        self.next_check = time.time()+3
         self.busy = False
         self.worker = None
         self.ready = None
@@ -79,8 +83,7 @@ class AutomaticUpdates:
         manual = getattr(self.app, "update_dialog", None)
         if manual and not manual.closed:
             return
-        self.next_check = now+6*3600
-        self.app.store.set_setting("last_update_check", now)
+        self.next_check = now+self.CHECK_INTERVAL
         self.busy = True
         self.status("Đang kiểm tra cập nhật…")
 
@@ -101,6 +104,9 @@ class AutomaticUpdates:
 
     def found(self, payload, asset, path):
         self.busy = False
+        now = time.time()
+        self.next_check = now+self.CHECK_INTERVAL
+        self.app.store.set_setting("last_update_check", now)
         notify = getattr(self.app, "show_update_notice", None)
         if notify:
             notify(payload is not None)
@@ -114,4 +120,5 @@ class AutomaticUpdates:
 
     def failed(self, error):
         self.busy = False
+        self.next_check = time.time()+self.RETRY_INTERVAL
         self.status(f"Không thể cập nhật tự động: {error}")

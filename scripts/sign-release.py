@@ -23,15 +23,15 @@ envelope = {"payload": payload, "signature": base64.b64encode(key.sign(canonical
 (folder/"update-manifest.json").write_text(json.dumps(envelope, ensure_ascii=False, indent=2), encoding="utf-8")
 notes = f"""# Hngoos Download Manager v{__version__}
 
-Browser integration and audio export fixes for Windows and macOS.
+Update notification fixes for Windows and macOS.
 
-- The video download button is an on/off switch that persists across reloads and browser restarts.
-- Browser download requests restore and activate the HDM window automatically.
-- Received media links open filename, format, and quality choices without pasting again.
-- Export the audio from supported videos as PCM WAV, preserving the source sample rate.
+- The update notice appears only on the main view, beneath the logo, and stays hidden in Preferences and other pages.
+- The notice scales with the logo and remains within its column in compact windows.
+- Automatic checks start shortly after launch and repeat every five minutes, even if the previous session checked recently.
+- Failed network checks retry after one minute instead of postponing updates for hours.
 
-After updating HDM, reload its extension on your browser's extensions page,
-then refresh existing video tabs to load the updated content script.
+Automatic checks honor the Preferences setting. Installing updates automatically
+remains a separate, optional setting.
 
 Choose the Windows x64 installer or the macOS DMG matching your processor.
 Windows packages are not Authenticode-signed; macOS packages are not notarized.

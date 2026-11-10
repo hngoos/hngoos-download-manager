@@ -182,6 +182,65 @@ class SketchLayoutTests(unittest.TestCase):
         self.pump()
         self.assertFalse(app.update_notice.winfo_ismapped())
 
+    def test_update_notice_is_only_on_main_view_and_scales(self):
+        app = self.app
+        app.show_update_notice(True)
+        self.pump()
+        self.assertTrue(app.update_notice.winfo_ismapped())
+        page = app.open_preferences()
+        self.pump()
+        self.assertFalse(app.update_notice.winfo_ismapped(), "Update notice belongs only on the main view")
+        surface = app.presentation_surface
+        for geometry in ("1320x900", "900x640", "760x560", "800x500"):
+            self.root.geometry(geometry)
+            self.pump(.3)
+            for language in ("vi", "en"):
+                app.set_preference("language", language)
+                app.set_preference("theme", "light" if language == "vi" else "dark")
+                self.pump(.2)
+                with self.subTest(geometry=geometry, language=language):
+                    appearance_position = surface.bounds(page.sections["Chung"])
+                    app.show_update_notice(False)
+                    app.show_update_notice(True)
+                    self.pump(.1)
+                    self.assertFalse(app.update_notice.winfo_ismapped(), "Late notifications stay hidden in preferences")
+                    self.assertFalse(any(widget is app.update_notice for widget, _, _ in surface.regions))
+                    self.assertEqual(surface.bounds(page.sections["Chung"]), appearance_position)
+                    for button in app.contact_buttons.values():
+                        _, by, _, bh = surface.bounds(button)
+                        self.assertLessEqual(by+bh, self.root.winfo_height())
+                    page.hide()
+                    self.pump(.2)
+                    self.assertTrue(app.update_notice.winfo_ismapped())
+                    x, y, width, height = surface.bounds(app.update_notice)
+                    lx, ly, lw, lh = surface.bounds(app.brand_label)
+                    _, hy, _, hh = surface.bounds(app.header)
+                    self.assertGreaterEqual(y, ly+lh+4)
+                    self.assertLessEqual(y+height, hy+hh, "Notice is outside its reserved header")
+                    self.assertLessEqual(y+height, surface.bounds(app.queue_panel)[1])
+                    self.assertGreaterEqual(x, lx)
+                    self.assertLessEqual(x+width, lx+lw+1, "Notice is wider than the logo column")
+                    self.assertTrue(any(widget is app.update_notice for widget, _, _ in surface.regions))
+                    for item in app.update_notice.find_all():
+                        if app.update_notice.type(item) == "text":
+                            text_box = app.update_notice.bbox(item)
+                            self.assertGreaterEqual(text_box[0], 0, "Update label is clipped")
+                            self.assertLessEqual(text_box[2], width, "Update label is clipped")
+                    page.show()
+                    self.pump(.1)
+                    self.assertFalse(app.update_notice.winfo_ismapped())
+        app.show_update_notice(False)
+        page.hide()
+        self.pump()
+        self.assertFalse(app.update_notice.winfo_ismapped())
+
+    def test_update_notice_does_not_interrupt_shutdown_from_preferences(self):
+        self.app.show_update_notice(True)
+        self.app.open_preferences()
+        self.pump()
+        self.app.close()
+        self.assertEqual(self.errors, [], "Closing preferences must finish destroying the window")
+
     def test_paste_recognizes_without_starting_and_cancel_restores_url_only(self):
         from unittest.mock import patch
 

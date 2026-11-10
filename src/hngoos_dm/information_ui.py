@@ -170,6 +170,7 @@ class ContentPage(ttk.Frame):
             app.empty_panel.grid_remove()
             app.header_left.configure(height=app.brand_label.winfo_reqheight())
         app.page_stack.append(self)
+        app.sync_update_notice()
         if self.beside_logo:
             self.place(relx=.04, rely=.05, relwidth=.90, relheight=.88)
             app.header.pack_forget()
@@ -193,6 +194,7 @@ class ContentPage(ttk.Frame):
         for child in list(app.page_stack[index+1:])[::-1]:
             child.destroy()
         app.page_stack.remove(self)
+        app.sync_update_notice()
         if hasattr(self, "surface"):
             self.surface.hide()
         self.place_forget()

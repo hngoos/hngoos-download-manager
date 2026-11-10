@@ -11,6 +11,62 @@ from hngoos_dm.store import Store
 
 
 class AutomaticUpdateTests(unittest.TestCase):
+    def test_startup_checks_recently_published_release_despite_previous_session_check(self):
+        from hngoos_dm.automatic_updates import AutomaticUpdates
+
+        now = time.time()
+        self.app.store.set_setting("last_update_check", now)
+        notices = []
+        self.app.show_update_notice = notices.append
+        with patch("hngoos_dm.automatic_updates.time.time", return_value=now) as clock, \
+                patch("hngoos_dm.automatic_updates.check_update", return_value={"version": "9.9.9"}) as check:
+            updates = AutomaticUpdates(self.app)
+            clock.return_value = now+5
+            updates.tick()
+            self.drain(updates)
+        check.assert_called_once_with()
+        self.assertEqual(notices, [True])
+        self.assertFalse(self.app.closed)
+
+    def test_running_app_detects_release_published_after_its_first_check(self):
+        from hngoos_dm.automatic_updates import AutomaticUpdates
+
+        now = time.time()
+        notices = []
+        self.app.show_update_notice = notices.append
+        with patch("hngoos_dm.automatic_updates.time.time", return_value=now) as clock, \
+                patch("hngoos_dm.automatic_updates.check_update", side_effect=[None, {"version": "9.9.9"}]) as check:
+            updates = AutomaticUpdates(self.app)
+            clock.return_value = now+5
+            updates.tick()
+            self.drain(updates)
+            clock.return_value = now+305
+            updates.tick()
+            self.drain(updates)
+        self.assertEqual(check.call_count, 2)
+        self.assertEqual(notices, [False, True])
+
+    def test_offline_start_retries_without_postponing_updates_for_hours(self):
+        from hngoos_dm.automatic_updates import AutomaticUpdates
+
+        now = time.time()
+        previous_success = now-500
+        self.app.store.set_setting("last_update_check", previous_success)
+        notices = []
+        self.app.show_update_notice = notices.append
+        with patch("hngoos_dm.automatic_updates.time.time", return_value=now) as clock, \
+                patch("hngoos_dm.automatic_updates.check_update", side_effect=[OSError("offline"), {"version": "9.9.9"}]):
+            updates = AutomaticUpdates(self.app)
+            clock.return_value = now+5
+            updates.tick()
+            self.drain(updates)
+            self.assertIn("offline", self.app.store.setting("automatic_update_status", ""))
+            self.assertEqual(self.app.store.setting("last_update_check"), previous_success)
+            clock.return_value = now+65
+            updates.tick()
+            self.drain(updates)
+        self.assertEqual(notices, [True])
+
     def test_manual_update_rechecks_processing_before_verify_and_before_launch(self):
         import threading
         from unittest.mock import Mock

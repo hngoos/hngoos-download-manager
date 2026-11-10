@@ -527,7 +527,8 @@ class App:
         from .toolbar import SpeedMeter
         self.speed_meter = SpeedMeter(self, self.footer)
         self.speed_meter.pack(side="left")
-        self.update_notice = RoundedButton(self.header_left, text="HDM có bản cập nhật mới",
+        self.update_available = False
+        self.update_notice = RoundedButton(self.header_left, text="Có bản cập nhật",
             command=self.check_update, width=200, height=30)
         self.queue_panel = RoundedPanel(parent, padding=14)
         self.queue_panel.grid(row=0, column=0, sticky="nsew", padx=16)
@@ -608,12 +609,22 @@ class App:
         else:
             self.cancel_button.grid_remove()
 
-    def show_update_notice(self, available):
-        if available:
-            self.update_notice.configure(width=max(160, self.header_logo.width()))
+    def sync_update_notice(self):
+        if getattr(self, "_closing", False):
+            return
+        if self.update_available and not self.page_stack:
             self.update_notice.grid(row=1, column=0, sticky="sw", pady=(8, 0))
         else:
             self.update_notice.grid_remove()
+
+    @buffered_presentation
+    def show_update_notice(self, available):
+        available = bool(available)
+        if available == self.update_available:
+            return
+        self.update_available = available
+        self.sync_update_notice()
+        self.resize_source_card()
         self.schedule_redraw()
 
     def save_directory(self):
@@ -708,7 +719,7 @@ class App:
         page = getattr(self, "preferences_dialog", None)
         editor = getattr(self, "download_editor", None) or getattr(self, "download_placeholder", None)
         signature = (self.root.winfo_width(), self.root.winfo_height(), self.root.tk.call("tk", "scaling"),
-                     self.theme, self.locale.language, editor, tuple(self.page_stack),
+                     self.theme, self.locale.language, editor, tuple(self.page_stack), self.update_available,
                      self.empty_panel.winfo_width(), self._scaled_font_metrics is None)
         if getattr(self, "_source_layout_signature", None) == signature:
             if self.page_stack and page and page.winfo_exists():
@@ -727,6 +738,8 @@ class App:
             logo_width = self.header_logo.width()
             from .ui_scale import WindowScale
             scale = WindowScale(self.root)
+            self.update_notice.configure(width=logo_width, height=scale.size(30, 24))
+            self.update_notice.label_font.configure(size=scale.font_size(10, 9))
             self.fit_icons()
             style = ttk.Style(self.root)
             metrics = scale.font_size(10, 9), scale.size(38, 30)
@@ -735,7 +748,7 @@ class App:
                 style.configure("Treeview", font=("Segoe UI", metrics[0]), rowheight=metrics[1])
                 self._scaled_font_metrics = metrics
             # Reserve four rows before recognition so the journal never jumps.
-            height = max(scale.size(208, 192), logo_height+scale.size(38, 28))
+            height = max(scale.size(208, 192), logo_height+int(self.update_notice.cget("height"))+8)
             self.header.columnconfigure(0, minsize=logo_width+8)
             self.header.columnconfigure(2, minsize=0, weight=0)
             self.input_content.columnconfigure(1, minsize=scale.size(150, 100))

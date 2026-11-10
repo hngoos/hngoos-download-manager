@@ -166,7 +166,7 @@ TRANSLATIONS = {
     "Tắt máy sau khi tải xong": "Shut down after downloads finish",
     "Hỗ trợ": "Support", "Thông tin": "Info",
     "Tệp:": "File:",
-    "HDM có bản cập nhật mới": "HDM update available",
+    "Có bản cập nhật": "Update available",
     "Mở HDM": "Open HDM",
     "Phiên bản hiện tại: {version}": "Current version: {version}",
     "Không có bản cập nhật mới.": "No updates available.",
