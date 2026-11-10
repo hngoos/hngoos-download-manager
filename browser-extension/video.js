@@ -4,6 +4,42 @@
   window.__hngoosVideoButtons = true;
   const buttons = new Map();
   let observer, timer, frame, enabled = false;
+  const tiktok = /(^|\.)tiktok\.com$/i.test(location.hostname);
+  const tiktokURL = value => {
+    try {
+      const url = new URL(value, location.href);
+      if (!/^https?:$/.test(url.protocol) || url.username || url.password ||
+          !/(^|\.)tiktok\.com$/i.test(url.hostname)) return null;
+      return url;
+    } catch { return null; }
+  };
+  const targetURL = video => {
+    const direct = video.currentSrc || video.src || video.querySelector('source')?.src || '';
+    if (!tiktok) return /^https?:/i.test(direct) ? direct : location.href;
+    // Feed navigation leaves location at /vi-VN/. Resolve only this player's
+    // item, never a post elsewhere on the page or an expiring CDN/blob URL.
+    const item = video.closest('article,[data-e2e="recommend-list-item-container"]');
+    const player = video.closest('[id^="xgwrapper-"]');
+    const id = player?.id.match(/^xgwrapper-\d+-(\d{15,22})$/)?.[1];
+    const post = value => {
+      const url = tiktokURL(value);
+      const match = url?.pathname.match(/^\/@([\w.-]+)\/(video|photo)\/(\d{15,22})\/?$/);
+      return match && (!id || id === match[3]) ? `https://www.tiktok.com/@${match[1]}/${match[2]}/${match[3]}` : null;
+    };
+    if (item) {
+      const posts = new Set([...item.querySelectorAll('a[href]')].map(a => post(a.href)).filter(Boolean));
+      if (posts.size > 1) return null;
+      if (posts.size === 1) return [...posts][0];
+      if (id) {
+        const primary = item.querySelectorAll('a[data-e2e="video-author-avatar"][href]');
+        const authors = new Set([...(primary.length ? primary : item.querySelectorAll('a[href]'))]
+          .map(a => tiktokURL(a.href)?.pathname.match(/^\/@([\w.-]+)\/?$/)?.[1]).filter(Boolean));
+        if (authors.size === 1) return `https://www.tiktok.com/@${[...authors][0]}/video/${id}`;
+      }
+    }
+    const detail = post(location.href);
+    return detail && (id || document.querySelectorAll('video').length === 1) ? detail : null;
+  };
   const eligible = video => {
     // Camera, microphone, screen sharing and WebRTC calls have no downloadable
     // file. A blob backed by MediaSource (e.g. YouTube) is different: srcObject
@@ -15,7 +51,7 @@
     frame = null;
     for (const [video, {host}] of buttons) {
       const rect = video.getBoundingClientRect();
-      const visible = video.isConnected && eligible(video) && rect.width >= 160 && rect.height >= 90 &&
+      const visible = video.isConnected && eligible(video) && targetURL(video) && rect.width >= 160 && rect.height >= 90 &&
         rect.bottom > 35 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth &&
         getComputedStyle(video).visibility !== 'hidden';
       host.style.setProperty('display', visible ? 'block' : 'none', 'important');
@@ -29,12 +65,18 @@
   const scan = () => {
     if (!enabled) return;
     for (const [video, {host}] of buttons) {
-      if (!video.isConnected || !eligible(video)) { host.remove(); buttons.delete(video); }
+      if (!video.isConnected || !eligible(video) || !targetURL(video)) { host.remove(); buttons.delete(video); }
     }
     for (const video of document.querySelectorAll('video')) {
-      if (!eligible(video)) continue;
+      if (!eligible(video) || !targetURL(video)) continue;
       if (buttons.has(video)) {
-        const {host} = buttons.get(video);
+        const entry = buttons.get(video);
+        const {host, button} = entry;
+        const target = targetURL(video);
+        if (entry.target !== target) {
+          entry.target = target;
+          button.textContent = '↓ Tải video này bằng HDM';
+        }
         if (!host.isConnected) document.documentElement.append(host);
         continue;
       }
@@ -56,15 +98,16 @@
         if (!event.isTrusted) return;
         event.preventDefault(); event.stopPropagation();
         if (!eligible(video)) return;
-        const direct = video.currentSrc || video.src || video.querySelector('source')?.src;
+        const url = targetURL(video);
+        if (!url) { scan(); return; }
         try {
-          const response = await api.runtime.sendMessage({action: 'download', kind: 'video',
-            url: /^https?:/i.test(direct) ? direct : location.href});
+          const response = await api.runtime.sendMessage({action: 'download', kind: 'video', url});
+          if (targetURL(video) !== url) return;
           button.textContent = response?.ok ? '✓ Đã gửi tới HDM' : 'Chưa kết nối ứng dụng HDM';
         } catch { button.textContent = 'Chưa kết nối ứng dụng HDM'; }
       });
       shadow.append(button);
-      buttons.set(video, {host, button});
+      buttons.set(video, {host, button, target: targetURL(video)});
       document.documentElement.append(host);
     }
     position();
@@ -76,7 +119,8 @@
     if (enabled) {
       scan();
       observer ||= new MutationObserver(scan);
-      observer.observe(document.documentElement, {childList: true, subtree: true, attributes: true, attributeFilter: ['src']});
+      observer.observe(document.documentElement, {childList: true, subtree: true, attributes: true,
+        attributeFilter: tiktok ? ['src', 'id', 'href'] : ['src']});
       // srcObject is a JS property, not a DOM attribute. Calls can switch it
       // without mutating the tree, so also reconcile these lightweight entries.
       timer = setInterval(scan, 750);

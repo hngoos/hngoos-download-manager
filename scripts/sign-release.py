@@ -23,15 +23,12 @@ envelope = {"payload": payload, "signature": base64.b64encode(key.sign(canonical
 (folder/"update-manifest.json").write_text(json.dumps(envelope, ensure_ascii=False, indent=2), encoding="utf-8")
 notes = f"""# Hngoos Download Manager v{__version__}
 
-Browser integration, media export, and interface fixes for Windows and macOS.
+Browser setup and TikTok feed fixes for Windows and macOS.
 
-- Added AAC, FLAC, AIFF, WMA, and AC3 audio export presets, plus compatible MKV, MOV, and M4V video containers.
-- Added a guided extension setup page for all seven supported browsers, with copy buttons for the extension address and folder path.
-- Extension links reuse an existing browser window. Installed-browser availability refreshes when Preferences opens, and orphan Opera launchers no longer count as an installation.
-- The video-button preference stays usable on internal pages and while HDM is offline.
-- Video download buttons are isolated from page styles and player overlays. Camera and WebRTC call streams no longer receive download buttons.
-- Fixed overlapping Preferences checkbox labels and added localized URL and empty-list hints.
-- TikTok photo posts now download all source images in order through the same staging and optional safety-check workflow.
+- TikTok video buttons resolve the current post even when the feed address stays unchanged. Buttons are hidden when a post cannot be identified reliably.
+- Simplified browser setup to the selected browser name and four installation steps. The extensions-page link and folder path stay inline, with Morphicons copy buttons.
+- Long extension paths fit compact windows; copying always retains the complete path.
+- Network proxy modes stay on one row as the window and display scale change, in both English and Vietnamese.
 
 Choose the Windows x64 installer or the macOS DMG matching your processor.
 Windows packages are not Authenticode-signed; macOS packages are not notarized.

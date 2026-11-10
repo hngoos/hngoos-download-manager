@@ -130,6 +130,11 @@ TRANSLATIONS = {
     "Đang hoàn tất": "Finishing",
     "Không tìm thấy tiện ích HDM trong thư mục extension. Hãy cài lại HDM.":
         "HDM extension not found in the extension folder. Reinstall HDM.",
+    "Không proxy": "No proxy",
+    "Thủ công": "Manual",
+    "Bước 1: Mở trang tiện ích tại:": "Step 1: Open extensions at:",
+    "Bước 3: Chọn Tải tiện ích đã giải nén (Load unpacked).": "Step 3: Click Load unpacked.",
+    "Bước 4: Chọn thư mục extension tại:": "Step 4: Select extension folder at:",
     "Bước 1: Mở trang tiện ích trình duyệt tại:": "Step 1: Open the browser extensions page at:",
     "Bước 2: Bật Chế độ nhà phát triển (Developer mode).": "Step 2: Enable Developer mode.",
     "Bước 3: Chọn Tải tiện ích đã giải nén (Load unpacked), rồi chọn thư mục extension có sẵn cùng HDM:":

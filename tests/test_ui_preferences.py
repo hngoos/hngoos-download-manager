@@ -16,6 +16,53 @@ from hngoos_dm.app import App
 
 
 class PresentationTests(unittest.TestCase):
+    def test_network_modes_stay_on_one_row_at_compact_sizes_and_display_scales(self):
+        original = self.root.tk.call("tk", "scaling")
+        self.app.open_preferences()
+        try:
+            for scaling in (1, 1.33333, 1.66667, 2):
+                self.root.tk.call("tk", "scaling", scaling)
+                for language in ("en", "vi"):
+                    self.app.set_preference("language", language)
+                    for geometry in ("800x500", "960x600", "1280x800", "1568x1000"):
+                        with self.subTest(scaling=scaling, language=language, geometry=geometry):
+                            self.root.geometry(geometry)
+                            self.pump(.12)
+                            choices = self.app.proxy_choices
+                            buttons = list(choices.buttons.values())
+                            self.assertEqual(len({b.winfo_y() for b in buttons}), 1)
+                            for index, button in enumerate(buttons):
+                                self.assertLessEqual(button.winfo_x()+button.winfo_width(), choices.winfo_width())
+                                self.assertGreaterEqual(button.winfo_width(),
+                                    button.label_font.measure(self.app.locale.text(button.label))+12)
+                                if index:
+                                    self.assertGreaterEqual(button.winfo_x(),
+                                        buttons[index-1].winfo_x()+buttons[index-1].winfo_width())
+        finally:
+            self.root.tk.call("tk", "scaling", original)
+
+    def test_extension_guide_keeps_folder_and_copy_inline_at_every_window_size(self):
+        from hngoos_dm.information_ui import browser_dialog
+        target = Path(self.folder.name)/"A long installation folder for HDM"/"extension"
+        with patch("hngoos_dm.extension_package.bundled_extension_path", return_value=target), \
+                patch("hngoos_dm.browser.connect_extension"):
+            guide = browser_dialog(self.app, "opera-gx")
+        with patch.object(self.root, "clipboard_clear"), patch.object(self.root, "clipboard_append") as copied:
+            for language in ("en", "vi"):
+                self.app.set_preference("language", language)
+                for geometry in ("800x500", "1120x720", "1568x1000"):
+                    self.root.geometry(geometry)
+                    self.pump(.2)
+                    controls = (guide.step_labels[-1], guide.folder_label, guide.copy_folder)
+                    centers = [w.winfo_rooty()+w.winfo_height()/2 for w in controls]
+                    self.assertLessEqual(max(centers)-min(centers), 2)
+                    self.assertLessEqual(guide.copy_folder.winfo_rootx()+guide.copy_folder.winfo_width(),
+                                         self.root.winfo_rootx()+self.root.winfo_width())
+                    self.assertLess(guide.step_labels[0].winfo_rootx(), guide.extension_link.winfo_rootx())
+                    self.assertEqual(guide.copy_folder.image, self.app.icons["copy"])
+                    guide.copy_folder.invoke()
+                    copied.assert_called_with(str(target))
+
     def test_shared_checkbox_artwork_scales_with_compact_window(self):
         self.app.open_preferences()
         surface = self.app.presentation_surface
@@ -1777,7 +1824,7 @@ class PresentationTests(unittest.TestCase):
             launch.assert_not_called()
             connect.assert_called_once_with(target, self.app.data_dir)
         self.assertFalse(hasattr(guide, "connect_button"))
-        self.assertEqual(len(guide.step_labels), 3)
+        self.assertEqual(len(guide.step_labels), 4)
         for language, prefix, developer in (("en", "Step 1:", "Developer mode"),
                                              ("vi", "Bước 1:", "Chế độ nhà phát triển")):
             self.app.set_preference("language", language)
@@ -1785,7 +1832,7 @@ class PresentationTests(unittest.TestCase):
             self.assertTrue(guide.step_labels[0].cget("text").startswith(prefix))
             self.assertIn(developer, guide.step_labels[1].cget("text"))
             self.assertNotIn(".zip", " ".join(label.cget("text") for label in guide.step_labels))
-            self.assertIn("extension", guide.step_labels[2].cget("text"))
+            self.assertIn("extension", guide.step_labels[-1].cget("text"))
             self.assertEqual(guide.extension_link.cget("text"), "opera://extensions")
 
     def test_extension_guide_steps_and_link_fit_without_illustration_or_scrolling(self):

@@ -92,8 +92,8 @@ def build_network_settings(app, parent):
             return
         if policy != app.store.setting("proxy"):
             app.store.set_setting("proxy", policy)
-    app.proxy_choices = ChoiceRow(parent, mode, [("Proxy hệ thống", "system"), ("Không dùng proxy", "direct"),
-                             ("Cấu hình thủ công", "manual")], changed, app)
+    app.proxy_choices = ChoiceRow(parent, mode, [("Hệ thống", "system"), ("Không proxy", "direct"),
+                             ("Thủ công", "manual")], changed, app)
     app.proxy_choices.pack(fill="x", pady=8)
     row = app.proxy_address_row = ttk.Frame(parent)
     ttk.Label(row, text="Địa chỉ proxy").pack(side="left", padx=(0, 8))

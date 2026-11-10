@@ -9,6 +9,77 @@ from pathlib import Path
 
 @unittest.skipUnless(os.environ.get("HNGOOS_BROWSER_TESTS") == "1", "Set HNGOOS_BROWSER_TESTS=1")
 class BrowserIntegrationTests(unittest.TestCase):
+    def test_tiktok_feed_buttons_resolve_each_post_and_recycled_players(self):
+        from playwright.sync_api import sync_playwright
+
+        script = Path(__file__).resolve().parents[1]/"browser-extension/video.js"
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                page.route("https://www.tiktok.com/**", lambda route: route.fulfill(content_type="text/html", body='''
+                    <style>video{width:320px;height:180px}</style>
+                    <a href="/@unrelated/video/9999999999999999999">Other post</a>
+                    <article><a data-e2e="video-author-avatar" href="/@first">Author</a>
+                    <div id="xgwrapper-0-7658861391901740308"><video src="blob:https://www.tiktok.com/first"></video></div></article>
+                    <article><a data-e2e="video-author-avatar" href="/@second">Author</a>
+                    <div id="xgwrapper-0-7699443199626071317"><video src="blob:https://www.tiktok.com/second"></video></div></article>'''))
+                page.goto("https://www.tiktok.com/vi-VN/")
+                page.evaluate('''window.requests=[];
+                    window.chrome={storage:{local:{get:async()=>({videoButton:true})},onChanged:{addListener(){}}},
+                    runtime:{sendMessage:async message => {requests.push(message);return {ok:true}}}};''')
+                page.add_script_tag(path=str(script))
+                buttons = page.locator('[data-hdm-video-download]')
+                buttons.nth(1).wait_for()
+                buttons.nth(0).click()
+                buttons.nth(1).click()
+                self.assertEqual([r['url'] for r in page.evaluate('requests')], [
+                    'https://www.tiktok.com/@first/video/7658861391901740308',
+                    'https://www.tiktok.com/@second/video/7699443199626071317'])
+                page.evaluate('''document.querySelector('article a').href='/@third';
+                    document.querySelector('article div').id='xgwrapper-0-7680913365123796231';''')
+                buttons.nth(0).click()
+                self.assertEqual(page.evaluate('requests.at(-1).url'),
+                                 'https://www.tiktok.com/@third/video/7680913365123796231')
+                # Removing identity must hide this button, even with a global post link.
+                page.evaluate("document.querySelector('article div').id='unknown-player'")
+                page.wait_for_function("document.querySelectorAll('[data-hdm-video-host]').length === 1")
+                page.evaluate("document.querySelector('article div').id='xgwrapper-0-7680913365123796231'")
+                page.wait_for_function("document.querySelectorAll('[data-hdm-video-host]').length === 2")
+                # A conflicting author cannot be used to guess a canonical URL.
+                page.evaluate('''document.querySelector('article').insertAdjacentHTML('beforeend',
+                    '<a data-e2e="video-author-avatar" href="/@conflict">Author</a>')''')
+                page.wait_for_function("document.querySelectorAll('[data-hdm-video-host]').length === 1")
+            finally:
+                browser.close()
+
+    def test_tiktok_scoped_permalink_is_used_without_guessing_from_other_items(self):
+        from playwright.sync_api import sync_playwright
+
+        script = Path(__file__).resolve().parents[1]/"browser-extension/video.js"
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                page.route("https://www.tiktok.com/**", lambda route: route.fulfill(content_type="text/html", body='''
+                    <style>video{width:320px;height:180px}</style>
+                    <article><a href="/@first/photo/7680913365123796231">Post</a>
+                    <video src="blob:https://www.tiktok.com/first"></video></article>
+                    <article><video src="blob:https://www.tiktok.com/unknown"></video></article>'''))
+                page.goto("https://www.tiktok.com/vi-VN/")
+                page.evaluate('''window.requests=[];
+                    window.chrome={storage:{local:{get:async()=>({videoButton:true})},onChanged:{addListener(){}}},
+                    runtime:{sendMessage:async message => {requests.push(message);return {ok:true}}}};''')
+                page.add_script_tag(path=str(script))
+                buttons = page.locator('[data-hdm-video-download]')
+                buttons.first.wait_for()
+                self.assertEqual(buttons.count(), 1)
+                buttons.first.click()
+                self.assertEqual(page.evaluate('requests[0].url'),
+                                 'https://www.tiktok.com/@first/photo/7680913365123796231')
+            finally:
+                browser.close()
+
     def test_call_streams_are_excluded_and_all_of_the_download_button_is_clickable(self):
         from playwright.sync_api import sync_playwright
 
