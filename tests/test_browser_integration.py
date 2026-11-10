@@ -9,6 +9,38 @@ from pathlib import Path
 
 @unittest.skipUnless(os.environ.get("HNGOOS_BROWSER_TESTS") == "1", "Set HNGOOS_BROWSER_TESTS=1")
 class BrowserIntegrationTests(unittest.TestCase):
+    def test_call_streams_are_excluded_and_all_of_the_download_button_is_clickable(self):
+        from playwright.sync_api import sync_playwright
+
+        script = Path(__file__).resolve().parents[1]/"browser-extension/video.js"
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                page.set_content('''<style>button {pointer-events:none!important; opacity:0!important}
+                    video {width:400px;height:240px} .cover {position:absolute;inset:0;z-index:9999}</style>
+                    <video id="file" src="https://example.com/video.mp4"></video>
+                    <video id="call"></video><video id="placeholder"></video><div class="cover"></div>''')
+                page.evaluate('''window.requests=[];
+                    document.querySelector('#call').srcObject = new MediaStream();
+                    window.chrome={storage:{local:{get:async()=>({videoButton:true})},onChanged:{addListener(){}}},
+                    runtime:{sendMessage:async message => {requests.push(message);return {ok:true}}}};''')
+                page.add_script_tag(path=str(script))
+                button = page.locator('[data-hdm-video-download]')
+                button.first.wait_for()
+                self.assertEqual(button.count(), 1)
+                box = button.bounding_box()
+                for fraction in (.05, .5, .95):
+                    page.mouse.click(box['x']+box['width']*fraction, box['y']+box['height']/2)
+                self.assertEqual(len(page.evaluate('requests')), 3)
+                self.assertTrue(all(item['url'] == 'https://example.com/video.mp4'
+                                    for item in page.evaluate('requests')))
+                page.evaluate("document.querySelector('#file').srcObject=new MediaStream()")
+                page.wait_for_function("document.querySelectorAll('[data-hdm-video-host]').length === 0")
+            finally:
+                browser.close()
+
+
     def test_popup_is_usable_without_native_host_in_both_languages_and_themes(self):
         import json
         import shutil
@@ -18,7 +50,7 @@ class BrowserIntegrationTests(unittest.TestCase):
         source_extension = Path(__file__).resolve().parents[1]/"browser-extension"
         with tempfile.TemporaryDirectory() as folder, sync_playwright() as playwright:
             extension = Path(folder)/"extension"
-            shutil.copytree(source_extension, extension)
+            shutil.copytree(source_extension, extension, ignore=shutil.ignore_patterns("node_modules", "test"))
             manifest = json.loads((extension/"manifest.json").read_text(encoding="utf-8"))
             manifest["host_permissions"] = ["https://example.com/*"]
             (extension/"manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
@@ -50,6 +82,11 @@ class BrowserIntegrationTests(unittest.TestCase):
                         self.assertTrue(page.locator(".brand img").evaluate("image => image.complete && image.naturalWidth >= 44"))
                         self.assertEqual(page.locator("#download svg").count(), 1)
                         self.assertEqual(page.locator("#video").get_attribute("role"), "switch")
+                        self.assertTrue(page.locator("#video").is_enabled())
+                        page.locator("#video").check()
+                        page.wait_for_function("async () => (await chrome.storage.local.get('videoButton')).videoButton === true")
+                        page.locator("#video").uncheck()
+                        page.wait_for_function("async () => (await chrome.storage.local.get('videoButton')).videoButton === false")
                         artifacts = os.environ.get("HNGOOS_BROWSER_ARTIFACTS")
                         if artifacts:
                             Path(artifacts).mkdir(parents=True, exist_ok=True)
@@ -117,13 +154,13 @@ class BrowserIntegrationTests(unittest.TestCase):
                 source.locator("[data-hdm-video-download]").wait_for()
                 source.goto("https://example.com/next-video")
                 source.locator("[data-hdm-video-download]").wait_for()
-                source.evaluate("document.body.append(document.createElement('video'))")
-                source.wait_for_function("document.querySelectorAll('[data-hdm-video-download]').length === 2")
+                source.evaluate("const v=document.createElement('video'); v.src='https://example.com/second.mp4'; document.body.append(v)")
+                source.wait_for_function("document.querySelectorAll('[data-hdm-video-host]').length === 2")
                 popup.reload()
                 toggle.wait_for()
                 self.assertTrue(toggle.is_checked())
                 toggle.uncheck()
-                source.wait_for_function("!document.querySelector('[data-hdm-video-download]')")
+                source.wait_for_function("!document.querySelector('[data-hdm-video-host]')")
                 source.reload()
                 self.assertEqual(source.locator("[data-hdm-video-download]").count(), 0)
                 toggle.check()
@@ -336,12 +373,13 @@ class BrowserIntegrationTests(unittest.TestCase):
                     "runtime:{sendMessage:async()=>{globalThis.__hngoosMessages++;return {ok:true}}}}")
                 page.add_script_tag(path=str(extension/"video.js"))
                 button = page.locator("button")
+                button.wait_for()
                 self.assertEqual(button.count(), 1)
-                self.assertTrue(page.evaluate("document.querySelector('video').previousElementSibling.tagName==='BUTTON'"))
-                page.evaluate("document.querySelector('button').click()")
+                self.assertEqual(page.locator("video button").count(), 0)
+                button.evaluate("element => element.click()")
                 self.assertEqual(page.evaluate("globalThis.__hngoosMessages"), 0)
                 button.click()
-                page.wait_for_function("() => document.querySelector('button').textContent.includes('Đã gửi')")
+                button.get_by_text("Đã gửi", exact=False).wait_for()
                 self.assertEqual(page.evaluate("globalThis.__hngoosMessages"), 1)
             finally:
                 context.close()

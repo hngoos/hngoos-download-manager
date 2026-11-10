@@ -423,6 +423,14 @@ TRANSLATIONS = {
     "Mở lại torrent đã lưu": "Reopen saved torrent", "Cắt nhanh": "Fast trim", "Cắt chính xác": "Precise trim",
     "Ghép": "Merge", "Nén MP4": "Compress MP4", "Đổi MP4": "Convert to MP4",
     "Tách MP3": "Extract MP3", "Tách M4A": "Extract M4A", "Thêm tệp": "Add files",
+    "Dán đường dẫn tải file vào đây": "Paste a download link here",
+    "Danh sách trống": "No downloads yet",
+    "Đã sao chép.": "Copied.",
+    "Mở thư mục tiện ích": "Open extension folder",
+    "Hãy mở trình duyệt đã chọn trước, rồi bấm lại đường dẫn tiện ích.":
+        "Open the selected browser first, then click the extension address again.",
+    "Không thể mở trang tiện ích. Sao chép địa chỉ và dán vào trình duyệt đã chọn.":
+        "Cannot open the extensions page. Copy the address and paste it into the selected browser.",
     "Lên": "Move up", "Xuống": "Move down", "Bỏ tệp": "Remove file",
     "Tệp gốc được giữ nguyên.": "Original files are kept.", "Đang xử lý…": "Processing…",
     "Bắt đầu xử lý": "Start processing", "Hủy tác vụ": "Cancel task",

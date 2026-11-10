@@ -501,6 +501,7 @@ class App:
         ttk.Label(form, text="URL:", background=PANEL, font=("Segoe UI", 14),
                   foreground=TEXT).grid(row=0, column=0, sticky="w", padx=(0, 8))
         self.url_entry = UnderlinedEntry(form, textvariable=self.url, font=("Segoe UI", 14), fill_width=True)
+        self.url_entry.control.placeholder = "Dán đường dẫn tải file vào đây"
         self.url_entry.configure(height=44)
         self.url_entry.grid(row=0, column=1, sticky="ew")
         self.url_entry.bind("<Return>", lambda _event: self.submit_download())
@@ -935,9 +936,11 @@ class App:
                 from .dialogs import torrent_dialog
                 self.guarded(lambda: torrent_dialog(self, value, self.directory.get()))
                 return
-            if kind == "media" or self.download_format.get() in {"MP4", "MOV", "MP3", "M4A", "WAV"}:
+            from .media_formats import AUDIO_EXPORTS, VIDEO_CONTAINERS
+            selected_format = self.download_format.get().lower()
+            if kind == "media" or selected_format in (*AUDIO_EXPORTS, *VIDEO_CONTAINERS):
                 self.media_url.set(value)
-                self.start_media({"MP3": "mp3", "M4A": "m4a", "WAV": "wav"}.get(self.download_format.get(), ""))
+                self.start_media(selected_format if selected_format in AUDIO_EXPORTS else "")
                 return
             digest = self.expected_hash.get().strip()
             algorithm = self.hash_algorithm.get().lower().replace("-", "")
@@ -1199,7 +1202,7 @@ class App:
             subtitles=self.media_subtitles.get(), cookie_file=self.media_cookie.get(),
             format_id=self.media_format.get(), connections=int(self.connections.get()),
             filename="" if self.media_playlist.get() else self.filename.get().strip(),
-            container=self.download_format.get().lower() if self.download_format.get() in {"MP4", "MOV", "WEBM", "MKV"} else "mp4",
+            container=self.download_format.get().lower() if self.download_format.get() in {"MP4", "MOV", "WEBM", "MKV", "M4V"} else "mp4",
             audio_bitrate=int(self.media_bitrate.get()))
         if url == self.browser_session_url:
             options.referrer = getattr(self, "browser_referrer", "")

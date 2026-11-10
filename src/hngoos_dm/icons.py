@@ -96,7 +96,7 @@ def load_icons(master, light=False, size=None):
     names = ("download", "play", "pause", "check", "shield", "settings", "folder", "list", "video",
              "file", "search", "plus", "globe", "info", "scissors", "close", "app", "music", "image", "archive",
              "arrow-down", "arrow-up", "activity", "sun", "moon", "more", "trash", "refresh", "transfer", "progress",
-             "grid", "remove", "alert")
+             "grid", "remove", "alert", "copy")
     return {name: load_image(master, root/(name+".png"), light, size) for name in names}
 
 

@@ -30,7 +30,14 @@ formats, and manage transfers in one place.
 
 ## Download
 
-The current release is **v0.1.2**.
+The current release is **v0.1.3**.
+
+This release improves browser detection, extension setup, video download buttons,
+and Preferences text layout. Supported audio exports include MP3, M4A, WAV, AAC,
+FLAC, AIFF, WMA, and AC3. Video containers include MP4, WebM, MKV, MOV, and M4V,
+where compatible with the source. Available resolutions come from the source;
+changing the container does not increase video quality.
+TikTok photo posts download their source images in order without converting them to video.
 
 ### Windows
 
@@ -38,7 +45,7 @@ The current release is **v0.1.2**.
 
 #### Download
 
-[Download the Windows installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.2/HDM-Setup-0.1.2.exe)
+[Download the Windows installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.3/HDM-Setup-0.1.3.exe)
 
 Or install from Command Prompt (CMD):
 
@@ -62,15 +69,15 @@ Click the HDM logo to change the download folder in Preferences.
 
 #### Download
 
-- [Download for Apple Silicon](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.2/HDM-0.1.2-macOS-arm64.dmg)
-- [Download for Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.2/HDM-0.1.2-macOS-x64.dmg)
+- [Download for Apple Silicon](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.3/HDM-0.1.3-macOS-arm64.dmg)
+- [Download for Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.3/HDM-0.1.3-macOS-x64.dmg)
 
 Or download the matching package from Terminal:
 
 ```sh
 hdm_arch=$(uname -m)
 [ "$hdm_arch" = "x86_64" ] && hdm_arch=x64
-curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.2/HDM-0.1.2-macOS-$hdm_arch.dmg" -o HDM.dmg
+curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.3/HDM-0.1.3-macOS-$hdm_arch.dmg" -o HDM.dmg
 ```
 
 #### Installation

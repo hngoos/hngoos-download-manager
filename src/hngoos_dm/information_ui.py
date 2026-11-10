@@ -10,6 +10,42 @@ from .ui_preferences import buffered_presentation
 REPOSITORY = "https://github.com/hngoos/hngoos-download-manager"
 
 
+class ExtensionExample(tk.Canvas):
+    """Small vector examples, drawn into the app's shared presentation surface."""
+    _hdm_surface_canvas = True
+
+    def __init__(self, parent, app, kind):
+        super().__init__(parent, width=1, height=64, highlightthickness=0, borderwidth=0)
+        self.app, self.kind = app, kind
+        self.bind("<Configure>", lambda _: self.draw())
+
+    def set_presentation(self, *_args):
+        self.draw()
+
+    def draw(self):
+        from .rounded import rounded_rectangle
+        from .ui_preferences import PALETTES
+        from .ui_scale import WindowScale
+        scale = WindowScale(self.app.root)
+        background, panel, text, muted, _ = PALETTES[self.app.theme]
+        self.configure(background=background)
+        self.delete("all")
+        width, height = self.winfo_width(), self.winfo_height()
+        rounded_rectangle(self, 1, 1, max(2, width-1), max(2, height-1), 12,
+                          fill=panel, outline=muted, tags="surface")
+        font = ("Segoe UI", scale.font_size(11, 9))
+        if self.kind == "developer":
+            self.create_text(18, height/2, anchor="w", text="Developer mode", fill=text, font=font)
+            x = width-60
+            self.create_line(x, height/2, x+24, height/2, width=20, capstyle="round", fill=muted)
+            self.create_oval(x+16, height/2-7, x+30, height/2+7, fill=panel, outline=panel)
+        else:
+            self.create_text(18, height/2, anchor="w", text="Extensions", fill=muted, font=font)
+            left = max(120, width-190)
+            rounded_rectangle(self, left, height/2-18, width-12, height/2+18, 8, fill=panel, outline=text)
+            self.create_text((left+width-12)/2, height/2, text="Load unpacked", fill=text, font=font)
+
+
 def build_browser_settings(app, parent):
     from . import browser
     from .icons import load_browser_icons
@@ -29,6 +65,17 @@ def build_browser_settings(app, parent):
                          takefocus=available)
         button.grid(row=0, column=index, padx=(0, 2), pady=2)
         app.browser_install_buttons[browser_id] = button
+
+
+def refresh_browser_availability(app):
+    from . import browser
+    for browser_id, button in getattr(app, "browser_install_buttons", {}).items():
+        available = browser.find_browser(browser_id) is not None
+        button.configure(state="normal" if available else "disabled", cursor="hand2" if available else "arrow",
+                         takefocus=available)
+        size = getattr(button.image, "width", lambda: 48)()
+        artwork = app.browser_icon_sizes.get(size, app.browser_icons)
+        button.configure(image=artwork[browser_id, available])
 
 
 def build_browser_capture_settings(app, parent):
@@ -226,6 +273,7 @@ def preferences_page(app):
     """Compact static columns: general controls under the logo, downloads beside it."""
     previous = getattr(app, "preferences_dialog", None)
     if previous and previous.winfo_exists():
+        refresh_browser_availability(app)
         previous.show()
         return previous
     dialog = app.preferences_dialog = ContentPage(app, "Thiết lập", beside_logo=True)
@@ -353,7 +401,7 @@ def preferences_page(app):
             section.pack_configure(pady=(0, 2 if small else 4 if compact else 20))
             for control in section.winfo_children():
                 if isinstance(control, ttk.Checkbutton):
-                    control.pack_configure(pady=0 if compact else 4)
+                    control.pack_configure(pady=0 if compact else 4, fill="x")
                     control.configure(style="Compact.TCheckbutton")
                 elif isinstance(control, ttk.Label) and control.pack_info().get("anchor") == "w":
                     if not hasattr(control, "_full_size_font"):
@@ -469,6 +517,7 @@ def browser_dialog(app, browser_id="chrome"):
 
     from . import browser
     from .extension_package import bundled_extension_path
+    from .rounded import RoundedButton
     previous = getattr(app, "browser_install_page", None)
     if previous and previous.winfo_exists():
         if previous.browser_id == browser_id:
@@ -483,7 +532,21 @@ def browser_dialog(app, browser_id="chrome"):
     header.pack(fill="x", pady=(8, 18))
     dialog.browser_title = ttk.Label(header, text=name, font=("Segoe UI", 20, "bold"))
     dialog.browser_title.pack(side="left")
+    ttk.Label(header, text="Tiện ích trình duyệt", style="Muted.TLabel").pack(side="right")
     status = dialog.status = tk.StringVar()
+    selector = ttk.Frame(parent)
+    selector.pack(fill="x", pady=(0, 16))
+    from .icons import load_browser_icons
+    dialog.browser_icons = load_browser_icons(app.root, 24)
+    dialog.browser_buttons = {}
+    for index, selected in enumerate(browser.supported_browsers()):
+        available = browser.find_browser(selected) is not None
+        button = RoundedButton(selector, text=browser.BROWSERS[selected][0],
+            image=dialog.browser_icons[selected, available], flat=True, width=120, height=36,
+            command=lambda selected=selected: browser_dialog(app, selected))
+        button.configure(state="normal" if available else "disabled")
+        button.grid(row=index//4, column=index%4, sticky="w", padx=(0, 8), pady=2)
+        dialog.browser_buttons[selected] = button
 
     def connect_folder():
         try:
@@ -497,7 +560,9 @@ def browser_dialog(app, browser_id="chrome"):
         except (OSError, ValueError) as error:
             status.set(app.locale.text(str(error)))
 
-    dialog.folder_label = ttk.Label(parent, text=str(dialog.folder_path), style="Muted.TLabel",
+    folder_row = ttk.Frame(parent)
+    folder_row.columnconfigure(0, weight=0)
+    dialog.folder_label = ttk.Label(folder_row, text=str(dialog.folder_path), style="Muted.TLabel",
                                       font=("Segoe UI", 11), wraplength=900)
     dialog.folder_label.translate_text = False
     instructions = ttk.Frame(parent)
@@ -515,7 +580,23 @@ def browser_dialog(app, browser_id="chrome"):
             status.set(app.locale.text(str(error)))
         return "break"
 
+    def copy(value):
+        app.root.clipboard_clear()
+        app.root.clipboard_append(value)
+        status.set(app.locale.text("Đã sao chép."))
+
+    dialog.copy_folder = RoundedButton(folder_row, text="", image=app.icons["copy"], flat=True,
+        width=32, height=32, command=lambda: copy(str(dialog.folder_path)))
+    dialog.copy_folder.accessible_name = "Sao chép đường dẫn thư mục"
+    dialog.folder_label.grid(row=0, column=0, sticky="w")
+    dialog.copy_folder.grid(row=0, column=1, padx=(8, 0), sticky="w")
+    from .platforms import open_path
+    dialog.open_folder = RoundedButton(folder_row, text="Mở thư mục tiện ích", image=app.icons["folder"],
+        width=190, height=36, flat=True, command=lambda: app.guarded(lambda: open_path(dialog.folder_path)))
+    dialog.open_folder.grid(row=1, column=0, columnspan=2, sticky="w", pady=(4, 0))
+
     dialog.step_labels = []
+    dialog.examples = []
     for index, step in enumerate(steps):
         row = ttk.Frame(instructions)
         row.pack(fill="x", pady=(3, 8))
@@ -528,15 +609,36 @@ def browser_dialog(app, browser_id="chrome"):
             dialog.extension_link = ttk.Label(row, text=extension_page, cursor="hand2", takefocus=True,
                                              font=("Segoe UI", 12, "underline"))
             dialog.extension_link.translate_text = False
+            dialog.extension_link.surface_command = open_page
             dialog.extension_link.pack(side="left", padx=(6, 0))
+            dialog.copy_address = RoundedButton(row, text="", image=app.icons["copy"], flat=True,
+                width=28, height=28, command=lambda: copy(extension_page))
+            dialog.copy_address.pack(side="left", padx=(6, 0))
+            dialog.copy_address.accessible_name = "Sao chép địa chỉ trang tiện ích"
             for sequence in ("<Button-1>", "<Return>", "<space>"):
                 dialog.extension_link.bind(sequence, open_page)
         if index == 2:
-            dialog.folder_label.pack(in_=row, anchor="w", pady=(4, 0))
+            folder_row.pack(in_=row, fill="x", pady=(4, 0))
+        if index in (1, 2):
+            example = ExtensionExample(row, app, "developer" if index == 1 else "unpacked")
+            example.configure(width=480)
+            example.pack(anchor="w", padx=(12, 0), pady=(6, 2))
+            dialog.examples.append(example)
     def fit_steps(event):
-        dialog.folder_label.configure(wraplength=max(200, event.width))
+        dialog.folder_label.configure(wraplength=max(120, event.width-48))
         for label in dialog.step_labels[1:]:
             label.configure(wraplength=max(200, event.width))
+        from .ui_scale import WindowScale
+        scale = WindowScale(app.root)
+        for example in dialog.examples:
+            if app.root.winfo_height() < 650:
+                example.pack_forget()
+            else:
+                example.configure(height=scale.size(64, 48), width=min(480, max(200, event.width-24)))
+                example.pack(anchor="w", padx=(12, 0), pady=(6, 2))
+        for button in dialog.browser_buttons.values():
+            button.label_font.configure(size=scale.font_size(10, 9))
+            button.configure(width=max(100, min(150, (event.width-32)//4)), height=scale.size(36, 28))
     instructions.bind("<Configure>", fit_steps)
     ttk.Label(parent, textvariable=status, style="Muted.TLabel", wraplength=1100).pack(anchor="w", pady=(8, 0))
     connect_folder()

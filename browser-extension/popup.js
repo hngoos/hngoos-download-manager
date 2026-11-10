@@ -59,22 +59,29 @@ document.getElementById('settings').onclick = async () => {
   }
 };
 document.getElementById('settings').setAttribute('aria-label', text('settings'));
-for (const id of ['download', 'video']) document.getElementById(id).disabled = !webPage;
+document.getElementById('download').disabled = !webPage;
 document.getElementById('download').onclick = event => send(event.currentTarget, {action: 'download', kind: 'video', url: tab.url});
 const video = document.getElementById('video');
 video.checked = !!settings.videoButton;
 video.onchange = async () => {
+  const enabled = video.checked;
   video.disabled = true;
   try {
-    await api.storage.local.set({videoButton: video.checked});
-    if (video.checked) {
+    await api.storage.local.set({videoButton: enabled});
+  } catch {
+    video.checked = !enabled;
+    status.textContent = text('offline');
+    video.disabled = false;
+    return;
+  }
+  video.disabled = false;
+  if (enabled && webPage) {
+    try {
       // Already-open pages may predate the extension's content script.
       const result = await api.runtime.sendMessage({action: 'enable-video', tabId: tab.id});
       if (!result?.ok) throw Error('Video button unavailable');
-    }
-  } catch {
-    status.textContent = text('offline');
-  } finally { video.disabled = !webPage; }
+    } catch { status.textContent = text('offline'); }
+  }
 };
 // Cached settings make the popup usable even while the native host is offline.
 const connection = document.getElementById('connection');

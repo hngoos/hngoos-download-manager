@@ -7,6 +7,7 @@ import threading
 from dataclasses import dataclass
 from pathlib import Path
 
+from .media_formats import AUDIO_EXPORTS, VIDEO_CONTAINERS
 from .safety import validate_url
 
 
@@ -92,11 +93,11 @@ def ydl_options(directory, options=None, ffmpeg=None):
         settings["http_headers"] = {"Referer": validate_url(options.referrer)}
     if ffmpeg:
         settings["ffmpeg_location"] = str(ffmpeg)
-    if options.container not in {"mp4", "mov", "webm", "mkv"}:
+    if options.container not in VIDEO_CONTAINERS:
         raise ValueError("Định dạng video không được hỗ trợ.")
     if options.audio:
-        if options.audio not in {"mp3", "m4a", "wav"}:
-            raise ValueError("Chỉ nhận định dạng âm thanh MP3, M4A hoặc WAV.")
+        if options.audio not in AUDIO_EXPORTS:
+            raise ValueError("Định dạng âm thanh không được hỗ trợ.")
         if not ffmpeg:
             raise ValueError("Cần FFmpeg để tách nhạc.")
         if options.audio_bitrate not in {96, 128, 192, 256, 320}:
@@ -120,11 +121,11 @@ def ydl_options(directory, options=None, ffmpeg=None):
     else:
         height = max(144, min(4320, int(options.height)))
         settings["format"] = f"b[height<=?{height}][ext=mp4]/b[height<=?{height}]"
-    if not options.audio and options.container == "mov":
+    if not options.audio and options.container in {"mov", "mkv", "m4v"}:
         if not ffmpeg:
-            raise ValueError("Cần FFmpeg để tạo tệp MOV.")
-        settings["merge_output_format"] = "mov"
-        settings["postprocessors"] = [{"key": "FFmpegVideoRemuxer", "preferedformat": "mov"}]
+            raise ValueError("Cần FFmpeg để đổi định dạng video.")
+        settings["merge_output_format"] = options.container
+        settings["postprocessors"] = [{"key": "FFmpegVideoRemuxer", "preferedformat": options.container}]
     return settings
 
 
@@ -154,6 +155,11 @@ def video_quality(item):
 
 def describe_media(url, proxy=None, cookie_file=""):
     """Bound preview requests; no playlist traversal, processing, or downloaded media."""
+    from .tiktok_photos import describe_album, photo_id
+    if photo_id(url):
+        album = describe_album(url, proxy)
+        return {"title": album["title"], "media_type": "photos", "extension": album["images"][0]["ext"],
+                "heights": [], "formats": []}
     from yt_dlp import YoutubeDL
     settings = ydl_options(Path.cwd(), MediaOptions(proxy=proxy, cookie_file=cookie_file))
     settings.update(skip_download=True, extract_flat=False, playlistend=1,
@@ -231,6 +237,42 @@ def _download_video(url, directory, audio=False, progress=None, options=None, st
     from .media_progress import MediaProgress
     options = options or MediaOptions(audio="mp3" if audio else "")
     stop = stop or threading.Event()
+    from .tiktok_photos import describe_album, photo_id
+    if identifier := photo_id(url):
+        if stop.is_set():
+            raise MediaCancelled("Đã dừng tác vụ tải.")
+        album = describe_album(url, options.proxy)
+        from .safety import safe_filename
+        stem = safe_filename(Path(options.filename).stem if options.filename else album["title"])
+        settings = {"quiet": True, "noprogress": True, "continuedl": True, "overwrites": False,
+                    "outtmpl": str(Path(directory)/(stem.replace("%", "%%")+" - %(autonumber)03d.%(ext)s")),
+                    "http_headers": {"Referer": "https://www.tiktok.com/"}, "socket_timeout": 15, "retries": 3}
+        from .network import media_proxy
+        if (proxy := media_proxy(options.proxy)) is not None:
+            settings["proxy"] = proxy
+        reporter = MediaProgress(progress)
+        entries = [dict(image, id=f"{identifier}-{index}", title=album["title"], format_id="image")
+                   for index, image in enumerate(album["images"], 1)]
+        for entry in entries:
+            reporter.plan(entry)
+        def photo_progress(data):
+            if stop.is_set():
+                raise MediaCancelled("Đã dừng tác vụ tải.")
+            # yt-dlp skips an image completed before pause without byte counters.
+            if data.get("status") == "finished" and "downloaded_bytes" not in data and data.get("filename"):
+                size = Path(data["filename"]).stat().st_size
+                data = dict(data, downloaded_bytes=size, total_bytes=size)
+            reporter(data)
+        settings["progress_hooks"] = [photo_progress]
+        with YoutubeDL(settings) as downloader:
+            downloader.process_ie_result({"_type": "playlist", "id": identifier, "title": album["title"],
+                                          "extractor": "TikTokPhotos", "extractor_key": "TikTokPhotos",
+                                          "webpage_url": url, "entries": entries}, download=True)
+        from .files import mark_internet
+        for path in Path(directory).glob("*"):
+            if path.suffix.lower() in {".jpg", ".png", ".webp", ".avif"}:
+                mark_internet(path)
+        return
     try:
         ffmpeg = find_ffmpeg()
     except ValueError:
@@ -286,10 +328,12 @@ def normalize_audio(directory, options, stop):
             if output != source and output.exists():
                 raise FileExistsError(output)
             target = Path(folder)/output.name
-            codec = {"mp3": "libmp3lame", "m4a": "aac", "wav": "pcm_s16le"}[options.audio]
+            codec, rates = AUDIO_EXPORTS[options.audio]
             encoding = ["-c:a", codec]
-            if options.audio != "wav":
+            if rates:
                 encoding += ["-b:a", f"{options.audio_bitrate}k"]
+            if options.audio == "wma":
+                encoding += ["-ac", "2", "-ar", "48000"]
             _execute_ffmpeg(["-i", source, "-map", "0:a:0", "-vn", *encoding, target], stop)
             target.replace(output)
             if output != source:

@@ -86,10 +86,12 @@ class BrowserInstallationTests(unittest.TestCase):
             executable.touch()
             with patch.object(browser.sys, "platform", "win32"), \
                     patch.object(browser, "find_browser", return_value=executable), \
+                    patch.object(browser, "_opera_window", return_value=123), \
+                    patch.object(browser, "_opera_extension_shortcut") as navigate, \
                     patch("subprocess.Popen") as launch:
                 browser.open_extensions("edge")
-            self.assertEqual(launch.call_args.args[0], [str(executable), "--new-tab", "--", "edge://extensions/"])
-            self.assertNotIn("shell", launch.call_args.kwargs)
+            navigate.assert_called_once_with(123, "edge://extensions/")
+            launch.assert_not_called()
 
     def test_missing_browser_is_reported_without_opening_a_different_browser(self):
         with patch.object(browser.sys, "platform", "win32"), \

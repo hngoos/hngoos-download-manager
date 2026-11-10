@@ -36,7 +36,9 @@ def find_browser(browser_id):
             try:
                 with winreg.OpenKey(hive, f"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\{executable}") as key:
                     path = Path(winreg.QueryValueEx(key, "")[0].strip('"'))
-                    gx = "operagx" in str(path).lower().replace(" ", "").replace("-", "")
+                    product = (_windows_product_name(path).lower()
+                               if browser_id in {"opera", "opera-gx"} and path.is_file() else "")
+                    gx = "gx" in product if product else "operagx" in re.sub(r"[^a-z0-9]", "", str(path).lower())
                     if browser_id not in {"opera", "opera-gx"} or gx == (browser_id == "opera-gx"):
                         candidates.append(path)
             except OSError:
@@ -51,11 +53,49 @@ def find_browser(browser_id):
         name = {"brave": "Brave Browser", "coccoc": "CocCoc"}.get(browser_id, name)
         for base in (Path("/Applications"), Path.home()/"Applications"):
             candidates.append(base/f"{name}.app/Contents/MacOS/{name}")
-    return next((candidate for candidate in candidates if candidate.is_file()), None)
+    for candidate in candidates:
+        if not candidate.is_file():
+            continue
+        if sys.platform == "win32" and browser_id in {"opera", "opera-gx"}:
+            binaries = [candidate] if candidate.name.lower() == "opera.exe" else [
+                candidate.parent/"opera.exe", *candidate.parent.glob("*/opera.exe")]
+            binary = next((item for item in binaries if item.is_file()), None)
+            if binary is None:
+                continue  # An orphan launcher is not an installed browser.
+            product = _windows_product_name(binary).lower()
+            if product and ("gx" in product) != (browser_id == "opera-gx"):
+                continue
+        return candidate
+    return None
+
+
+def _windows_product_name(executable):
+    """Read binary product metadata without starting the browser."""
+    import ctypes
+    from ctypes import wintypes
+    version = ctypes.windll.version
+    version.GetFileVersionInfoSizeW.argtypes = [wintypes.LPCWSTR, ctypes.POINTER(wintypes.DWORD)]
+    version.GetFileVersionInfoSizeW.restype = wintypes.DWORD
+    version.GetFileVersionInfoW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, ctypes.c_void_p]
+    version.VerQueryValueW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR, ctypes.POINTER(ctypes.c_void_p),
+                                     ctypes.POINTER(wintypes.UINT)]
+    size = version.GetFileVersionInfoSizeW(str(executable), None)
+    if not size:
+        return ""
+    data = ctypes.create_string_buffer(size)
+    if not version.GetFileVersionInfoW(str(executable), 0, size, data):
+        return ""
+    value, length = ctypes.c_void_p(), wintypes.UINT()
+    if not version.VerQueryValueW(data, "\\VarFileInfo\\Translation", ctypes.byref(value), ctypes.byref(length)) or length.value < 4:
+        return ""
+    words = ctypes.cast(value, ctypes.POINTER(wintypes.WORD))
+    key = f"\\StringFileInfo\\{words[0]:04x}{words[1]:04x}\\ProductName"
+    if version.VerQueryValueW(data, key, ctypes.byref(value), ctypes.byref(length)):
+        return ctypes.wstring_at(value, max(0, length.value-1))
+    return ""
 
 
 def open_extensions(browser_id):
-    import subprocess
     if browser_id not in supported_browsers():
         raise ValueError("Trình duyệt không được hỗ trợ.")
     executable = find_browser(browser_id)
@@ -63,8 +103,37 @@ def open_extensions(browser_id):
         raise FileNotFoundError("Chưa tìm thấy trình duyệt này trên máy. Hãy cài trình duyệt trước.")
     if sys.platform == "win32" and browser_id in {"opera", "opera-gx"}:
         return _open_opera_extensions(executable)
-    subprocess.Popen([str(executable), "--new-tab", "--", BROWSERS[browser_id][1]+"://extensions/"],
-                     creationflags=0x08000000 if os.name == "nt" else 0)
+    url = BROWSERS[browser_id][1]+"://extensions/"
+    if sys.platform == "win32":
+        hwnd = _opera_window(executable)
+        if hwnd is None:
+            raise OSError("Hãy mở trình duyệt đã chọn trước, rồi bấm lại đường dẫn tiện ích.")
+        _opera_extension_shortcut(hwnd, url)
+    else:
+        _mac_extensions(executable, url)
+
+
+def _mac_extensions(executable, url):
+    import plistlib
+    import subprocess
+    bundle = executable.parents[2]
+    with (bundle/"Contents/Info.plist").open("rb") as stream:
+        identifier = plistlib.load(stream)["CFBundleIdentifier"]
+    script = '''function run(args) {
+const browser = Application(args[0]);
+if (!browser.running()) throw Error("Open the selected browser first.");
+const windows = browser.windows();
+if (!windows.length) throw Error("Open a browser window first.");
+windows[0].activeTab.url = args[1];
+browser.activate();
+}'''
+    try:
+        result = subprocess.run(["osascript", "-l", "JavaScript", "-e", script, identifier, url],
+                                capture_output=True, text=True, timeout=10, check=False)
+    except subprocess.TimeoutExpired as error:
+        raise OSError("Không thể mở trang tiện ích. Sao chép địa chỉ và dán vào trình duyệt đã chọn.") from error
+    if result.returncode:
+        raise OSError("Không thể mở trang tiện ích. Sao chép địa chỉ và dán vào trình duyệt đã chọn.")
 
 
 def _opera_window(executable):
@@ -100,7 +169,10 @@ def _opera_window(executable):
                 buffer, length = ctypes.create_unicode_buffer(32768), wintypes.DWORD(32768)
                 if kernel.QueryFullProcessImageNameW(process, 0, buffer, ctypes.byref(length)):
                     image = Path(buffer.value)
-                    if image.name.lower() == "opera.exe" and image.is_relative_to(executable.parent):
+                    match = image == executable
+                    if executable.name.lower() in {"opera.exe", "launcher.exe"}:
+                        match = image.name.lower() == "opera.exe" and image.is_relative_to(executable.parent)
+                    if match:
                         found.append(hwnd)
                         return False
             finally:
@@ -111,7 +183,7 @@ def _opera_window(executable):
     return found[0] if found else None
 
 
-def _opera_extension_shortcut(hwnd):
+def _opera_extension_shortcut(hwnd, url=None):
     """Opera ignores internal URLs from its launcher. Use its documented shortcut only after focus is verified."""
     import ctypes
     from ctypes import wintypes
@@ -125,7 +197,7 @@ def _opera_extension_shortcut(hwnd):
     user.SetForegroundWindow(hwnd)
     if user.GetForegroundWindow() != hwnd or any(user.GetAsyncKeyState(key) & 0x8000
                                                 for key in (0x10, 0x11, 0x12, 0x5b, 0x5c)):
-        raise OSError("Không thể mở trang tiện ích. Hãy nhập opera://extensions vào thanh địa chỉ trình duyệt.")
+        raise OSError("Không thể mở trang tiện ích. Sao chép địa chỉ và dán vào trình duyệt đã chọn.")
     class Keyboard(ctypes.Structure):
         _fields_ = [("key", wintypes.WORD), ("scan", wintypes.WORD), ("flags", wintypes.DWORD),
                     ("time", wintypes.DWORD), ("extra", ctypes.c_size_t)]
@@ -137,28 +209,25 @@ def _opera_extension_shortcut(hwnd):
     class Input(ctypes.Structure):
         _fields_ = [("kind", wintypes.DWORD), ("payload", Payload)]
     # https://help.opera.com/en/latest/shortcuts/: Ctrl+Shift+E opens Extensions.
-    keys = ((0x11, 0), (0x10, 0), (0x45, 0), (0x45, 2), (0x10, 2), (0x11, 2))
-    events = (Input*len(keys))(*(Input(kind=1, payload=Payload(keyboard=Keyboard(key, 0, flags, 0, 0)))
-                                for key, flags in keys))
+    keys = [(key, 0, flags) for key, flags in
+            ((0x11, 0), (0x10, 0), (0x45, 0), (0x45, 2), (0x10, 2), (0x11, 2))]
+    if url:
+        keys = [(0x11, 0, 0), (0x4c, 0, 0), (0x4c, 0, 2), (0x11, 0, 2)]
+        keys += [(0, ord(char), flags) for char in url for flags in (4, 6)]
+        keys += [(0x0d, 0, 0), (0x0d, 0, 2)]
+    events = (Input*len(keys))(*(Input(kind=1, payload=Payload(keyboard=Keyboard(key, scan, flags, 0, 0)))
+                                for key, scan, flags in keys))
     user.SendInput.argtypes = [wintypes.UINT, ctypes.POINTER(Input), ctypes.c_int]
     if user.SendInput(len(events), events, ctypes.sizeof(Input)) != len(events):
         for key in (0x45, 0x10, 0x11):
             user.keybd_event(key, 0, 2, 0)
-        raise OSError("Không thể mở trang tiện ích. Hãy nhập opera://extensions vào thanh địa chỉ trình duyệt.")
+        raise OSError("Không thể mở trang tiện ích. Sao chép địa chỉ và dán vào trình duyệt đã chọn.")
 
 
 def _open_opera_extensions(executable):
-    import subprocess
-    import time
     hwnd = _opera_window(executable)
     if hwnd is None:
-        subprocess.Popen([str(executable)], creationflags=0x08000000)
-        deadline = time.monotonic()+3
-        while hwnd is None and time.monotonic() < deadline:
-            time.sleep(.05)
-            hwnd = _opera_window(executable)
-    if hwnd is None:
-        raise OSError("Chưa tìm thấy trình duyệt này trên máy. Hãy cài trình duyệt trước.")
+        raise OSError("Hãy mở trình duyệt đã chọn trước, rồi bấm lại đường dẫn tiện ích.")
     _opera_extension_shortcut(hwnd)
 
 

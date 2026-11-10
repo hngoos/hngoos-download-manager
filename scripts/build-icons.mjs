@@ -7,7 +7,7 @@ const names = {download: 'Download', play: 'Play', pause: 'Pause', check: 'Check
   plus: 'Plus', globe: 'Globe', info: 'Info', scissors: 'Scissors', close: 'X', app: 'AppWindow',
   music: 'Music', image: 'Image', archive: 'Archive', 'arrow-down': 'ArrowDown', 'arrow-up': 'ArrowUp',
   activity: 'ChartNoAxesCombined', sun: 'Sun', moon: 'Moon', more: 'Ellipsis', trash: 'Trash2', refresh: 'RefreshCw',
-  transfer: 'ArrowUpDown', grid: 'LayoutGrid'};
+  transfer: 'ArrowUpDown', grid: 'LayoutGrid', copy: 'Copy'};
 // Iconoir's unstriped trash outline, matching the selected Morphicons preview.
 // https://github.com/iconoir-icons/iconoir/blob/main/icons/regular/trash.svg (MIT)
 const removeIcon = [

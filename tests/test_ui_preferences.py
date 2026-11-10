@@ -1031,7 +1031,7 @@ class PresentationTests(unittest.TestCase):
             self.pump(.1)
         editor = self.app.download_editor
         self.assertEqual(editor.filename.get(), "Browser video.mp4")
-        self.assertEqual(set(editor.format_choices.buttons), {"MP4", "M4A", "MP3", "WAV"})
+        self.assertTrue({"MP4", "M4A", "MP3", "WAV"} <= set(editor.format_choices.buttons))
         self.assertEqual(editor.heights, [720])
         self.assertTrue(editor.quality_label.winfo_ismapped())
         self.assertFalse(self.app.page_stack)
@@ -1289,7 +1289,7 @@ class PresentationTests(unittest.TestCase):
             ]})
         editor.pack(fill="both", expand=True)
         self.pump()
-        self.assertEqual(set(editor.format_choices.buttons), {"MP4", "M4A", "MP3", "WAV"})
+        self.assertTrue({"MP4", "M4A", "MP3", "WAV"} <= set(editor.format_choices.buttons))
         self.assertEqual(set(editor.quality_choices.buttons), {"720"})
         self.assertEqual(editor.format_id.get(), "22")
         editor.format_choices.buttons["M4A"].invoke()

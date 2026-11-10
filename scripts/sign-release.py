@@ -23,15 +23,15 @@ envelope = {"payload": payload, "signature": base64.b64encode(key.sign(canonical
 (folder/"update-manifest.json").write_text(json.dumps(envelope, ensure_ascii=False, indent=2), encoding="utf-8")
 notes = f"""# Hngoos Download Manager v{__version__}
 
-Update notification fixes for Windows and macOS.
+Browser integration, media export, and interface fixes for Windows and macOS.
 
-- The update notice appears only on the main view, beneath the logo, and stays hidden in Preferences and other pages.
-- The notice scales with the logo and remains within its column in compact windows.
-- Automatic checks start shortly after launch and repeat every five minutes, even if the previous session checked recently.
-- Failed network checks retry after one minute instead of postponing updates for hours.
-
-Automatic checks honor the Preferences setting. Installing updates automatically
-remains a separate, optional setting.
+- Added AAC, FLAC, AIFF, WMA, and AC3 audio export presets, plus compatible MKV, MOV, and M4V video containers.
+- Added a guided extension setup page for all seven supported browsers, with copy buttons for the extension address and folder path.
+- Extension links reuse an existing browser window. Installed-browser availability refreshes when Preferences opens, and orphan Opera launchers no longer count as an installation.
+- The video-button preference stays usable on internal pages and while HDM is offline.
+- Video download buttons are isolated from page styles and player overlays. Camera and WebRTC call streams no longer receive download buttons.
+- Fixed overlapping Preferences checkbox labels and added localized URL and empty-list hints.
+- TikTok photo posts now download all source images in order through the same staging and optional safety-check workflow.
 
 Choose the Windows x64 installer or the macOS DMG matching your processor.
 Windows packages are not Authenticode-signed; macOS packages are not notarized.

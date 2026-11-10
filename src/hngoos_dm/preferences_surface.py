@@ -171,7 +171,8 @@ class PreferencesSurface(tk.Canvas):
                              anchor="center" if centered else "w", fill=color, font=font,
                              width=width, tags="frame")
         if str(widget.cget("cursor")) == "hand2":
-            self.regions.append((widget, (x, y, width, height), lambda: widget.event_generate("<Button-1>")))
+            action = getattr(widget, "surface_command", None) or (lambda: widget.event_generate("<Button-1>"))
+            self.regions.append((widget, (x, y, width, height), action))
 
     def checkbox(self, widget, x, y, width, height):
         self.watch(widget.cget("variable"))
@@ -204,7 +205,8 @@ class PreferencesSurface(tk.Canvas):
         font = ttk.Style(self).lookup(widget.cget("style") or "TCheckbutton", "font")
         inset = image.width()-1
         self.create_text(x+inset, y+height/2, text=self.text(widget), anchor="w",
-                         font=font, fill=muted if disabled else text, width=max(1, width-inset), tags="frame")
+                         font=font, fill=muted if disabled else text,
+                         width=max(1, widget.master.winfo_width()-widget.winfo_x()-inset-4), tags="frame")
         if not disabled:
             self.regions.append((widget, (x, y, width, height), widget.invoke))
 
@@ -251,8 +253,9 @@ class PreferencesSurface(tk.Canvas):
         if not editing:
             from .ui_fonts import metrics_font
             font = metrics_font(self, widget.cget("font"))
-            text = fit_text(font, widget.get(), width)
-            color = PALETTES[self.app.theme][3 if str(widget.cget("state")) == "disabled" else 2]
+            placeholder = getattr(widget, "placeholder", "") if not widget.get() else ""
+            text = fit_text(font, self.app.locale.text(placeholder) if placeholder else widget.get(), width)
+            color = PALETTES[self.app.theme][3 if placeholder or str(widget.cget("state")) == "disabled" else 2]
             self.create_text(x, y+height/2, text=text, anchor="w", fill=color, font=font, tags="frame")
         if str(widget.cget("state")) != "disabled":
             self.regions.append((widget, (x, y, width, height), lambda: self.start_edit(widget)))
@@ -310,6 +313,8 @@ class PreferencesSurface(tk.Canvas):
                     self.regions.append((widget, (x, y, width, height), None))
             elif isinstance(widget, ttk.Entry):
                 self.editor(widget, x, y, width, height)
+            elif getattr(widget, "_hdm_surface_canvas", False):
+                self.vector_items(widget, x, y)
             elif isinstance(widget, ttk.Treeview):
                 self.journal(widget, x, y)
             elif isinstance(widget, tk.Frame) and height == 1:
@@ -360,6 +365,11 @@ class PreferencesSurface(tk.Canvas):
         style = ttk.Style(self)
         font = metrics_font(self, style.lookup("Treeview", "font"))
         color = PALETTES[self.app.theme][2]
+        if not widget.get_children():
+            heading_height = font.metrics("linespace")+16
+            self.create_text(x+widget.winfo_width()/2, y+(widget.winfo_height()+heading_height)/2,
+                             text=self.app.locale.text("Danh sách trống"), fill=PALETTES[self.app.theme][3],
+                             font=font, tags="frame")
         # Status, speed, check and actions are existing semantic cell overlays.
         # File names are the only text supplied directly by the native table.
         for row in widget.get_children():

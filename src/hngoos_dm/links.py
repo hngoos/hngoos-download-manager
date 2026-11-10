@@ -111,9 +111,10 @@ def describe_source(value, proxy=None, cookie_file=""):
             if cookie_file:
                 options["cookie_file"] = cookie_file
             metadata = describe_media(value, **options)
-            result.update(heights=metadata.get("heights", []), formats=metadata.get("formats", []))
+            result.update(heights=metadata.get("heights", []), formats=metadata.get("formats", []),
+                          media_type=metadata.get("media_type", ""))
             if metadata.get("title"):
-                result["filename"] = safe_filename(metadata["title"])+".mp4"
+                result["filename"] = safe_filename(metadata["title"])+"."+metadata.get("extension", "mp4")
         except Exception as error:  # noqa: BLE001 -- Cookie-protected sources remain configurable.
             result["metadata_error"] = str(error)
             result["filename"] = filename_from_url(value).rsplit(".", 1)[0]+".mp4"

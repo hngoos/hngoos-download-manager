@@ -4,6 +4,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import ttk
 
+from .media_formats import AUDIO_EXPORTS
 from .rounded import ChoiceRow, UnderlinedEntry
 from .safety import filename_from_url
 
@@ -18,7 +19,8 @@ class DownloadEditor(ttk.Frame):
         self.ready = self.kind in {"file", "media"} and not description.get("metadata_error")
         import mimetypes
         content_type = description.get("content_type") or mimetypes.guess_type(description.get("filename", ""))[0] or ""
-        self.show_options = self.ready and (self.kind == "media" or content_type.startswith(("video/", "audio/")))
+        self.show_options = self.ready and description.get("media_type") != "photos" and (
+            self.kind == "media" or content_type.startswith(("video/", "audio/")))
         app.show_source_controls(self.kind != "empty")
         if self.kind != "empty" and getattr(app, "download_placeholder", None):
             app.download_placeholder.pack_forget()
@@ -69,7 +71,11 @@ class DownloadEditor(ttk.Frame):
         available = list(dict.fromkeys(item["ext"].upper() for item in self.source_formats)) if self.kind == "media" else ["Original"]
         available.sort(key=lambda ext: not any(item["ext"].upper() == ext and item.get("height") for item in self.source_formats))
         if self.kind == "media" and any(item.get("acodec") not in {None, "none"} for item in self.source_formats):
-            available.extend(value for value in ("MP3", "WAV") if value not in available)
+            available.extend(value.upper() for value in AUDIO_EXPORTS if value.upper() not in available)
+        if self.kind == "media" and any(item.get("height") for item in self.source_formats):
+            available.extend(value for value in ("MKV", "MOV", "M4V") if value not in available
+                             and (value == "MKV" or any(item.get("height") and item["ext"] == "mp4"
+                                                      for item in self.source_formats)))
         self.format.set(available[0] if available else "Original")
         self.format_label = ttk.Label(self, text="Định dạng", style="Source.Card.TLabel")
         self.format_label.grid(row=2, column=0, sticky="w", padx=(0, 12))
@@ -139,6 +145,9 @@ class DownloadEditor(ttk.Frame):
 
     def format_changed(self, _event=None):
         self.current_formats = [item for item in self.source_formats if item["ext"].upper() == self.format.get()]
+        if not self.current_formats and self.format.get() in {"MKV", "MOV", "M4V"}:
+            self.current_formats = [item for item in self.source_formats if
+                self.format.get() == "MKV" or item["ext"] == "mp4"]
         video = any(item.get("height") and item.get("vcodec") != "none" for item in self.current_formats)
         self.video_output = video
         if self.quality_choices is not None:
@@ -149,7 +158,8 @@ class DownloadEditor(ttk.Frame):
             if self.quality.get() not in {value for _, value in values}:
                 self.quality.set(str(max(heights)))
         else:
-            rates = ([320, 256, 192, 128] if self.format.get() == "MP3" else
+            rates = (list(AUDIO_EXPORTS[self.format.get().lower()][1])
+                     if not self.current_formats and self.format.get().lower() in AUDIO_EXPORTS else
                      sorted({round(item["abr"]) for item in self.current_formats if item.get("abr")}, reverse=True))
             values = [(f"{rate} kbps", str(rate)) for rate in rates]
             if rates and self.bitrate.get() not in {value for _, value in values}:
@@ -170,7 +180,7 @@ class DownloadEditor(ttk.Frame):
         for button in self.quality_choices.buttons.values():
             button.configure(state="normal" if self.ready and self.kind == "media" else "disabled")
         self.quality_choices.present()
-        if self.ready and self.kind == "media":
+        if self.ready and self.kind == "media" and self.format.get() != "Original":
             self.filename.set(str(Path(self.filename.get() or self.base_name).with_suffix("."+self.format.get().lower())))
         if not video:
             self.subtitles.set(False)
