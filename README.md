@@ -125,40 +125,15 @@ This release includes:
 - Exercise forced process termination, repeated connection loss, disk-full recovery and concurrent output collisions
   in regression tests, with dedicated Windows and macOS recovery jobs in CI.
 
-## Build from source
+## Repository scope
 
-### Requirements and commands
+This repository distributes the current HDM releases for Windows and macOS.
+Download current installers from [Releases](https://github.com/hngoos/hngoos-download-manager/releases).
 
-Use Python 3.11 or later with Tkinter, Node.js 22 or later, and Inno Setup 6
-for Windows installers. Build on the target operating system.
-
-```sh
-python -m pip install -e ".[media,processing,excel,pdf,web,tray,torrent,updates,dev,build]"
-npm ci --prefix browser-extension --ignore-scripts
-python -m unittest discover -s tests -v
-node --test browser-extension/test/*.test.js
-python -m ruff check .
-```
-
-Windows codec builds require a MinGW-w64 environment with GCC, Make, NASM,
-CMake, Ninja, Meson and pkgconf (the CI workflow uses MSYS2 MINGW64).
-Prepare the pinned sources with `python scripts/prepare-ffmpeg.py`, then run
-`bash scripts/build-ffmpeg.sh` in that environment. The build retains software
-AV1 decoding and H.264/MP3/AAC processing, and creates a separate archive of
-the corresponding codec sources for redistribution.
-
-Then run `scripts/build.ps1` in PowerShell and compile
-`scripts/installer.iss` with Inno Setup. On macOS, run
-`python scripts/build-desktop.py`. Build outputs are written to `dist/`.
-
-Website capture uses an installed Chromium browser with a temporary profile.
-YouTube JavaScript support uses bundled QuickJS-NG; Playwright and its Node
-runtime are only needed by development tooling and browser tests.
-
-Source code is in `src/hngoos_dm/`; the browser extension is in
-`browser-extension/`. Local environments, caches, reports, and generated
-packages are excluded from the repository. Third-party license notices
-accompany binary distributions.
+The application and extension source files visible here are a historical v0.1.4
+snapshot. They do not reproduce the current release binaries. Current development,
+platform builds and application tests are maintained in a private repository.
+Public Actions verify the publisher signature, size and SHA-256 of released packages.
 
 ## Contact
 
