@@ -1,18 +1,19 @@
-name: Release packages
+name: Verify published packages
 on:
-  push:
-    tags: ['v*']
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to verify
+        required: true
+        default: v0.1.5
 permissions:
   contents: read
 jobs:
-  windows:
-    uses: ./.github/workflows/ci.yml
-  desktop:
-    uses: ./.github/workflows/desktop-preview.yml
-  signing:
-    needs: [windows, desktop]
+  verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -20,22 +21,55 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.13'
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          path: dist
-          merge-multiple: true
-      - run: python -m pip install -e ".[updates]"
-      - name: Sign when a publisher key is configured
+      - run: python -m pip install cryptography==50.0.2
+      - name: Verify publisher signature and download every release asset
         env:
-          HNGOOS_RELEASE_SIGNING_KEY: ${{ secrets.HNGOOS_RELEASE_SIGNING_KEY }}
-        shell: bash
+          GH_TOKEN: ${{ github.token }}
+          HDM_RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        shell: python
         run: |
-          if [ -n "$HNGOOS_RELEASE_SIGNING_KEY" ]; then
-            python scripts/sign-release.py
-          else
-            echo "Packages are ready for local publisher signing. No release is published automatically."
-          fi
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: HDM-release-packages
-          path: dist/
+          import hashlib
+          import json
+          import os
+          import re
+          import sys
+          import urllib.request
+          from pathlib import Path
+          sys.path.insert(0, 'src')
+          from hngoos_dm.updater import MANIFEST_START, MANIFEST_END, verify_manifest
+          tag = os.environ['HDM_RELEASE_TAG']
+          assert re.fullmatch(r'v\d+\.\d+\.\d+', tag), 'Invalid release tag'
+          base = 'https://api.github.com/repos/hngoos/hngoos-download-manager'
+          request = urllib.request.Request(base+'/releases/tags/'+tag, headers={
+              'Authorization': 'Bearer '+os.environ['GH_TOKEN'],
+              'Accept': 'application/vnd.github+json', 'User-Agent': 'HDM-release-verification'})
+          with urllib.request.urlopen(request, timeout=60) as response:
+              release = json.load(response)
+          assert not release['draft'] and not release['prerelease']
+          body = release['body']
+          assert body.count(MANIFEST_START) == body.count(MANIFEST_END) == 1
+          payload = verify_manifest(json.loads(body.split(MANIFEST_START)[1].split(MANIFEST_END)[0]))
+          version = tag[1:]
+          assert payload['version'] == version
+          expected = {f'HDM-Setup-{version}.exe', f'HDM-{version}-macOS-arm64.dmg',
+              f'HDM-{version}-macOS-x64.dmg', 'HDM-FFmpeg-9.0.2-Sources.tar.gz'}
+          assets = {a['name']:a for a in release['assets']}
+          assert set(assets) == {a['name'] for a in payload['assets']} == expected
+          for item in payload['assets']:
+              asset = assets[item['name']]
+              assert asset['size'] == item['size']
+              assert asset['digest'] == 'sha256:'+item['sha256']
+              assert asset['browser_download_url'].startswith(
+                  'https://github.com/hngoos/hngoos-download-manager/releases/download/'+tag+'/')
+              count, digest = 0, hashlib.sha256()
+              # Public asset redirects receive no API authorization header.
+              with urllib.request.urlopen(asset['browser_download_url'], timeout=120) as response:
+                  while block := response.read(1024*1024):
+                      count += len(block)
+                      assert count <= item['size']
+                      digest.update(block)
+              assert count == item['size'] and digest.hexdigest() == item['sha256']
+              print('Verified', item['name'], count, flush=True)
+          Path(os.environ['GITHUB_STEP_SUMMARY']).write_text(
+              'Verified '+tag+': pinned Ed25519 signature and all four asset sizes/SHA-256 hashes.\n',
+              encoding='utf-8')

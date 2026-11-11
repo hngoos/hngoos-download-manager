@@ -30,10 +30,11 @@ formats, and manage transfers in one place.
 
 ## Download
 
-The current release is **v0.1.4**.
+The current release is **v0.1.5**.
 
-This release fixes TikTok feed video links, simplifies browser extension setup,
-and keeps Network controls aligned in compact windows. Supported audio exports include MP3, M4A, WAV, AAC,
+This release improves interrupted-download recovery, verifies saved HTTP ranges,
+and keeps large download histories responsive. Windows Defender scans run in a
+shared background queue; missing files no longer show an overlapping safety result. Supported audio exports include MP3, M4A, WAV, AAC,
 FLAC, AIFF, WMA, and AC3. Video containers include MP4, WebM, MKV, MOV, and M4V,
 where compatible with the source. Available resolutions come from the source;
 changing the container does not increase video quality.
@@ -45,7 +46,7 @@ TikTok photo posts download their source images in order without converting them
 
 #### Download
 
-[Download the Windows installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.4/HDM-Setup-0.1.4.exe)
+[Download the Windows installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-Setup-0.1.5.exe)
 
 Or install from Command Prompt (CMD):
 
@@ -69,15 +70,15 @@ Click the HDM logo to change the download folder in Preferences.
 
 #### Download
 
-- [Download for Apple Silicon](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.4/HDM-0.1.4-macOS-arm64.dmg)
-- [Download for Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.4/HDM-0.1.4-macOS-x64.dmg)
+- [Download for Apple Silicon](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-macOS-arm64.dmg)
+- [Download for Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-macOS-x64.dmg)
 
 Or download the matching package from Terminal:
 
 ```sh
 hdm_arch=$(uname -m)
 [ "$hdm_arch" = "x86_64" ] && hdm_arch=x64
-curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.4/HDM-0.1.4-macOS-$hdm_arch.dmg" -o HDM.dmg
+curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-macOS-$hdm_arch.dmg" -o HDM.dmg
 ```
 
 #### Installation
@@ -100,7 +101,33 @@ on or off, download the current page/video, or show the video download button.
 Supported browsers: Chrome, Edge, Brave, Cốc Cốc, Opera, Opera GX, and Vivaldi.
 The extension currently requires manual installation through Developer mode.
 
+## What is new in v0.1.5
+
+This release includes:
+
+- Reuse metadata probe connections for HTTP range downloads.
+- Resume interrupted file and media transfers on startup, with a preference to disable recovery.
+  Manually paused transfers remain paused. Network retries use a bounded delay;
+  preserving partial data depends on source support and unchanged content.
+- Show app/extension version mismatches and directions to reload the extension or update HDM.
+- Scan published files with Windows Defender without a redundant full-file hash read.
+  Manual and automatic scans share a serial queue with duplicate suppression and priority for manual requests;
+  queued files are checked for changes before scanning, independently of download workers.
+- Explain network, access, expired-link, unsupported-source, and local-file errors with recovery steps.
+- Keep retained-byte progress through range retries and display recent HTTP transfer speed.
+- Verify SHA-256 checkpoints before reusing downloaded ranges; refetch damaged ranges independently.
+  Older partial downloads without checkpoints restart safely instead of trusting unverified local bytes.
+- Refresh the journal incrementally and render only its viewport rows, keeping long histories accessible.
+- Publish single-part downloads without an assembly copy; calculate SHA-256 and any requested integrity hashes.
+- Refresh expired links once for supported sharing providers, validating retained bytes before reuse.
+- Invalidate clean scan results when an output's file identity, size, or modification time changes.
+- Budget remaining download, assembly and delivery space per volume, including adaptive range splitting.
+- Exercise forced process termination, repeated connection loss, disk-full recovery and concurrent output collisions
+  in regression tests, with dedicated Windows and macOS recovery jobs in CI.
+
 ## Build from source
+
+### Requirements and commands
 
 Use Python 3.11 or later with Tkinter, Node.js 22 or later, and Inno Setup 6
 for Windows installers. Build on the target operating system.
