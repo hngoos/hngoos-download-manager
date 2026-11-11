@@ -1,0 +1,46 @@
+name: Verify distribution metadata
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.13'
+      - name: Validate Windows download pins and platform availability
+        shell: python
+        run: |
+          import json
+          import re
+          from pathlib import Path
+          script = Path('install.ps1').read_text(encoding='utf-8')
+          version = re.search(r"(?m)^\$hdmVersion = '([^']+)'$", script)[1]
+          digest = re.search(r"(?m)^\$hdmHash = '([a-f0-9]{64})'$", script)[1]
+          size = int(re.search(r"(?m)^\$hdmSize = (\d+)$", script)[1])
+          assert re.fullmatch(r'\d+\.\d+\.\d+', version)
+          assert 0 < size < 60_000_000
+          scoop = json.loads(Path('scoop/hdm.json').read_text(encoding='utf-8'))
+          url = 'https://github.com/hngoos/hngoos-download-manager/releases/download/v'+version+'/'
+          assert scoop['version'] == version
+          assert scoop['architecture']['64bit']['hash'] == digest
+          assert scoop['architecture']['64bit']['url'] == url+'HDM-Setup-'+version+'.exe#/HDM-Setup.exe'
+          readme = Path('README.md').read_text(encoding='utf-8')
+          assert url+'HDM-Setup-'+version+'.exe' in readme
+          assert url+'HDM-'+version+'-Windows-x64-Portable.zip' in readme
+          assert 'Downloads are temporarily unavailable.' in readme
+          assert not re.search(r'https://[^\s<>)]*\.dmg', readme)
+          assert 'private repository' in readme
+          for name in re.findall(r'<img[^>]+src="([^"]+)"', readme):
+              assert not name.startswith(('http:', 'https:'))
+              assert Path(name).is_file(), 'Missing image: '+name
+          print('Verified Windows '+version+' pins, local branding assets and paused macOS downloads.')

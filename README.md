@@ -7,7 +7,7 @@ Download files with parallel connections, choose available video and audio
 formats, and manage transfers in one place.
 
 <p align="center">
-  <a href="#windows"><img src="docs/assets/install-windows.svg" width="49%" alt="Download for Windows"></a><a href="#macos"><img src="docs/assets/install-macos.svg" width="49%" alt="Download for macOS"></a>
+  <a href="#windows"><img src="docs/assets/install-windows.svg" width="49%" alt="Download for Windows"></a><img src="docs/assets/install-macos.svg" width="49%" alt="macOS downloads temporarily unavailable">
 </p>
 
 ## Features
@@ -30,9 +30,9 @@ formats, and manage transfers in one place.
 
 ## Download
 
-The current release is **v0.1.5**.
+The current Windows release is **v0.1.6**.
 
-This release improves interrupted-download recovery, verifies saved HTTP ranges,
+HDM supports interrupted-download recovery, verifies saved HTTP ranges,
 and keeps large download histories responsive. Windows Defender scans run in a
 shared background queue; missing files no longer show an overlapping safety result. Supported audio exports include MP3, M4A, WAV, AAC,
 FLAC, AIFF, WMA, and AC3. Video containers include MP4, WebM, MKV, MOV, and M4V,
@@ -46,7 +46,7 @@ TikTok photo posts download their source images in order without converting them
 
 #### Download
 
-[Download the Windows installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-Setup-0.1.5.exe)
+[Download the Windows installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.6/HDM-Setup-0.1.6.exe)
 
 Or install from Command Prompt (CMD):
 
@@ -55,6 +55,21 @@ curl.exe -fL https://raw.githubusercontent.com/hngoos/hngoos-download-manager/ma
 ```
 
 The command verifies the published package size and SHA-256 before starting setup.
+
+#### Portable
+
+[Download the Windows portable ZIP](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.6/HDM-0.1.6-Windows-x64-Portable.zip)
+
+Extract the entire HDM folder into a writable location, then run HDM.exe.
+Settings, history and default downloads stay in Data beside the app. Close HDM
+before moving it. For updates, extract the new runtime to a fresh folder and move
+your existing Data folder into it; keep your Data folder.
+
+Portable mode does not automatically register startup or browser native messaging.
+Opening a browser setup guide explicitly registers that copy as the browser's
+native host. Repeat setup after moving it; a browser uses one registered HDM copy
+at a time. Saved website sessions may need authentication again on another PC.
+
 
 #### Installation
 
@@ -66,29 +81,10 @@ Click the HDM logo to change the download folder in Preferences.
 
 ### macOS
 
-**macOS 15 or later | Apple Silicon and Intel**
+**Downloads are temporarily unavailable.**
 
-#### Download
-
-- [Download for Apple Silicon](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-macOS-arm64.dmg)
-- [Download for Intel](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-macOS-x64.dmg)
-
-Or download the matching package from Terminal:
-
-```sh
-hdm_arch=$(uname -m)
-[ "$hdm_arch" = "x86_64" ] && hdm_arch=x64
-curl -fL "https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.5/HDM-0.1.5-macOS-$hdm_arch.dmg" -o HDM.dmg
-```
-
-#### Installation
-
-1. Open the downloaded `.dmg`.
-2. Drag **HDM** to **Applications**.
-3. Open **HDM** from Applications.
-
-The current macOS packages use ad-hoc signatures and are not notarized by Apple.
-If macOS blocks the app, review it in **System Settings → Privacy & Security**.
+The current release is available for Windows only. macOS packages will return
+when platform testing is complete; v0.1.6 does not contain a macOS installer.
 
 ### Browser extension
 
@@ -101,29 +97,15 @@ on or off, download the current page/video, or show the video download button.
 Supported browsers: Chrome, Edge, Brave, Cốc Cốc, Opera, Opera GX, and Vivaldi.
 The extension currently requires manual installation through Developer mode.
 
-## What is new in v0.1.5
+## What is new in v0.1.6
 
-This release includes:
-
-- Reuse metadata probe connections for HTTP range downloads.
-- Resume interrupted file and media transfers on startup, with a preference to disable recovery.
-  Manually paused transfers remain paused. Network retries use a bounded delay;
-  preserving partial data depends on source support and unchanged content.
-- Show app/extension version mismatches and directions to reload the extension or update HDM.
-- Scan published files with Windows Defender without a redundant full-file hash read.
-  Manual and automatic scans share a serial queue with duplicate suppression and priority for manual requests;
-  queued files are checked for changes before scanning, independently of download workers.
-- Explain network, access, expired-link, unsupported-source, and local-file errors with recovery steps.
-- Keep retained-byte progress through range retries and display recent HTTP transfer speed.
-- Verify SHA-256 checkpoints before reusing downloaded ranges; refetch damaged ranges independently.
-  Older partial downloads without checkpoints restart safely instead of trusting unverified local bytes.
-- Refresh the journal incrementally and render only its viewport rows, keeping long histories accessible.
-- Publish single-part downloads without an assembly copy; calculate SHA-256 and any requested integrity hashes.
-- Refresh expired links once for supported sharing providers, validating retained bytes before reuse.
-- Invalidate clean scan results when an output's file identity, size, or modification time changes.
-- Budget remaining download, assembly and delivery space per volume, including adaptive range splitting.
-- Exercise forced process termination, repeated connection loss, disk-full recovery and concurrent output collisions
-  in regression tests, with dedicated Windows and macOS recovery jobs in CI.
+- Windows x64 portable ZIP with configuration, history and default downloads in
+  a local Data folder. Moving the closed app preserves owned paths, paused media
+  transfers, torrent history and saved file selections.
+- Portable update checks download a verified ZIP instead of running the installer.
+- Fewer redundant durable checkpoint writes at HTTP range completion.
+- Fix audio export failures caused by long temporary filenames on Windows.
+- macOS downloads are temporarily unavailable while platform validation is pending.
 
 ## Repository scope
 
@@ -133,7 +115,9 @@ Download current installers from [Releases](https://github.com/hngoos/hngoos-dow
 The application and extension source files visible here are a historical v0.1.4
 snapshot. They do not reproduce the current release binaries. Current development,
 platform builds and application tests are maintained in a private repository.
-Public Actions verify the publisher signature, size and SHA-256 of released packages.
+Public Actions validate distribution metadata and verify the publisher signature,
+size and SHA-256 of released packages. Historical-source build workflows are
+manual only and do not validate the current private source.
 
 ## Contact
 

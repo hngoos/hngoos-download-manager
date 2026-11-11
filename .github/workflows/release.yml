@@ -7,7 +7,7 @@ on:
       tag:
         description: Release tag to verify
         required: true
-        default: v0.1.5
+        default: v0.1.6
 permissions:
   contents: read
 jobs:
@@ -51,8 +51,11 @@ jobs:
           payload = verify_manifest(json.loads(body.split(MANIFEST_START)[1].split(MANIFEST_END)[0]))
           version = tag[1:]
           assert payload['version'] == version
-          expected = {f'HDM-Setup-{version}.exe', f'HDM-{version}-macOS-arm64.dmg',
-              f'HDM-{version}-macOS-x64.dmg', 'HDM-FFmpeg-9.0.2-Sources.tar.gz'}
+          expected = {f'HDM-Setup-{version}.exe', 'HDM-FFmpeg-9.0.2-Sources.tar.gz'}
+          if version != '0.1.6':
+              expected.update({f'HDM-{version}-macOS-arm64.dmg', f'HDM-{version}-macOS-x64.dmg'})
+          if tuple(map(int, version.split('.'))) >= (0, 1, 6):
+              expected.add(f'HDM-{version}-Windows-x64-Portable.zip')
           assets = {a['name']:a for a in release['assets']}
           assert set(assets) == {a['name'] for a in payload['assets']} == expected
           for item in payload['assets']:
@@ -71,5 +74,5 @@ jobs:
               assert count == item['size'] and digest.hexdigest() == item['sha256']
               print('Verified', item['name'], count, flush=True)
           Path(os.environ['GITHUB_STEP_SUMMARY']).write_text(
-              'Verified '+tag+': pinned Ed25519 signature and all four asset sizes/SHA-256 hashes.\n',
+              'Verified '+tag+': pinned Ed25519 signature and all asset sizes/SHA-256 hashes.\n',
               encoding='utf-8')

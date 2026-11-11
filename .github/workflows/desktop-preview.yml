@@ -1,18 +1,6 @@
-name: macOS desktop packages
+name: Historical v0.1.4 macOS source (manual)
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'scripts/**'
-      - 'docs/**'
-      - 'install.sh'
-      - 'pyproject.toml'
-      - '.github/workflows/desktop-preview.yml'
-  pull_request:
   workflow_dispatch:
-  workflow_call:
 permissions:
   contents: read
 concurrency:
