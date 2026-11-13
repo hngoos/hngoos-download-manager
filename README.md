@@ -30,7 +30,7 @@ formats, and manage transfers in one place.
 
 ## Download
 
-The current Windows release is **v0.1.6**.
+The current Windows release is **v0.1.7**.
 
 HDM supports interrupted-download recovery, verifies saved HTTP ranges,
 and keeps large download histories responsive. Windows Defender scans run in a
@@ -46,7 +46,7 @@ TikTok photo posts download their source images in order without converting them
 
 #### Download
 
-[Download the Windows installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.6/HDM-Setup-0.1.6.exe)
+[Download the Windows installer](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.7/HDM-Setup-0.1.7.exe)
 
 Or install from Command Prompt (CMD):
 
@@ -58,7 +58,7 @@ The command verifies the published package size and SHA-256 before starting setu
 
 #### Portable
 
-[Download the Windows portable ZIP](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.6/HDM-0.1.6-Windows-x64-Portable.zip)
+[Download the Windows portable ZIP](https://github.com/hngoos/hngoos-download-manager/releases/download/v0.1.7/HDM-0.1.7-Windows-x64-Portable.zip)
 
 Extract the entire HDM folder into a writable location, then run HDM.exe.
 Settings, history and default downloads stay in Data beside the app. Close HDM
@@ -84,7 +84,7 @@ Click the HDM logo to change the download folder in Preferences.
 **Downloads are temporarily unavailable.**
 
 The current release is available for Windows only. macOS packages will return
-when platform testing is complete; v0.1.6 does not contain a macOS installer.
+when platform testing is complete; v0.1.7 does not contain a macOS installer.
 
 ### Browser extension
 
@@ -97,15 +97,27 @@ on or off, download the current page/video, or show the video download button.
 Supported browsers: Chrome, Edge, Brave, Cốc Cốc, Opera, Opera GX, and Vivaldi.
 The extension currently requires manual installation through Developer mode.
 
-## What is new in v0.1.6
+## What is new in v0.1.7
 
-- Windows x64 portable ZIP with configuration, history and default downloads in
-  a local Data folder. Moving the closed app preserves owned paths, paused media
-  transfers, torrent history and saved file selections.
-- Portable update checks download a verified ZIP instead of running the installer.
-- Fewer redundant durable checkpoint writes at HTTP range completion.
-- Fix audio export failures caused by long temporary filenames on Windows.
-- macOS downloads are temporarily unavailable while platform validation is pending.
+- Capture progressive MP4, M4A and other supported media responses alongside HLS/DASH,
+  tied to the active browser document with common ad/tracking/fragment filtering.
+- Select individual items from supported collections in a paged window. Each item
+  has independent progress and retry; completed items are preserved.
+- Warn about duplicate sources with matching output choices. Missing or changed
+  completed files can be downloaded again.
+- Preserve the browser source origin during direct-file probes, retries and resume.
+- Use verified changed-file portable updates where an exact base is available,
+  with full ZIP fallback and a standalone worker. Failed startup restores the
+  previous runtime without replacing Data.
+
+The v0.1.6 portable updater still uses its existing manual update procedure;
+transactional update initiation is included from v0.1.7 onward. Automatic runtime
+rollback applies to portable mode. A power loss during a runtime swap may require
+`.hdm-update/worker.exe --portable-update-recover <portable-folder>`.
+
+The Windows installer is 54.2 MB, with approximately 161.7 MB after installation.
+The portable ZIP is 75.7 MB. Windows packages are not Authenticode-signed; update
+metadata is verified with the pinned Ed25519 publisher key.
 
 ## Repository scope
 

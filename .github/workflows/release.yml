@@ -7,7 +7,7 @@ on:
       tag:
         description: Release tag to verify
         required: true
-        default: v0.1.6
+        default: v0.1.7
 permissions:
   contents: read
 jobs:
@@ -52,10 +52,17 @@ jobs:
           version = tag[1:]
           assert payload['version'] == version
           expected = {f'HDM-Setup-{version}.exe', 'HDM-FFmpeg-9.0.2-Sources.tar.gz'}
-          if version != '0.1.6':
+          if tuple(map(int, version.split('.'))) < (0, 1, 6):
               expected.update({f'HDM-{version}-macOS-arm64.dmg', f'HDM-{version}-macOS-x64.dmg'})
           if tuple(map(int, version.split('.'))) >= (0, 1, 6):
               expected.add(f'HDM-{version}-Windows-x64-Portable.zip')
+          for item in payload['assets']:
+              if item.get('kind') == 'portable-patch':
+                  base_version = item.get('base_version', '')
+                  assert re.fullmatch(r'\d+\.\d+\.\d+', base_version)
+                  assert tuple(map(int, base_version.split('.'))) < tuple(map(int, version.split('.')))
+                  assert item['name'] == f'HDM-{version}-Windows-x64-Patch-from-{base_version}.zip'
+                  expected.add(item['name'])
           assets = {a['name']:a for a in release['assets']}
           assert set(assets) == {a['name'] for a in payload['assets']} == expected
           for item in payload['assets']:
